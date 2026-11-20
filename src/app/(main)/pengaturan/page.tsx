@@ -33,6 +33,9 @@ import {
   X,
   KeyRound,
   Smartphone,
+  Maximize,
+  Minimize,
+  Crop,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { createClient } from "@/lib/supabase/client";
@@ -79,6 +82,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePwaInstall } from "@/lib/pwa-install";
 import { PwaInstallModal } from "@/components/pwa-install-modal";
+import { AvatarCropModal } from "@/components/profile/avatar-crop-modal";
+import { useFullscreen } from "@/lib/use-fullscreen";
 
 type SettingsSection =
   | null
@@ -108,6 +113,13 @@ export default function PengaturanPage() {
   const [editName, setEditName] = React.useState("");
   const [isSavingProfile, setIsSavingProfile] = React.useState(false);
   const [avatarUploadPreview, setAvatarUploadPreview] = React.useState<string | null>(null);
+
+  // Crop photo state
+  const [rawCropImage, setRawCropImage] = React.useState<string | null>(null);
+  const [showCropModal, setShowCropModal] = React.useState(false);
+
+  // Fullscreen hook
+  const { isFullscreen, toggleFullscreen, isSupported: isFullscreenSupported } = useFullscreen();
 
   // App data state
   const [wallets, setWallets] = React.useState<WalletBalance[]>([]);
@@ -236,23 +248,33 @@ export default function PengaturanPage() {
     }
   };
 
-  // Handler Unggah Foto Profil (Base64 DataUrl)
+  // Handler Unggah Foto Profil (Buka Modal Pemotong Foto)
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      showToast("Ukuran foto maksimal 2MB.");
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Ukuran foto maksimal 5MB.");
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target?.result as string;
-      setAvatarUploadPreview(result);
+      setRawCropImage(result);
+      setShowCropModal(true);
       triggerHapticFeedback();
     };
     reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  // Handler saat selesai potong foto
+  const handleCropComplete = (croppedDataUrl: string) => {
+    setAvatarUploadPreview(croppedDataUrl);
+    setProfile((p) => ({ ...p, avatarUrl: croppedDataUrl }));
+    showToast("Foto berhasil disesuaikan & dipotong!");
+    triggerHapticFeedback();
   };
 
   // Handler Simpan Finansial & Gaji
@@ -725,6 +747,37 @@ export default function PengaturanPage() {
                   </div>
                 </div>
 
+                {/* Opsi Fullscreen: Mode Layar Penuh (Sembunyikan Notifikasi & Navigasi HP) */}
+                <div className="flex items-center justify-between p-3.5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-sky-500/15 text-sky-600 dark:text-sky-400 shrink-0">
+                      {isFullscreen ? <Minimize className="h-4.5 w-4.5" /> : <Maximize className="h-4.5 w-4.5" />}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-foreground">Mode Layar Penuh (Fullscreen)</p>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        Sembunyikan bilah notifikasi & tombol navigasi HP
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHapticFeedback();
+                      toggleFullscreen();
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs",
+                      isFullscreen
+                        ? "bg-teal-600 text-white"
+                        : "bg-muted text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {isFullscreen ? "Aktif" : "Aktifkan"}
+                  </button>
+                </div>
+
                 {/* Opsi 5: Ganti Kata Sandi */}
                 <button
                   type="button"
@@ -905,29 +958,45 @@ export default function PengaturanPage() {
                 className="hidden"
               />
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-center">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
-                  className="h-8 text-[11px] rounded-xl px-3"
+                  className="h-8 text-[11px] rounded-xl px-3 cursor-pointer"
                 >
                   <Camera className="mr-1.5 h-3.5 w-3.5" />
-                  Unggah Foto
+                  Pilih Foto
                 </Button>
 
                 {(avatarUploadPreview || profile.avatarUrl) && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => {
-                      setAvatarUploadPreview(null);
-                      setProfile((p) => ({ ...p, avatarUrl: null }));
-                    }}
-                    className="h-8 text-[11px] rounded-xl text-rose-500 hover:text-rose-600 px-2"
-                  >
-                    Hapus Foto
-                  </Button>
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setRawCropImage(avatarUploadPreview || profile.avatarUrl!);
+                        setShowCropModal(true);
+                        triggerHapticFeedback();
+                      }}
+                      className="h-8 text-[11px] rounded-xl px-2.5 text-teal-600 dark:text-teal-400 border-teal-500/30 cursor-pointer"
+                    >
+                      <Crop className="mr-1 h-3.5 w-3.5" />
+                      Potong / Sesuaikan
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        setAvatarUploadPreview(null);
+                        setProfile((p) => ({ ...p, avatarUrl: null }));
+                      }}
+                      className="h-8 text-[11px] rounded-xl text-rose-500 hover:text-rose-600 px-2 cursor-pointer"
+                    >
+                      Hapus Foto
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
@@ -1627,6 +1696,13 @@ export default function PengaturanPage() {
         onClose={() => setShowModal(false)}
         isIOS={isIOS}
         isInstalled={isInstalled}
+      />
+
+      <AvatarCropModal
+        isOpen={showCropModal}
+        imageSrc={rawCropImage}
+        onClose={() => setShowCropModal(false)}
+        onCropComplete={handleCropComplete}
       />
     </div>
   );

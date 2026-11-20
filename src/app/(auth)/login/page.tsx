@@ -21,6 +21,7 @@ import {
   Download,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { FullscreenToggle } from "@/components/fullscreen-toggle";
 import { cn } from "@/lib/utils";
 import { usePwaInstall } from "@/lib/pwa-install";
 import { PwaInstallModal } from "@/components/pwa-install-modal";
@@ -132,8 +133,9 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-15%,rgba(13,148,136,0.12),transparent)]" />
       </div>
 
-      {/* Theme toggle di pojok kanan atas */}
-      <div className="absolute top-4 right-4 z-20">
+      {/* Tombol Fullscreen & Theme toggle di pojok kanan atas */}
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-1">
+        <FullscreenToggle />
         <ThemeToggle />
       </div>
 

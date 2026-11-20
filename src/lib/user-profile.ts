@@ -63,11 +63,26 @@ export async function getUserProfile(): Promise<UserProfile> {
           ? profile.name
           : email.split("@")[0]);
 
+      // PEMBERSIHAN OTOMATIS: Jika cookie sebelumnya menyimpan base64 gambar yang besar,
+      // bersihkan segera agar tidak memicu error 494 Request Header Too Large di Vercel!
+      if (meta.avatar_url && typeof meta.avatar_url === "string" && meta.avatar_url.startsWith("data:")) {
+        try {
+          await supabase.auth.updateUser({
+            data: { avatar_url: null },
+          });
+        } catch (_) {}
+      }
+
+      const safeRemoteAvatarUrl =
+        meta.avatar_url && !meta.avatar_url.startsWith("data:")
+          ? meta.avatar_url
+          : profile.avatarUrl;
+
       profile = {
         ...profile,
         email,
         name: name || profile.name,
-        avatarUrl: meta.avatar_url || profile.avatarUrl,
+        avatarUrl: safeRemoteAvatarUrl,
         avatarEmoji: meta.avatar_emoji || profile.avatarEmoji,
         avatarBg: meta.avatar_bg || profile.avatarBg,
       };
@@ -95,7 +110,7 @@ export async function saveUserProfile(
     ...updates,
   };
 
-  // 1. Simpan ke localStorage
+  // 1. Simpan ke localStorage (gambar lokal disimpan di sini, TIDAK di cookies)
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem("dompetku_user_profile", JSON.stringify(nextProfile));
@@ -108,6 +123,9 @@ export async function saveUserProfile(
   }
 
   // 2. Simpan ke Supabase user metadata jika user login
+  // PENTING: JANGAN PERNAH mengirim data base64 (data:image/...) ke Supabase user_metadata
+  // karena Supabase menyimpannya di cookie HTTP browser yang memiliki limit ukuran header ~8KB-16KB.
+  // Menyimpan base64 di cookie akan menghasilkan error Vercel 494 Request Header Too Large!
   try {
     const supabase = createClient();
     const {
@@ -115,11 +133,16 @@ export async function saveUserProfile(
     } = await supabase.auth.getSession();
 
     if (session?.user) {
+      const isRemoteUrl =
+        nextProfile.avatarUrl &&
+        typeof nextProfile.avatarUrl === "string" &&
+        !nextProfile.avatarUrl.startsWith("data:");
+
       await supabase.auth.updateUser({
         data: {
           full_name: nextProfile.name,
           name: nextProfile.name,
-          avatar_url: nextProfile.avatarUrl,
+          avatar_url: isRemoteUrl ? nextProfile.avatarUrl : null,
           avatar_emoji: nextProfile.avatarEmoji,
           avatar_bg: nextProfile.avatarBg,
         },

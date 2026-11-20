@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   applicationName: "Dompetku",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Dompetku",
   },
   formatDetection: {

@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Dompetku",
     description: "Catatan keuangan pribadi simpel dan cerdas untuk HP",
     start_url: "/",
-    display: "standalone",
+    display: "fullscreen",
     background_color: "#0f172a",
     theme_color: "#0d9488",
     orientation: "portrait",

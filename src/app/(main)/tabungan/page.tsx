@@ -3,6 +3,10 @@
 import * as React from "react";
 import { TopHeader } from "@/components/layout/top-header";
 import { formatRupiah, formatTanggalWIB } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { todayJakarta } from "@/lib/data/sample-mode";
+import type { Database } from "@/types/database";
+import type { WalletBalance } from "@/lib/data/wallets";
 import {
   calculateSavingsProjection,
   type SavingsProjectionResult,
@@ -22,6 +26,7 @@ import {
   Pencil,
   X,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -69,81 +74,99 @@ export interface GoalItem {
 }
 
 export default function TabunganPage() {
-  // Tanggal acuan: 20 Nov 2026
-  const asOfDate = React.useMemo(() => new Date("2026-11-20T00:00:00Z"), []);
+  // Tanggal acuan: diinisialisasi dalam useEffect untuk menghindari hydration/prerender mismatch
+  const [todayStr, setTodayStr] = React.useState<string>("");
+  const [asOfDate, setAsOfDate] = React.useState<Date | null>(null);
 
-  // Jadwal gajian simulasi (dari payday_schedule)
-  const paydayDates = React.useMemo(
-    () => [
-      "2026-11-28",
-      "2026-12-28",
-      "2027-01-28",
-      "2027-02-28",
-      "2027-03-28",
-      "2027-04-28",
-    ],
-    []
+  React.useEffect(() => {
+    const today = todayJakarta();
+    setTodayStr(today);
+    setAsOfDate(new Date(`${today}T00:00:00Z`));
+  }, []);
+
+  const [paydayDates, setPaydayDates] = React.useState<string[]>([]);
+  const [goals, setGoals] = React.useState<GoalItem[]>([]);
+  const [wallets, setWallets] = React.useState<WalletBalance[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+  const [selectedWallet, setSelectedWallet] = React.useState("");
+
+  const walletName = React.useCallback(
+    (id: string) => wallets.find((w) => w.id === id)?.name ?? "Dompet",
+    [wallets]
   );
 
-  // Data Seed Utama: "Lamaran" (saldo Rp2.100.000, target Rp6.000.000, tenggat 25 Des 2026)
-  const [goals, setGoals] = React.useState<GoalItem[]>([
-    {
-      id: "seed-lamaran",
-      name: "Lamaran",
-      target_amount: 6000000,
-      current_amount: 2100000,
-      initial_amount: 1000000,
-      deadline: "2026-12-25",
-      storage_place: "RDPU Bibit",
-      planned_per_payday: 500000,
-      priority: 1,
-      status: "aktif",
-      is_emergency_fund: false,
-      notes: "Biaya persiapan seserahan dan gedung lamaran",
-      history: [
-        {
-          id: "trx-1",
-          date: "2026-10-28",
-          type: "goal_deposit",
-          amount: 500000,
-          walletName: "BCA Utama",
-          note: "Setoran gajian Oktober",
-        },
-        {
-          id: "trx-2",
-          date: "2026-11-10",
-          type: "goal_deposit",
-          amount: 600000,
-          walletName: "GoPay",
-          note: "Bonus proyek sampingan",
-        },
-      ],
-    },
-    {
-      id: "seed-darurat",
-      name: "Dana Darurat (3 Bulan)",
-      target_amount: 12000000,
-      current_amount: 7500000,
-      initial_amount: 3000000,
-      deadline: "2027-06-30",
-      storage_place: "Tabungan Bank Jago",
-      planned_per_payday: 1000000,
-      priority: 2,
-      status: "aktif",
-      is_emergency_fund: true,
-      notes: "Simpanan liquid saat kondisi tak terduga",
-      history: [
-        {
-          id: "trx-3",
-          date: "2026-10-28",
-          type: "goal_deposit",
-          amount: 1000000,
-          walletName: "BCA Utama",
-          note: "Rutin gajian",
-        },
-      ],
-    },
-  ]);
+  const loadData = React.useCallback(async () => {
+    const supabase = createClient();
+    const today = todayJakarta();
+    setTodayStr(today);
+    setAsOfDate(new Date(`${today}T00:00:00Z`));
+    const [goalsRes, walletsRes, trxRes, payRes] = await Promise.all([
+      supabase.from("goal_progress").select("*").order("priority", { ascending: true }),
+      supabase.from("wallet_balances").select("*").order("sort_order", { ascending: true }),
+      supabase
+        .from("transactions")
+        .select("id,date,type,amount,wallet_id,note,goal_id,created_at")
+        .in("type", ["goal_deposit", "goal_withdraw"])
+        .order("date", { ascending: false })
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("payday_schedule")
+        .select("date")
+        .gte("date", today)
+        .order("date", { ascending: true })
+        .limit(24),
+    ]);
+
+    const walletList = (walletsRes.data ?? []) as WalletBalance[];
+    setWallets(walletList);
+    setPaydayDates((payRes.data ?? []).map((r: { date: string }) => r.date));
+
+    const nameOf = (id: string) => walletList.find((w) => w.id === id)?.name ?? "Dompet";
+    const trx = (trxRes.data ?? []) as {
+      id: string; date: string; type: "goal_deposit" | "goal_withdraw";
+      amount: number; wallet_id: string; note: string | null; goal_id: string | null;
+    }[];
+
+    setGoals(
+      (goalsRes.data ?? []).map((g) => ({
+        id: g.id as string,
+        name: g.name as string,
+        target_amount: Number(g.target_amount),
+        current_amount: Number(g.saved ?? 0),
+        initial_amount: Number(g.initial_amount ?? 0),
+        deadline: (g.deadline as string | null) ?? null,
+        storage_place: (g.storage_place as string | null) ?? "-",
+        planned_per_payday: Number(g.planned_per_payday ?? 0),
+        priority: Number(g.priority ?? 1),
+        status: (g.status as GoalItem["status"]) ?? "aktif",
+        is_emergency_fund: Boolean(g.is_emergency_fund),
+        notes: (g.notes as string | null) ?? null,
+        history: trx
+          .filter((t) => t.goal_id === g.id)
+          .map((t) => ({
+            id: t.id,
+            date: formatTanggalWIB(`${t.date}T00:00:00+07:00`),
+            type: t.type,
+            amount: Number(t.amount),
+            walletName: nameOf(t.wallet_id),
+            note: t.note ?? undefined,
+          })),
+      }))
+    );
+    setLoading(false);
+  }, []);
+
+  React.useEffect(() => {
+    if (!selectedWallet && wallets.length > 0) setSelectedWallet(wallets[0].id);
+  }, [wallets, selectedWallet]);
+
+  React.useEffect(() => {
+    loadData().catch((err) => {
+      console.error("Gagal memuat tabungan:", err);
+      setLoading(false);
+    });
+  }, [loadData]);
 
   // State navigasi modal & detail
   const [selectedGoalId, setSelectedGoalId] = React.useState<string | null>(null);
@@ -153,7 +176,6 @@ export default function TabunganPage() {
 
   // State form Setor & Tarik
   const [actionAmount, setActionAmount] = React.useState("");
-  const [selectedWallet, setSelectedWallet] = React.useState("BCA Utama");
   const [actionNote, setActionNote] = React.useState("");
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
 
@@ -178,7 +200,7 @@ export default function TabunganPage() {
 
   // Kalkulasi proyeksi untuk goal yang dipilih
   const selectedProjection: SavingsProjectionResult | null = React.useMemo(() => {
-    if (!selectedGoal) return null;
+    if (!selectedGoal || !asOfDate) return null;
     return calculateSavingsProjection({
       currentAmount: selectedGoal.current_amount,
       targetAmount: selectedGoal.target_amount,
@@ -221,7 +243,7 @@ export default function TabunganPage() {
   };
 
   // Simpan Tambah / Edit
-  const handleSaveGoal = (e: React.FormEvent) => {
+  const handleSaveGoal = async (e: React.FormEvent) => {
     e.preventDefault();
     const targetNum = parseInt(formTarget.replace(/\D/g, "") || "0", 10);
     const initialNum = parseInt(formInitial.replace(/\D/g, "") || "0", 10);
@@ -232,91 +254,101 @@ export default function TabunganPage() {
       return;
     }
 
-    if (editingGoal) {
-      setGoals((prev) =>
-        prev.map((g) =>
-          g.id === editingGoal.id
-            ? {
-                ...g,
-                name: formName,
-                target_amount: targetNum,
-                deadline: formDeadline || null,
-                storage_place: formStorage,
-                planned_per_payday: plannedNum,
-                notes: formNotes || null,
-              }
-            : g
-        )
-      );
-      showToast(`Tabungan "${formName}" berhasil diperbarui!`);
-    } else {
-      const newGoal: GoalItem = {
-        id: `goal-${Date.now()}`,
-        name: formName,
-        target_amount: targetNum,
-        current_amount: initialNum,
-        initial_amount: initialNum,
-        deadline: formDeadline || null,
-        storage_place: formStorage,
-        planned_per_payday: plannedNum,
-        priority: goals.length + 1,
-        status: "aktif",
-        is_emergency_fund: false,
-        notes: formNotes || null,
-        history:
-          initialNum > 0
-            ? [
-                {
-                  id: `init-${Date.now()}`,
-                  date: formatTanggalWIB(asOfDate),
-                  type: "goal_deposit",
-                  amount: initialNum,
-                  walletName: formStorage,
-                  note: "Saldo awal tabungan",
-                },
-              ]
-            : [],
-      };
-      setGoals((prev) => [...prev, newGoal]);
-      showToast(`Target "${formName}" berhasil dibuat!`);
-    }
+    setSaving(true);
+    const supabase = createClient();
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    setIsFormOpen(false);
+      if (editingGoal) {
+        const { error } = await supabase
+          .from("savings_goals")
+          .update({
+            name: formName.trim(),
+            target_amount: targetNum,
+            initial_amount: initialNum,
+            deadline: formDeadline || null,
+            storage_place: formStorage,
+            planned_per_payday: plannedNum,
+            notes: formNotes || null,
+          })
+          .eq("id", editingGoal.id);
+        if (error) throw error;
+        showToast(`Tabungan "${formName}" berhasil diperbarui!`);
+      } else {
+        const insertPayload: Database["public"]["Tables"]["savings_goals"]["Insert"] = {
+          name: formName.trim(),
+          target_amount: targetNum,
+          initial_amount: initialNum,
+          deadline: formDeadline || null,
+          storage_place: formStorage,
+          planned_per_payday: plannedNum,
+          priority: goals.length + 1,
+          status: "aktif",
+          is_emergency_fund: false,
+          notes: formNotes || null,
+          ...(user?.id ? { user_id: user.id } : {}),
+        };
+        const { error } = await supabase.from("savings_goals").insert(insertPayload);
+        if (error) throw error;
+        showToast(`Target "${formName}" berhasil dibuat!`);
+      }
+      setIsFormOpen(false);
+      await loadData();
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menyimpan ke database. Coba lagi.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const recordGoalTransaction = async (
+    type: "goal_deposit" | "goal_withdraw",
+    amountNum: number,
+    defaultNote: string
+  ) => {
+    if (!selectedGoal) return false;
+    if (!selectedWallet) {
+      alert("Pilih dompet dulu. Kalau belum ada dompet, tambahkan di Pengaturan.");
+      return false;
+    }
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from("transactions").insert({
+        type,
+        amount: amountNum,
+        wallet_id: selectedWallet,
+        goal_id: selectedGoal.id,
+        date: todayStr || todayJakarta(),
+        note: actionNote || defaultNote,
+        source: "manual",
+        category_id: null,
+        to_wallet_id: null,
+      });
+      if (error) throw error;
+      await loadData();
+      return true;
+    } catch (err) {
+      console.error(err);
+      alert("Gagal mencatat ke database. Coba lagi.");
+      return false;
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Eksekusi Setor Uang ke Tabungan
-  const handleDepositSubmit = (e: React.FormEvent) => {
+  const handleDepositSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGoal) return;
     const amountNum = parseInt(actionAmount.replace(/\D/g, "") || "0", 10);
     if (amountNum <= 0) return;
 
-    setGoals((prev) =>
-      prev.map((g) => {
-        if (g.id === selectedGoal.id) {
-          const newCurrent = g.current_amount + amountNum;
-          const newHistory = [
-            {
-              id: `dep-${Date.now()}`,
-              date: formatTanggalWIB(asOfDate),
-              type: "goal_deposit" as const,
-              amount: amountNum,
-              walletName: selectedWallet,
-              note: actionNote || "Setoran manual",
-            },
-            ...(g.history || []),
-          ];
-          return {
-            ...g,
-            current_amount: newCurrent,
-            status: newCurrent >= g.target_amount ? "tercapai" : g.status,
-            history: newHistory,
-          };
-        }
-        return g;
-      })
-    );
-
+    const ok = await recordGoalTransaction("goal_deposit", amountNum, "Setoran manual");
+    if (!ok) return;
     showToast(`Berhasil setor ${formatRupiah(amountNum)} ke ${selectedGoal.name}!`);
     setActiveDetailView("detail");
     setActionAmount("");
@@ -324,7 +356,7 @@ export default function TabunganPage() {
   };
 
   // Eksekusi Tarik Uang dari Tabungan
-  const handleWithdrawSubmit = (e: React.FormEvent) => {
+  const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGoal) return;
     const amountNum = parseInt(actionAmount.replace(/\D/g, "") || "0", 10);
@@ -335,73 +367,42 @@ export default function TabunganPage() {
       return;
     }
 
-    setGoals((prev) =>
-      prev.map((g) => {
-        if (g.id === selectedGoal.id) {
-          const newCurrent = Math.max(0, g.current_amount - amountNum);
-          const newHistory = [
-            {
-              id: `wdr-${Date.now()}`,
-              date: formatTanggalWIB(asOfDate),
-              type: "goal_withdraw" as const,
-              amount: amountNum,
-              walletName: selectedWallet,
-              note: actionNote || "Penarikan tabungan",
-            },
-            ...(g.history || []),
-          ];
-          return {
-            ...g,
-            current_amount: newCurrent,
-            history: newHistory,
-          };
-        }
-        return g;
-      })
-    );
-
-    showToast(`Berhasil tarik ${formatRupiah(amountNum)} ke ${selectedWallet}!`);
+    const ok = await recordGoalTransaction("goal_withdraw", amountNum, "Penarikan tabungan");
+    if (!ok) return;
+    showToast(`Berhasil tarik ${formatRupiah(amountNum)} ke ${walletName(selectedWallet)}!`);
     setActiveDetailView("detail");
     setActionAmount("");
     setActionNote("");
   };
 
-  // Generate Data Tren Garis Aktual vs Rencana
+  // Data tren: aktual per bulan (dari riwayat) vs rencana per gajian
   const chartData = React.useMemo(() => {
-    if (!selectedGoal) return [];
-    const points = [
-      {
-        nama: "Awal",
-        aktual: selectedGoal.initial_amount,
-        rencana: selectedGoal.initial_amount,
-      },
-      {
-        nama: "Okt 26",
-        aktual: selectedGoal.initial_amount + 500000,
-        rencana: selectedGoal.initial_amount + selectedGoal.planned_per_payday,
-      },
-      {
-        nama: "Nov 26",
-        aktual: selectedGoal.current_amount,
-        rencana:
-          selectedGoal.initial_amount + selectedGoal.planned_per_payday * 2,
-      },
-      {
-        nama: "Des 26",
-        aktual: null,
-        rencana: Math.min(
-          selectedGoal.target_amount,
-          selectedGoal.initial_amount + selectedGoal.planned_per_payday * 3
-        ),
-      },
-      {
-        nama: "Target",
-        aktual: null,
-        rencana: selectedGoal.target_amount,
-      },
-    ];
-    return points;
-  }, [selectedGoal]);
+    if (!selectedGoal || !todayStr) return [];
+    const bulan = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+    const label = (ym: string) => `${bulan[parseInt(ym.slice(5, 7), 10) - 1]} ${ym.slice(2, 4)}`;
+    const nowYm = todayStr.slice(0, 7);
+    const endYm = (selectedGoal.deadline ?? "").slice(0, 7) || nowYm;
+    const months: string[] = [];
+    let y = parseInt(nowYm.slice(0, 4), 10);
+    let m = parseInt(nowYm.slice(5, 7), 10);
+    const [ey, em] = [parseInt(endYm.slice(0, 4), 10), parseInt(endYm.slice(5, 7), 10)];
+    while ((y < ey || (y === ey && m <= em)) && months.length < 18) {
+      months.push(`${y}-${String(m).padStart(2, "0")}`);
+      m += 1;
+      if (m > 12) { m = 1; y += 1; }
+    }
+    if (months.length === 0) months.push(nowYm);
+    let plannedSum = 0;
+    return months.map((ym, i) => {
+      const paydaysInMonth = paydayDates.filter((d) => d.startsWith(ym)).length;
+      plannedSum += paydaysInMonth * selectedGoal.planned_per_payday;
+      return {
+        nama: label(ym),
+        aktual: i === 0 ? selectedGoal.current_amount : null,
+        rencana: Math.min(selectedGoal.target_amount, selectedGoal.current_amount + plannedSum),
+      };
+    });
+  }, [selectedGoal, paydayDates, todayStr]);
 
   return (
     <div className="flex flex-col flex-1">
@@ -464,6 +465,17 @@ export default function TabunganPage() {
             </span>
           </div>
 
+          {loading && (
+            <div className="flex flex-col items-center justify-center gap-2 py-8 text-xs text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin text-teal-600 dark:text-teal-400" />
+              <span>Memuat data tabungan…</span>
+            </div>
+          )}
+          {!loading && goals.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-border/70 p-6 text-center text-xs text-muted-foreground">
+              Belum ada target tabungan. Ketuk <strong>Buat Target</strong> untuk memulai.
+            </div>
+          )}
           {goals.map((goal) => {
             const proj = calculateSavingsProjection({
               currentAmount: goal.current_amount,
@@ -471,7 +483,7 @@ export default function TabunganPage() {
               deadline: goal.deadline,
               plannedPerPayday: goal.planned_per_payday,
               paydayDates,
-              asOfDate,
+              asOfDate: asOfDate ?? undefined,
             });
 
             return (
@@ -613,10 +625,10 @@ export default function TabunganPage() {
                         onChange={(e) => setSelectedWallet(e.target.value)}
                         className="w-full h-10 rounded-xl border border-border/60 bg-muted/40 px-3 text-xs text-foreground focus:outline-none"
                       >
-                        <option value="BCA Utama">BCA Utama</option>
-                        <option value="GoPay">GoPay</option>
-                        <option value="Uang Tunai">Uang Tunai</option>
-                        <option value="Bank Mandiri">Bank Mandiri</option>
+                        <option value="" disabled>Pilih dompet</option>
+                        {wallets.map((w) => (
+                          <option key={w.id} value={w.id}>{w.name}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -650,7 +662,7 @@ export default function TabunganPage() {
                     </div>
 
                     <p className="text-[10px] text-muted-foreground bg-muted/50 p-2.5 rounded-xl leading-relaxed">
-                      ℹ️ Setoran ini mengurangi saldo <strong>{selectedWallet}</strong>{" "}
+                      ℹ️ Setoran ini mengurangi saldo <strong>{walletName(selectedWallet)}</strong>{" "}
                       dan <strong>tidak dihitung sebagai pengeluaran</strong> di analisis.
                     </p>
 
@@ -665,9 +677,17 @@ export default function TabunganPage() {
                       </Button>
                       <Button
                         type="submit"
-                        className="flex-1 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs"
+                        disabled={saving}
+                        className="flex-1 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                       >
-                        Konfirmasi Setor
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Menyimpan...</span>
+                          </>
+                        ) : (
+                          "Konfirmasi Setor"
+                        )}
                       </Button>
                     </div>
                   </form>
@@ -704,9 +724,10 @@ export default function TabunganPage() {
                         onChange={(e) => setSelectedWallet(e.target.value)}
                         className="w-full h-10 rounded-xl border border-border/60 bg-muted/40 px-3 text-xs text-foreground focus:outline-none"
                       >
-                        <option value="BCA Utama">BCA Utama</option>
-                        <option value="GoPay">GoPay</option>
-                        <option value="Uang Tunai">Uang Tunai</option>
+                        <option value="" disabled>Pilih dompet</option>
+                        {wallets.map((w) => (
+                          <option key={w.id} value={w.id}>{w.name}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -743,7 +764,7 @@ export default function TabunganPage() {
                     </div>
 
                     <p className="text-[10px] text-muted-foreground bg-muted/50 p-2.5 rounded-xl leading-relaxed">
-                      ℹ️ Penarikan ini menambah saldo <strong>{selectedWallet}</strong>{" "}
+                      ℹ️ Penarikan ini menambah saldo <strong>{walletName(selectedWallet)}</strong>{" "}
                       dan <strong>tidak dihitung sebagai pemasukan</strong> di analisis.
                     </p>
 
@@ -758,9 +779,17 @@ export default function TabunganPage() {
                       </Button>
                       <Button
                         type="submit"
-                        className="flex-1 h-10 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs"
+                        disabled={saving}
+                        className="flex-1 h-10 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                       >
-                        Konfirmasi Tarik
+                        {saving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Menyimpan...</span>
+                          </>
+                        ) : (
+                          "Konfirmasi Tarik"
+                        )}
                       </Button>
                     </div>
                   </form>
@@ -1151,6 +1180,9 @@ export default function TabunganPage() {
                   onChange={(e) => setFormStorage(e.target.value)}
                   className="w-full h-10 rounded-xl border border-border/60 bg-muted/40 px-3 text-xs text-foreground focus:outline-none"
                 >
+                  {formStorage && !["RDPU Bibit","BCA Utama (Tabungan)","Bank Jago Kantong","Emas Digital","Tunai Celengan"].includes(formStorage) && (
+                    <option value={formStorage}>{formStorage}</option>
+                  )}
                   <option value="RDPU Bibit">RDPU Bibit (Reksa Dana)</option>
                   <option value="BCA Utama (Tabungan)">BCA Utama (Tabungan)</option>
                   <option value="Bank Jago Kantong">Bank Jago Kantong</option>
@@ -1180,9 +1212,19 @@ export default function TabunganPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs"
+                  disabled={saving}
+                  className="flex-1 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  {editingGoal ? "Simpan Perubahan" : "Buat Target"}
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : editingGoal ? (
+                    "Simpan Perubahan"
+                  ) : (
+                    "Buat Target"
+                  )}
                 </Button>
               </div>
             </form>
