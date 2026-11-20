@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateJson } from "@/lib/ai/gemini";
+import { rateLimit } from "@/lib/rate-limit";
 
 /** Tes cepat koneksi Gemini. Buka /api/ai-health saat sudah login. */
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ ok: false, error: "Login dulu" }, { status: 401 });
+
+  // #3 Antrean: cegah serbuan permintaan ke Gemini.
+  const rl = rateLimit(`api:${user.id}`);
+  if (!rl.ok) return NextResponse.json({ ok: false, error: "Terlalu banyak permintaan. Coba lagi sebentar." }, { status: 429 });
 
   const started = Date.now();
   try {
