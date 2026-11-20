@@ -7,22 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Wallet,
   Loader2,
   AlertCircle,
   CheckCircle2,
   Eye,
   EyeOff,
+  LogIn,
+  Sparkles,
+  Camera,
+  Mic,
+  ShieldCheck,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -121,113 +119,192 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-slate-100 p-4 dark:bg-zinc-950">
-      {/* Theme toggle di pojok kanan atas agar tidak menumpuk di tengah */}
+    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-background">
+      {/* Ambient Aurora Glow Orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[380px] w-[380px] rounded-full bg-teal-500/20 blur-[110px] dark:bg-teal-500/15" />
+        <div className="absolute top-1/3 -right-24 h-72 w-72 rounded-full bg-emerald-500/15 blur-[95px] dark:bg-emerald-500/10" />
+        <div className="absolute -bottom-24 -left-20 h-80 w-80 rounded-full bg-teal-600/15 blur-[105px] dark:bg-teal-600/10" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-15%,rgba(13,148,136,0.12),transparent)]" />
+      </div>
+
+      {/* Theme toggle di pojok kanan atas */}
       <div className="absolute top-4 right-4 z-20">
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-[390px]">
-        {/* Header Bersih & Ringkas (Logo + Brand Horizontal) */}
-        <div className="mb-5 flex items-center justify-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-600 text-white shadow-md shadow-teal-600/30 dark:bg-teal-500 dark:text-zinc-950">
-            <Wallet className="h-6 w-6" />
+      <div className="relative z-10 w-full max-w-[400px]">
+        {/* Header Brand dengan Logo Glow Bergradasi */}
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="relative mb-3 flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-tr from-teal-500 to-emerald-400 text-white shadow-xl shadow-teal-500/30 ring-4 ring-teal-500/15 transition-transform hover:scale-105 duration-200">
+            <Wallet className="h-7 w-7" />
+            <div className="absolute inset-0 rounded-3xl bg-white/10" />
           </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground leading-tight">
-              Dompetku
-            </h1>
-            <p className="text-[11px] text-muted-foreground">
-              Catatan keuangan simpel & tenang
-            </p>
-          </div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
+            Dompetku
+          </h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Catatan keuangan simpel, tenang, & berdaya AI
+          </p>
         </div>
 
-        {/* Card Form */}
-        <Card className="border-border/60 shadow-xl bg-card rounded-2xl">
-          <CardHeader className="space-y-1 pb-3 pt-5 px-5">
-            <CardTitle className="text-lg font-bold">
-              {isRegisterMode ? "Buat Akun Baru" : "Masuk ke Akun"}
-            </CardTitle>
-            <CardDescription className="text-xs">
+        {/* Card Glassmorphism */}
+        <div className="rounded-3xl border border-white/20 dark:border-white/10 bg-card/85 dark:bg-card/70 backdrop-blur-2xl shadow-2xl shadow-teal-950/20 p-5 sm:p-6 space-y-4 transition-all">
+          {/* Segmented Pill Switcher (Masuk vs Buat Akun) */}
+          <div className="grid grid-cols-2 p-1 rounded-2xl bg-muted/60 border border-border/50 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegisterMode(false);
+                setErrorMsg(null);
+                setSuccessMsg(null);
+              }}
+              className={cn(
+                "py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer",
+                !isRegisterMode
+                  ? "bg-background text-foreground shadow-xs font-bold"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <LogIn className="h-3.5 w-3.5" />
+              Masuk
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegisterMode(true);
+                setErrorMsg(null);
+                setSuccessMsg(null);
+              }}
+              className={cn(
+                "py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer",
+                isRegisterMode
+                  ? "bg-background text-foreground shadow-xs font-bold"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Sparkles className="h-3.5 w-3.5 text-teal-500" />
+              Buat Akun
+            </button>
+          </div>
+
+          <div className="space-y-1">
+            <h2 className="text-base font-bold text-foreground">
+              {isRegisterMode ? "Mulai Akun Baru" : "Selamat Datang Kembali"}
+            </h2>
+            <p className="text-[11px] text-muted-foreground">
               {isRegisterMode
                 ? "Daftarkan akun pribadimu untuk mulai mencatat keuangan"
                 : "Masukkan email dan kata sandi yang terdaftar"}
-            </CardDescription>
-          </CardHeader>
+            </p>
+          </div>
 
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-3.5 px-5 pt-1 pb-4">
-              {!isEnvConfigured && (
-                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                    <p className="leading-relaxed">
-                      Kredensial Supabase di <code className="bg-amber-500/20 px-1 rounded">.env.local</code> belum lengkap.
-                    </p>
-                  </div>
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            {!isEnvConfigured && (
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    Kredensial Supabase di <code className="bg-amber-500/20 px-1 rounded">.env.local</code> belum lengkap.
+                  </p>
                 </div>
-              )}
-
-              {errorMsg && (
-                <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                    <span>{errorMsg}</span>
-                  </div>
-                </div>
-              )}
-
-              {successMsg && (
-                <div className="rounded-xl border border-teal-500/30 bg-teal-500/10 p-3 text-xs text-teal-700 dark:text-teal-400">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
-                    <span>{successMsg}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Input Email */}
-              <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-xs font-medium">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="kamu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  className="h-10 text-xs rounded-xl"
-                />
               </div>
+            )}
 
-              {/* Input Kata Sandi */}
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-xs font-medium">
-                  Kata Sandi
+            {errorMsg && (
+              <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive animate-in fade-in duration-200">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>{errorMsg}</span>
+                </div>
+              </div>
+            )}
+
+            {successMsg && (
+              <div className="rounded-2xl border border-teal-500/30 bg-teal-500/10 p-3 text-xs text-teal-700 dark:text-teal-400 animate-in fade-in duration-200">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>{successMsg}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Input Email */}
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-xs font-semibold text-foreground/90">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="kamu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                className="h-11 text-xs rounded-2xl bg-muted/30 focus:bg-background border-border/80 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all px-3.5"
+              />
+            </div>
+
+            {/* Input Kata Sandi */}
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-xs font-semibold text-foreground/90">
+                Kata Sandi
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder={isRegisterMode ? "Minimal 6 karakter" : "••••••••"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete={isRegisterMode ? "new-password" : "current-password"}
+                  className="h-11 text-xs rounded-2xl bg-muted/30 focus:bg-background border-border/80 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all px-3.5 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 cursor-pointer"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Sembunyikan sandi" : "Lihat sandi"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Input Konfirmasi Kata Sandi (Khusus mode daftar) */}
+            {isRegisterMode && (
+              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                <Label htmlFor="confirmPassword" className="text-xs font-semibold text-foreground/90">
+                  Konfirmasi Kata Sandi
                 </Label>
                 <div className="relative">
                   <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder={isRegisterMode ? "Minimal 6 karakter" : "••••••••"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Ketik ulang kata sandi"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    autoComplete={isRegisterMode ? "new-password" : "current-password"}
-                    className="h-10 text-xs rounded-xl pr-10"
+                    autoComplete="new-password"
+                    className="h-11 text-xs rounded-2xl bg-muted/30 focus:bg-background border-border/80 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all px-3.5 pr-10"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 cursor-pointer"
                     tabIndex={-1}
-                    aria-label={showPassword ? "Sembunyikan sandi" : "Lihat sandi"}
+                    aria-label={
+                      showConfirmPassword ? "Sembunyikan sandi" : "Lihat sandi"
+                    }
                   >
-                    {showPassword ? (
+                    {showConfirmPassword ? (
                       <EyeOff className="h-4 w-4" />
                     ) : (
                       <Eye className="h-4 w-4" />
@@ -235,49 +312,14 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
+            )}
 
-              {/* Input Konfirmasi Kata Sandi (Khusus mode daftar) */}
-              {isRegisterMode && (
-                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
-                  <Label htmlFor="confirmPassword" className="text-xs font-medium">
-                    Konfirmasi Kata Sandi
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Ketik ulang kata sandi"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      autoComplete="new-password"
-                      className="h-10 text-xs rounded-xl pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
-                      tabIndex={-1}
-                      aria-label={
-                        showConfirmPassword ? "Sembunyikan sandi" : "Lihat sandi"
-                      }
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-
-            <CardFooter className="flex flex-col gap-2.5 px-5 pb-5 pt-0">
+            {/* Tombol Aksi Utama */}
+            <div className="pt-1.5 space-y-2.5">
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-10 rounded-xl bg-teal-600 text-white hover:bg-teal-700 dark:bg-teal-500 dark:text-zinc-950 dark:hover:bg-teal-400 font-medium text-xs shadow-md shadow-teal-600/20"
+                className="w-full h-11 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold text-xs shadow-lg shadow-teal-500/25 active:scale-[0.98] transition-all cursor-pointer"
               >
                 {loading ? (
                   <>
@@ -285,42 +327,41 @@ export default function LoginPage() {
                     Memproses...
                   </>
                 ) : isRegisterMode ? (
-                  "Daftar Sekarang"
+                  "Daftar Akun Baru"
                 ) : (
-                  "Masuk"
+                  "Masuk ke Dompetku"
                 )}
               </Button>
 
-{process.env.NODE_ENV !== "production" && (
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => {
                   router.push("/?demo=true");
                 }}
-                className="w-full h-10 rounded-xl border-dashed border-teal-500/50 text-teal-600 dark:text-teal-400 font-semibold text-xs hover:bg-teal-500/10 cursor-pointer"
+                className="w-full h-10 rounded-2xl border-teal-500/30 bg-teal-500/5 hover:bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold text-xs transition-all cursor-pointer shadow-xs"
               >
                 ✨ Coba Langsung (Mode Demo)
               </Button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsRegisterMode(!isRegisterMode);
-                  setErrorMsg(null);
-                  setSuccessMsg(null);
-                  setConfirmPassword("");
-                }}
-                className="text-xs text-muted-foreground hover:text-foreground text-center transition-colors py-1"
-              >
-                {isRegisterMode
-                  ? "Sudah punya akun? Masuk di sini"
-                  : "Belum punya akun? Buat akun di sini"}
-              </button>
-            </CardFooter>
+            </div>
           </form>
-        </Card>
+        </div>
+
+        {/* Feature Badges Footer */}
+        <div className="mt-5 flex items-center justify-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50 border border-border/40 text-[10px] text-muted-foreground font-medium backdrop-blur-sm">
+            <Camera className="h-3 w-3 text-teal-500" />
+            <span>Scan Struk AI</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50 border border-border/40 text-[10px] text-muted-foreground font-medium backdrop-blur-sm">
+            <Mic className="h-3 w-3 text-teal-500" />
+            <span>Voice Note</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50 border border-border/40 text-[10px] text-muted-foreground font-medium backdrop-blur-sm">
+            <ShieldCheck className="h-3 w-3 text-emerald-500" />
+            <span>100% Privat</span>
+          </div>
+        </div>
       </div>
     </div>
   );
