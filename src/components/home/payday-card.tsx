@@ -24,6 +24,7 @@ import {
 } from "@/lib/data/payday";
 import type { WalletBalance } from "@/lib/data/wallets";
 import type { GoalProgress } from "@/lib/data/goals";
+import { USE_SAMPLE_DATA, todayJakarta } from "@/lib/data/sample-mode";
 
 interface PaydayCardProps {
   schedule: PaydaySchedule | null;
@@ -156,7 +157,7 @@ export function PaydayCard({
         livingCost: livingCost,
         allocations: allocationItems,
         freeAmount: Math.max(0, freeAmount),
-        date: schedule?.date || "2026-11-20",
+        date: schedule?.date || todayJakarta(),
       });
 
       setIsSuccess(true);

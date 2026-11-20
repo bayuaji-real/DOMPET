@@ -1,5 +1,6 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
+import { USE_SAMPLE_DATA, todayJakarta } from "./sample-mode";
 
 export type Wallet = Database["public"]["Tables"]["wallets"]["Row"];
 export type WalletBalance = Database["public"]["Views"]["wallet_balances"]["Row"];
@@ -57,7 +58,7 @@ export const SAMPLE_WALLETS: WalletBalance[] = [
 
 export async function getWallets(): Promise<WalletBalance[]> {
   if (!isSupabaseConfigured()) {
-    return SAMPLE_WALLETS;
+    return USE_SAMPLE_DATA ? SAMPLE_WALLETS : [];
   }
 
   const supabase = createClient();
@@ -68,10 +69,10 @@ export async function getWallets(): Promise<WalletBalance[]> {
 
   if (error) {
     console.warn("Gagal mengambil data dompet dari DB, fallback:", error);
-    return SAMPLE_WALLETS;
+    return USE_SAMPLE_DATA ? SAMPLE_WALLETS : [];
   }
 
-  return data && data.length > 0 ? data : SAMPLE_WALLETS;
+  return data && data.length > 0 ? data : USE_SAMPLE_DATA ? SAMPLE_WALLETS : [];
 }
 
 export async function getWalletById(id: string): Promise<WalletBalance | null> {

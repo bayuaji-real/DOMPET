@@ -12,6 +12,7 @@ import type {
   FinancialHealth,
   HealthStatus,
 } from "../../types/analytics";
+import { USE_SAMPLE_DATA, todayJakarta } from "./sample-mode";
 
 // Dataset sampel 2 bulan realistis (Oktober & November 2026) sebagai baseline fallback
 const SAMPLE_TRANSACTIONS = [
@@ -567,7 +568,7 @@ async function calculateAnalyticsFallback(
 
   // Jika transaksi di Supabase masih kosong atau sedikit, gabungkan dataset sampel realistis
   const allTransactions =
-    dbTransactions.length > 5
+    !USE_SAMPLE_DATA || dbTransactions.length > 5
       ? dbTransactions
       : [...dbTransactions, ...SAMPLE_TRANSACTIONS];
 

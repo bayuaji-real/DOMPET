@@ -1,5 +1,6 @@
 import { createClient, isSupabaseConfigured } from "../supabase/client";
 import type { Database } from "@/types/database";
+import { USE_SAMPLE_DATA, todayJakarta } from "./sample-mode";
 
 export type Budget = Database["public"]["Tables"]["budgets"]["Row"];
 
@@ -47,7 +48,7 @@ export const SAMPLE_BUDGETS: Budget[] = [
  */
 export async function getBudgets(month = "2026-11"): Promise<Budget[]> {
   if (!isSupabaseConfigured()) {
-    return SAMPLE_BUDGETS.filter((b) => b.month === month);
+    return (USE_SAMPLE_DATA ? SAMPLE_BUDGETS : []).filter((b) => b.month === month);
   }
 
   const supabase = createClient();
@@ -65,7 +66,7 @@ export async function getBudgets(month = "2026-11"): Promise<Budget[]> {
     console.warn("Gagal fetch budgets dari DB, gunakan fallback:", err);
   }
 
-  return SAMPLE_BUDGETS.filter((b) => b.month === month);
+  return (USE_SAMPLE_DATA ? SAMPLE_BUDGETS : []).filter((b) => b.month === month);
 }
 
 /**

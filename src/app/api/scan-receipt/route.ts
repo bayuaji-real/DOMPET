@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
+import { USE_SAMPLE_DATA, todayJakarta } from "@/lib/data/sample-mode";
 
 export interface ReceiptItem {
   name: string;
@@ -142,6 +143,13 @@ export async function POST(req: NextRequest) {
 
     // 2. Cek GEMINI_API_KEY
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+
+    if (!apiKey && !USE_SAMPLE_DATA) {
+      return NextResponse.json(
+        { error: "Fitur AI belum diatur (GEMINI_API_KEY kosong di server)." },
+        { status: 500 },
+      );
+    }
 
     if (!apiKey) {
       // Fallback cerdas untuk pengujian jika GEMINI_API_KEY belum terpasang di .env.local

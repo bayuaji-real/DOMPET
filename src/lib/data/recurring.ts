@@ -1,6 +1,7 @@
 import { createClient, isSupabaseConfigured } from "../supabase/client";
 import type { Database, TransactionType, RecurringRule } from "@/types/database";
 import { createTransaction } from "./transactions";
+import { USE_SAMPLE_DATA, todayJakarta } from "./sample-mode";
 
 export type RecurringTransaction =
   Database["public"]["Tables"]["recurring_transactions"]["Row"];
@@ -64,7 +65,7 @@ export const SAMPLE_RECURRING: (RecurringTransaction & {
  */
 export async function getRecurringTransactions(): Promise<RecurringTransaction[]> {
   if (!isSupabaseConfigured()) {
-    return SAMPLE_RECURRING;
+    return USE_SAMPLE_DATA ? SAMPLE_RECURRING : [];
   }
 
   const supabase = createClient();
@@ -82,14 +83,14 @@ export async function getRecurringTransactions(): Promise<RecurringTransaction[]
     console.warn("Gagal fetch recurring_transactions dari DB, gunakan sample:", err);
   }
 
-  return SAMPLE_RECURRING;
+  return USE_SAMPLE_DATA ? SAMPLE_RECURRING : [];
 }
 
 /**
  * Ambil daftar tagihan/transaksi berulang yang jatuh tempo hari ini (atau sudah lewat)
  */
 export async function getDueRecurringTransactions(
-  simulatedDate = "2026-11-20"
+  simulatedDate = todayJakarta()
 ): Promise<RecurringTransaction[]> {
   const all = await getRecurringTransactions();
   return all.filter((r) => r.is_active && r.next_date <= simulatedDate);
@@ -103,7 +104,7 @@ export async function getDueRecurringTransactions(
 export async function processRecurringTransaction(
   id: string,
   action: "record" | "skip",
-  currentNextDate = "2026-11-20"
+  currentNextDate = todayJakarta()
 ) {
   const supabase = createClient();
   const all = await getRecurringTransactions();

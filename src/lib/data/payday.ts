@@ -1,6 +1,7 @@
 import { createClient, isSupabaseConfigured } from "../supabase/client";
 import type { Database } from "@/types/database";
 import { createTransaction } from "./transactions";
+import { USE_SAMPLE_DATA, todayJakarta } from "./sample-mode";
 
 export type PaydaySchedule = Database["public"]["Tables"]["payday_schedule"]["Row"];
 
@@ -30,11 +31,11 @@ export const SAMPLE_PAYDAY_SCHEDULES: PaydaySchedule[] = [
  */
 export async function getPaydaySchedules(limit = 3): Promise<PaydaySchedule[]> {
   if (!isSupabaseConfigured()) {
-    return SAMPLE_PAYDAY_SCHEDULES;
+    return USE_SAMPLE_DATA ? SAMPLE_PAYDAY_SCHEDULES : [];
   }
 
   const supabase = createClient();
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = todayJakarta();
 
   try {
     const { data, error } = await supabase
@@ -62,20 +63,20 @@ export async function getPaydaySchedules(limit = 3): Promise<PaydaySchedule[]> {
     console.warn("Gagal fetch payday_schedule dari DB, gunakan fallback sampel:", err);
   }
 
-  return SAMPLE_PAYDAY_SCHEDULES;
+  return USE_SAMPLE_DATA ? SAMPLE_PAYDAY_SCHEDULES : [];
 }
 
 /**
  * Cek apakah ada jadwal gajian untuk hari ini
  * Mendukung tanggal simulasi (default: 2026-11-20)
  */
-export async function getTodayPaydaySchedule(simulatedDate = "2026-11-20"): Promise<PaydaySchedule | null> {
+export async function getTodayPaydaySchedule(simulatedDate = todayJakarta()): Promise<PaydaySchedule | null> {
   const schedules = await getPaydaySchedules(10);
   const found = schedules.find((s) => s.date === simulatedDate);
   if (found) return found;
 
   // Cek tanggal kalender sistem pengguna jika tidak cocok simulasi
-  const realToday = new Date().toISOString().split("T")[0];
+  const realToday = todayJakarta();
   const foundReal = schedules.find((s) => s.date === realToday);
   if (foundReal) return foundReal;
 

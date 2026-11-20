@@ -33,6 +33,7 @@ import {
   type RecurringTransaction,
 } from "@/lib/data/recurring";
 import { getUserSettings, type UserSettings } from "@/lib/data/settings";
+import { USE_SAMPLE_DATA, todayJakarta } from "@/lib/data/sample-mode";
 
 interface BerandaClientProps {
   initialWallets?: WalletBalance[];
@@ -96,8 +97,8 @@ export function BerandaClient({
         getWallets().catch(() => initialWallets),
         getTransactions({ limit: 5 }).catch(() => initialTransactions),
         getSavingsGoals().catch(() => initialGoals),
-        getTodayPaydaySchedule("2026-11-20").catch(() => SAMPLE_PAYDAY_SCHEDULES[0]),
-        getDueRecurringTransactions("2026-11-20").catch(() => SAMPLE_RECURRING),
+        getTodayPaydaySchedule(todayJakarta()).catch(() => (USE_SAMPLE_DATA ? SAMPLE_PAYDAY_SCHEDULES[0] : null)),
+        getDueRecurringTransactions(todayJakarta()).catch(() => (USE_SAMPLE_DATA ? SAMPLE_RECURRING : [])),
         getUserSettings().catch(() => null),
       ]);
 
@@ -221,7 +222,7 @@ export function BerandaClient({
         </div>
 
         {/* 2. Kartu Gajian Hari Ini (Part A: Mode Gajian) */}
-        {(paydaySchedule || showSimulatePayday) && (
+        {(paydaySchedule || (USE_SAMPLE_DATA && showSimulatePayday)) && (
           <PaydayCard
             schedule={paydaySchedule || SAMPLE_PAYDAY_SCHEDULES[0]}
             wallets={wallets}

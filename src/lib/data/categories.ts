@@ -1,5 +1,6 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { Database, CategoryType } from "@/types/database";
+import { USE_SAMPLE_DATA, todayJakarta } from "./sample-mode";
 
 export type Category = Database["public"]["Tables"]["categories"]["Row"];
 
@@ -114,9 +115,9 @@ export const SAMPLE_CATEGORIES: Category[] = [
 export async function getCategories(type?: CategoryType): Promise<Category[]> {
   if (!isSupabaseConfigured()) {
     if (type) {
-      return SAMPLE_CATEGORIES.filter((c) => c.type === type);
+      return (USE_SAMPLE_DATA ? SAMPLE_CATEGORIES : []).filter((c) => c.type === type);
     }
-    return [...SAMPLE_CATEGORIES];
+    return USE_SAMPLE_DATA ? [...SAMPLE_CATEGORIES] : [];
   }
 
   const supabase = createClient();
@@ -134,12 +135,12 @@ export async function getCategories(type?: CategoryType): Promise<Category[]> {
   if (error) {
     console.warn("Gagal mengambil kategori, fallback:", error);
     if (type) {
-      return SAMPLE_CATEGORIES.filter((c) => c.type === type);
+      return (USE_SAMPLE_DATA ? SAMPLE_CATEGORIES : []).filter((c) => c.type === type);
     }
-    return [...SAMPLE_CATEGORIES];
+    return USE_SAMPLE_DATA ? [...SAMPLE_CATEGORIES] : [];
   }
 
-  return data && data.length > 0 ? data : SAMPLE_CATEGORIES;
+  return data && data.length > 0 ? data : USE_SAMPLE_DATA ? SAMPLE_CATEGORIES : [];
 }
 
 export async function createCategory(

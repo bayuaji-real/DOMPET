@@ -36,6 +36,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { getReceiptSignedUrl } from "@/lib/storage";
+import { USE_SAMPLE_DATA, todayJakarta } from "@/lib/data/sample-mode";
 
 interface TrxItem {
   id: string;
@@ -69,7 +70,7 @@ export default function TransaksiPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [visibleCount, setVisibleCount] = React.useState(8);
 
-  const [transactions, setTransactions] = React.useState<TrxItem[]>([
+  const [transactions, setTransactions] = React.useState<TrxItem[]>(USE_SAMPLE_DATA ? [
     {
       id: "trx-receipt-1",
       judul: "Indomaret Point Sudirman",
@@ -171,7 +172,7 @@ export default function TransaksiPage() {
       tipe: "PEMASUKAN",
       source: "manual",
     },
-  ]);
+  ] : []);
 
   // Muat transaksi live dari database Supabase dan dengarkan update event
   React.useEffect(() => {

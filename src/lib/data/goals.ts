@@ -1,5 +1,6 @@
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
+import { USE_SAMPLE_DATA, todayJakarta } from "./sample-mode";
 
 export type SavingsGoal = Database["public"]["Tables"]["savings_goals"]["Row"];
 export type GoalProgress = Database["public"]["Views"]["goal_progress"]["Row"];
@@ -45,7 +46,7 @@ export const SAMPLE_GOALS: GoalProgress[] = [
 
 export async function getSavingsGoals(): Promise<GoalProgress[]> {
   if (!isSupabaseConfigured()) {
-    return SAMPLE_GOALS;
+    return USE_SAMPLE_DATA ? SAMPLE_GOALS : [];
   }
 
   const supabase = createClient();
@@ -56,10 +57,10 @@ export async function getSavingsGoals(): Promise<GoalProgress[]> {
 
   if (error) {
     console.warn("Gagal mengambil progres tabungan dari DB, fallback:", error);
-    return SAMPLE_GOALS;
+    return USE_SAMPLE_DATA ? SAMPLE_GOALS : [];
   }
 
-  return data && data.length > 0 ? data : SAMPLE_GOALS;
+  return data && data.length > 0 ? data : USE_SAMPLE_DATA ? SAMPLE_GOALS : [];
 }
 
 export async function getGoalById(id: string): Promise<GoalProgress | null> {
