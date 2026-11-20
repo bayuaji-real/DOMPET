@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getAnalyticsData } from "@/lib/data/analytics";
 import type { AnalyticsPeriod } from "@/types/analytics";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
+import { analyticsQuerySchema } from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,6 +15,10 @@ export async function GET(request: NextRequest) {
     const period = (searchParams.get("period") || "month") as AnalyticsPeriod;
     const startDate = searchParams.get("startDate") || undefined;
     const endDate = searchParams.get("endDate") || undefined;
+    const vq = analyticsQuerySchema.safeParse({ period: searchParams.get("period") ?? undefined, startDate, endDate });
+    if (!vq.success) {
+      return NextResponse.json({ success: false, error: "Parameter tidak valid." }, { status: 400 });
+    }
 
     const data = await getAnalyticsData({
       period,

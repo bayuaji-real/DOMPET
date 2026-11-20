@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
+import { scanReceiptSchema } from "@/lib/validation";
 import { USE_SAMPLE_DATA, todayJakarta } from "@/lib/data/sample-mode";
 
 export interface ReceiptItem {
@@ -91,6 +92,10 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
+    const parsed = scanReceiptSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Input tidak valid." }, { status: 400 });
+    }
     const { imageBase64, mimeType = "image/jpeg", userCategories, userWallets } = body;
 
     if (!imageBase64) {

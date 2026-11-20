@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { generateJson, GeminiError } from "@/lib/ai/gemini";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
+import { aiPlanSchema } from "@/lib/validation";
 
 /**
  * Saran AI untuk rencana keuangan. Angka sudah dihitung pasti di aplikasi (lib/financial-plan);
@@ -47,6 +48,10 @@ export async function POST(request: NextRequest) {
   let body: Body;
   try {
     body = await request.json();
+    const parsed = aiPlanSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: "Input tidak valid." }, { status: 400 });
+    }
   } catch {
     return NextResponse.json({ success: false, error: "Data tidak valid" }, { status: 400 });
   }
