@@ -10,7 +10,7 @@ import {
   PiggyBank,
   PieChart,
   Wallet,
-  User,
+  Settings,
   Camera,
   ImageIcon,
   Mic,
@@ -463,10 +463,10 @@ export function BottomNav() {
       isActive: pathname.startsWith("/analisis"),
     },
     {
-      label: "Profil",
-      href: "/profil",
-      icon: User,
-      isActive: pathname.startsWith("/profil") || pathname.startsWith("/pengaturan"),
+      label: "Settings",
+      href: "/pengaturan",
+      icon: Settings,
+      isActive: pathname.startsWith("/pengaturan") || pathname.startsWith("/settings") || pathname.startsWith("/profil"),
     },
   ];
 
