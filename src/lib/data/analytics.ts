@@ -14,6 +14,15 @@ import type {
 } from "../../types/analytics";
 import { USE_SAMPLE_DATA, todayJakarta } from "./sample-mode";
 
+function withTimeout<T>(p: PromiseLike<T>, ms = 1500): Promise<T> {
+  return Promise.race([
+    Promise.resolve(p),
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("DB timeout")), ms)),
+  ]);
+}
+
+const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+
 // Dataset sampel 2 bulan realistis (Oktober & November 2026) sebagai baseline fallback
 const SAMPLE_TRANSACTIONS = [
   // OKTOBER 2026
@@ -390,13 +399,13 @@ export function resolveDateRange(
     };
   }
 
-  // Default: Bulan Ini (November 2026)
+  // Default: Bulan Ini
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   return {
     startDate: formatDate(firstDay),
     endDate: formatDate(lastDay),
-    label: "Bulan Ini (Nov 2026)",
+    label: `Bulan Ini (${MONTH_SHORT[now.getMonth()]} ${now.getFullYear()})`,
     daysCount: lastDay.getDate(),
   };
 }
@@ -670,46 +679,23 @@ async function calculateAnalyticsFallback(
     }))
     .sort((a, b) => b.nominal - a.nominal);
 
-  // 3. Bar Chart Pemasukan vs Pengeluaran 6 Bulan Terakhir
+  // 3. Bar Chart Pemasukan vs Pengeluaran 6 Bulan Terakhir (murni dari transaksi asli)
   const monthlyCashflow: MonthlyCashflow[] = [];
-  const monthLabels = ["Jun", "Jul", "Agt", "Sep", "Okt", "Nov"];
-  const targetYear = 2026;
-
-  // 6 bulan terakhir s/d November 2026
-  for (let m = 5; m <= 10; m++) {
-    const monthNum = m + 1; // 6 .. 11
-    const mStr = `${targetYear}-${pad(monthNum)}`;
-    const label = monthLabels[m - 5];
-
-    // Filter dari transaksi
+  const [todayY, todayM] = todayJakarta().split("-").map(Number);
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(Date.UTC(todayY, todayM - 1 - i, 1));
+    const monthNum = d.getUTCMonth() + 1;
+    const mStr = `${d.getUTCFullYear()}-${pad(monthNum)}`;
     const inMonth = allTransactions.filter((t) => t.date.startsWith(mStr));
-    let inc = inMonth
+    const inc = inMonth
       .filter((t) => t.type === "income")
       .reduce((sum, t) => sum + t.amount, 0);
-    let exp = inMonth
+    const exp = inMonth
       .filter((t) => t.type === "expense")
       .reduce((sum, t) => sum + t.amount, 0);
-
-    // Jika bulan Jun-Sep belum ada transaksi, sediakan baseline simulasi realistis
-    if (inc === 0 && exp === 0) {
-      if (monthNum === 6) {
-        inc = 8000000;
-        exp = 3100000;
-      } else if (monthNum === 7) {
-        inc = 8000000;
-        exp = 3450000;
-      } else if (monthNum === 8) {
-        inc = 8500000;
-        exp = 3200000;
-      } else if (monthNum === 9) {
-        inc = 8500000;
-        exp = 3600000;
-      }
-    }
-
     monthlyCashflow.push({
       monthKey: mStr,
-      label,
+      label: MONTH_SHORT[monthNum - 1],
       income: inc,
       expense: exp,
     });
@@ -834,19 +820,45 @@ async function calculateAnalyticsFallback(
     savingsRateStatus = "waspada";
   }
 
-  // - Dana Darurat: Saldo tabungan Darurat (misal Rp 15.000.000 / living cost Rp 4.000.000)
-  const emergencyFundBalance = 15000000;
-  const livingCost = 4000000;
-  const emergencyFundMonths = Math.round((emergencyFundBalance / livingCost) * 10) / 10;
+  // - Dana Darurat: saldo target bertanda "dana darurat" dibagi biaya hidup bulanan (dari Pengaturan).
+  //   Belum punya dana darurat => saldo 0 => status kritis (jujur, bukan angka contoh).
+  let emergencyFundBalance = 0;
+  let monthlyLiving = 0;
+  let goalsOnTrack = true;
+  try {
+    const todayStr = todayJakarta();
+    const [goalsRes, settingsRes] = await withTimeout(
+      Promise.all([
+        supabase
+          .from("goal_progress")
+          .select("saved,target_amount,deadline,is_emergency_fund,status"),
+        supabase.from("user_settings").select("living_cost_per_payday").maybeSingle(),
+      ])
+    );
+    const goalRows = goalsRes.data ?? [];
+    emergencyFundBalance = goalRows
+      .filter((g) => g.is_emergency_fund && g.status !== "dibatalkan")
+      .reduce((sum, g) => sum + Number(g.saved ?? 0), 0);
+    // Gajian tiap 2 minggu => ±26 kali setahun
+    monthlyLiving = Math.round((Number(settingsRes.data?.living_cost_per_payday ?? 0) * 26) / 12);
+    goalsOnTrack = !goalRows.some(
+      (g) =>
+        g.status === "aktif" &&
+        g.deadline &&
+        g.deadline < todayStr &&
+        Number(g.saved ?? 0) < Number(g.target_amount ?? 0)
+    );
+  } catch {
+    // Biarkan nilai bawaan jika database tidak terjangkau
+  }
+  const emergencyFundMonths =
+    monthlyLiving > 0 ? Math.round((emergencyFundBalance / monthlyLiving) * 10) / 10 : 0;
   let emergencyStatus: HealthStatus = "kritis";
   if (emergencyFundMonths >= 3) {
     emergencyStatus = "sehat";
   } else if (emergencyFundMonths >= 1) {
     emergencyStatus = "waspada";
   }
-
-  // - Tabungan Bertenggat sesuai jadwal: Ya (true)
-  const goalsOnTrack = true;
 
   // - Overall status
   let overallStatus: HealthStatus = "sehat";

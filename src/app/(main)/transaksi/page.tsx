@@ -14,6 +14,8 @@ import {
   ArrowUpRight,
   Search,
   Filter,
+  Check,
+  ChevronDown,
   Calendar,
   Receipt,
   Store,
@@ -67,6 +69,36 @@ export default function TransaksiPage() {
   const [signedReceiptUrl, setSignedReceiptUrl] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [filterType, setFilterType] = React.useState<"all" | "expense" | "income" | "receipt">("all");
+  const [filterOpen, setFilterOpen] = React.useState(false);
+  const filterRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!filterOpen) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setFilterOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFilterOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [filterOpen]);
+
+  const FILTER_OPTIONS = [
+    { value: "all", label: "Semua" },
+    { value: "receipt", label: "Foto Struk" },
+    { value: "expense", label: "Pengeluaran" },
+    { value: "income", label: "Pemasukan" },
+  ] as const;
+  const activeFilterLabel = FILTER_OPTIONS.find((o) => o.value === filterType)?.label ?? "Semua";
   const [isLoading, setIsLoading] = React.useState(false);
   const [visibleCount, setVisibleCount] = React.useState(8);
 
@@ -293,58 +325,59 @@ export default function TransaksiPage() {
               className="pl-9 h-10 text-xs rounded-xl bg-card border-border/60"
             />
           </div>
-          <button
-            onClick={() => setFilterType((prev) => (prev === "receipt" ? "all" : "receipt"))}
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/60 transition-colors ${
-              filterType === "receipt"
-                ? "bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/40"
-                : "bg-card text-muted-foreground hover:text-foreground"
-            }`}
-            title="Filter Struk"
-            aria-label="Filter transaksi struk"
-          >
-            <Receipt className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Tab Filter Cepat */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 text-xs">
-          <Badge
-            variant={filterType === "all" ? "default" : "secondary"}
-            onClick={() => setFilterType("all")}
-            className={`rounded-lg px-3 py-1 cursor-pointer ${
-              filterType === "all" ? "bg-teal-600 hover:bg-teal-700 text-white" : ""
-            }`}
-          >
-            Semua
-          </Badge>
-          <Badge
-            variant={filterType === "receipt" ? "default" : "secondary"}
-            onClick={() => setFilterType("receipt")}
-            className={`rounded-lg px-3 py-1 cursor-pointer gap-1 ${
-              filterType === "receipt" ? "bg-teal-600 hover:bg-teal-700 text-white" : ""
-            }`}
-          >
-            <Receipt className="h-3 w-3" /> Foto Struk
-          </Badge>
-          <Badge
-            variant={filterType === "expense" ? "default" : "secondary"}
-            onClick={() => setFilterType("expense")}
-            className={`rounded-lg px-3 py-1 cursor-pointer ${
-              filterType === "expense" ? "bg-teal-600 hover:bg-teal-700 text-white" : ""
-            }`}
-          >
-            Pengeluaran
-          </Badge>
-          <Badge
-            variant={filterType === "income" ? "default" : "secondary"}
-            onClick={() => setFilterType("income")}
-            className={`rounded-lg px-3 py-1 cursor-pointer ${
-              filterType === "income" ? "bg-teal-600 hover:bg-teal-700 text-white" : ""
-            }`}
-          >
-            Pemasukan
-          </Badge>
+          <div ref={filterRef} className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setFilterOpen((o) => !o)}
+              aria-haspopup="listbox"
+              aria-expanded={filterOpen}
+              aria-label={`Filter transaksi: ${activeFilterLabel}`}
+              className={`flex h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition-colors cursor-pointer ${
+                filterType !== "all"
+                  ? "border-teal-500/40 bg-teal-500/15 text-teal-600 dark:text-teal-400"
+                  : "border-border/60 bg-card text-foreground hover:bg-muted/50"
+              }`}
+            >
+              <Filter className="h-3.5 w-3.5" />
+              <span>{activeFilterLabel}</span>
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform ${filterOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+            {filterOpen && (
+              <div
+                role="listbox"
+                className="absolute right-0 top-full z-30 mt-1.5 w-44 overflow-hidden rounded-xl border border-border/70 bg-card p-1 shadow-xl"
+              >
+                {FILTER_OPTIONS.map((opt) => {
+                  const active = filterType === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      role="option"
+                      aria-selected={active}
+                      onClick={() => {
+                        setFilterType(opt.value);
+                        setFilterOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-xs font-medium cursor-pointer transition-colors ${
+                        active
+                          ? "bg-teal-500/10 text-teal-600 dark:text-teal-400"
+                          : "text-foreground hover:bg-muted/60"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        {opt.value === "receipt" && <Receipt className="h-3.5 w-3.5" />}
+                        {opt.label}
+                      </span>
+                      {active && <Check className="h-3.5 w-3.5" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Daftar Transaksi */}

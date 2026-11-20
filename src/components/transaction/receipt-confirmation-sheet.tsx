@@ -779,7 +779,7 @@ export function ReceiptConfirmationSheet({
       {showWalletPicker && (
         <div
           onClick={() => setShowWalletPicker(false)}
-          className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 animate-in fade-in"
+          className="fixed inset-0 z-[90] bg-black/60 flex items-end sm:items-center justify-center p-3 animate-in fade-in"
         >
           <div
             className="w-full max-w-sm rounded-3xl bg-card border border-border/80 shadow-2xl p-4.5 space-y-3.5 animate-in slide-in-from-bottom-5 duration-200"
@@ -859,7 +859,7 @@ export function ReceiptConfirmationSheet({
       {showCategoryPicker && (
         <div
           onClick={() => setShowCategoryPicker(false)}
-          className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 animate-in fade-in"
+          className="fixed inset-0 z-[90] bg-black/60 flex items-end sm:items-center justify-center p-3 animate-in fade-in"
         >
           <div
             className="w-full max-w-sm rounded-3xl bg-card border border-border/80 shadow-2xl p-4.5 space-y-3.5 animate-in slide-in-from-bottom-5 duration-200"

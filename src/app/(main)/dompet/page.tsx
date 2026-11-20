@@ -53,6 +53,16 @@ export default function DompetPage() {
   // Modal Tambah Dompet
   const [showAddModal, setShowAddModal] = React.useState(false);
   const [addStep, setAddStep] = React.useState<1 | 2>(1);
+
+  // Dibuka dari Beranda ("+ Tambah Dompet" -> /dompet?tambah=1): langsung tampilkan jendela tambah dompet
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("tambah") === "1") {
+      setAddStep(1);
+      setShowAddModal(true);
+      window.history.replaceState(null, "", "/dompet");
+    }
+  }, []);
   const [presetSearch, setPresetSearch] = React.useState("");
   const [presetTab, setPresetTab] = React.useState<
     "all" | "bank" | "ewallet" | "cash" | "investasi"
@@ -448,7 +458,7 @@ export default function DompetPage() {
 
       {/* MODAL TAMBAH DOMPET BARU (Langkah 1: Pilih Preset Brand, Langkah 2: Lengkapi Saldo) */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 animate-in fade-in">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-3 animate-in fade-in">
           <div
             className="w-full max-w-sm rounded-3xl bg-card border border-border/80 shadow-2xl p-5 space-y-4 animate-in slide-in-from-bottom-5 duration-200 max-h-[88vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
@@ -621,7 +631,7 @@ export default function DompetPage() {
 
       {/* MODAL TRANSFER CEPAT ANTAR DOMPET */}
       {showTransferModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 animate-in fade-in">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-3 animate-in fade-in">
           <div
             className="w-full max-w-sm rounded-3xl bg-card border border-border/80 shadow-2xl p-5 space-y-4 animate-in slide-in-from-bottom-5 duration-200"
             onClick={(e) => e.stopPropagation()}

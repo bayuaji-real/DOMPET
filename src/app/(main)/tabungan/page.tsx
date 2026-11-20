@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { TopHeader } from "@/components/layout/top-header";
+import { SavingsTimeline } from "@/components/tabungan/savings-timeline";
 import { formatRupiah, formatTanggalWIB } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { todayJakarta } from "@/lib/data/sample-mode";
@@ -574,6 +575,9 @@ export default function TabunganPage() {
             );
           })}
         </div>
+
+        {/* Timeline estimasi tanggal & nominal */}
+        <SavingsTimeline goals={goals} todayStr={todayStr} />
       </div>
 
       {/* B. Sheet Detail Tabungan & In-Sheet Views */}
@@ -1077,7 +1081,7 @@ export default function TabunganPage() {
 
       {/* C. Dialog Tambah / Edit Tabungan (Z-Index 70) */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 animate-in fade-in">
           <div className="w-full max-w-[400px] max-h-[90vh] overflow-y-auto rounded-2xl border border-border/80 bg-card p-5 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-border/50 pb-2.5">
               <h3 className="text-sm font-bold flex items-center gap-1.5 text-foreground">

@@ -186,7 +186,7 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
 
         {/* Modal Periode Kustom */}
         {showCustomModal && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-in fade-in">
             <div className="w-full max-w-sm rounded-3xl bg-card border border-border/80 shadow-2xl p-4.5 space-y-3.5 animate-in zoom-in-95">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

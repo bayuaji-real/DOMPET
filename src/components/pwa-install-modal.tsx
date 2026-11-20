@@ -28,7 +28,7 @@ export function PwaInstallModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 animate-in fade-in duration-200">
       <div className="relative w-full max-w-sm rounded-3xl border border-white/20 dark:border-white/10 bg-card p-5 shadow-2xl animate-in slide-in-from-bottom-4 duration-300 space-y-4">
         {/* Tombol Close */}
         <button

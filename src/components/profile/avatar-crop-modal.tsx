@@ -1,8 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { X, ZoomIn, ZoomOut, RotateCw, Check, Move } from "lucide-react";
+import { X, ZoomIn, ZoomOut, RotateCw, Check, Move, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const MAX_ZOOM = 4;
 
 interface AvatarCropModalProps {
   imageSrc: string | null;
@@ -23,6 +25,8 @@ export function AvatarCropModal({
   const [isDragging, setIsDragging] = React.useState(false);
   const [dragStart, setDragStart] = React.useState({ x: 0, y: 0 });
 
+  const [natural, setNatural] = React.useState<{ w: number; h: number } | null>(null);
+
   const imageRef = React.useRef<HTMLImageElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
@@ -32,10 +36,21 @@ export function AvatarCropModal({
       setScale(1);
       setRotation(0);
       setPosition({ x: 0, y: 0 });
+      setNatural(null);
     }
   }, [isOpen, imageSrc]);
 
   if (!isOpen || !imageSrc) return null;
+
+  // Ukuran kotak potong di layar. Zoom 100% = seluruh foto terlihat utuh (fit),
+  // seperti foto biasa. Zoom di atas 100% memperbesar, geser untuk memilih bagian.
+  const viewportSize = 260;
+  const sideways = rotation % 180 !== 0;
+  const effW = natural ? (sideways ? natural.h : natural.w) : 1;
+  const effH = natural ? (sideways ? natural.w : natural.h) : 1;
+  const fitScale = natural ? viewportSize / Math.max(effW, effH) : 1; // px layar per px asli
+  const fillZoom = natural ? Math.min(MAX_ZOOM, Math.max(effW, effH) / Math.min(effW, effH)) : 1;
+  const renderScale = fitScale * scale;
 
   // Mouse drag handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -78,10 +93,10 @@ export function AvatarCropModal({
     setIsDragging(false);
   };
 
-  // Crop & generate 256x256 image
+  // Crop & generate 256x256 image (hasil sama persis dengan pratinjau)
   const handleCrop = () => {
     const img = imageRef.current;
-    if (!img) return;
+    if (!img || !natural) return;
 
     const cropSize = 256;
     const canvas = document.createElement("canvas");
@@ -90,45 +105,34 @@ export function AvatarCropModal({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Viewport box is 260x260 in UI
-    const viewportSize = 260;
     const ratio = cropSize / viewportSize;
 
+    // Latar sama dengan kotak pratinjau, supaya area kosong tidak jadi hitam pekat tak terduga
+    ctx.fillStyle = "#09090b";
+    ctx.fillRect(0, 0, cropSize, cropSize);
+
     ctx.save();
-    // Move to canvas center
-    ctx.translate(cropSize / 2, cropSize / 2);
+    // Geser (ruang layar) dulu, baru putar
+    ctx.translate(cropSize / 2 + position.x * ratio, cropSize / 2 + position.y * ratio);
     ctx.rotate((rotation * Math.PI) / 180);
-
-    // Calculate image render width & height preserving natural aspect ratio
-    const imgWidth = img.naturalWidth || 300;
-    const imgHeight = img.naturalHeight || 300;
-    const minDim = Math.min(imgWidth, imgHeight);
-    const baseScale = (viewportSize / minDim) * scale * ratio;
-
-    const drawW = imgWidth * baseScale;
-    const drawH = imgHeight * baseScale;
-
-    // Adjust for offset position
-    const offsetX = position.x * ratio;
-    const offsetY = position.y * ratio;
-
-    ctx.drawImage(img, -drawW / 2 + offsetX, -drawH / 2 + offsetY, drawW, drawH);
+    const k = renderScale * ratio;
+    ctx.drawImage(img, (-natural.w * k) / 2, (-natural.h * k) / 2, natural.w * k, natural.h * k);
     ctx.restore();
 
-    // Export as optimized lightweight JPEG (~15KB - 25KB)
+    // Export JPEG ringan
     const croppedDataUrl = canvas.toDataURL("image/jpeg", 0.85);
     onCropComplete(croppedDataUrl);
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 animate-in fade-in duration-200">
       <div className="relative w-full max-w-sm rounded-3xl border border-white/20 dark:border-white/10 bg-card p-5 shadow-2xl animate-in zoom-in-95 duration-200 space-y-4">
         {/* Header Modal */}
         <div className="flex items-center justify-between border-b border-border/50 pb-2.5">
           <div>
             <h3 className="text-sm font-extrabold text-foreground">Sesuaikan & Potong Foto</h3>
-            <p className="text-[11px] text-muted-foreground">Geser dan perbesar untuk mengatur foto profil</p>
+            <p className="text-[11px] text-muted-foreground">Foto tampil utuh. Perbesar, geser, atau putar jika perlu</p>
           </div>
           <button
             type="button"
@@ -157,16 +161,19 @@ export function AvatarCropModal({
             <img
               ref={imageRef}
               src={imageSrc}
-              alt="Crop Source"
+              alt="Foto yang akan dipotong"
               draggable={false}
-              className="absolute max-w-none transition-transform pointer-events-none"
+              onLoad={(e) =>
+                setNatural({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })
+              }
+              className="absolute max-w-none pointer-events-none"
               style={{
                 top: "50%",
                 left: "50%",
-                transform: `translate(-50%, -50%) translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
-                minWidth: "100%",
-                minHeight: "100%",
-                objectFit: "cover",
+                width: natural ? natural.w : undefined,
+                height: natural ? natural.h : undefined,
+                opacity: natural ? 1 : 0,
+                transform: `translate(-50%, -50%) translate(${position.x}px, ${position.y}px) rotate(${rotation}deg) scale(${renderScale})`,
               }}
             />
 
@@ -176,7 +183,7 @@ export function AvatarCropModal({
             </div>
 
             {/* Hint drag */}
-            <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/60 backdrop-blur-xs text-white/80 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+            <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/60 text-white/80 text-[10px] font-semibold px-2 py-0.5 rounded-full">
               <Move className="h-2.5 w-2.5" />
               <span>Geser untuk atur posisi</span>
             </div>
@@ -191,7 +198,7 @@ export function AvatarCropModal({
             <input
               type="range"
               min="1"
-              max="3"
+              max={MAX_ZOOM}
               step="0.05"
               value={scale}
               onChange={(e) => setScale(parseFloat(e.target.value))}
@@ -203,16 +210,32 @@ export function AvatarCropModal({
             </span>
           </div>
 
-          {/* Rotate & Reset */}
-          <div className="flex items-center justify-between text-xs pt-0.5">
-            <button
-              type="button"
-              onClick={() => setRotation((prev) => (prev + 90) % 360)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/80 bg-muted/30 hover:bg-muted text-foreground text-xs font-semibold cursor-pointer transition-all active:scale-95"
-            >
-              <RotateCw className="h-3.5 w-3.5 text-teal-500" />
-              Putar 90°
-            </button>
+          {/* Putar, isi penuh, reset */}
+          <div className="flex items-center justify-between gap-2 text-xs pt-0.5">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setRotation((prev) => (prev + 90) % 360);
+                  setPosition({ x: 0, y: 0 });
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/80 bg-muted/30 hover:bg-muted text-foreground text-xs font-semibold cursor-pointer transition-all active:scale-95"
+              >
+                <RotateCw className="h-3.5 w-3.5 text-teal-500" />
+                Putar 90°
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setScale(fillZoom);
+                  setPosition({ x: 0, y: 0 });
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/80 bg-muted/30 hover:bg-muted text-foreground text-xs font-semibold cursor-pointer transition-all active:scale-95"
+              >
+                <Maximize2 className="h-3.5 w-3.5 text-teal-500" />
+                Isi penuh
+              </button>
+            </div>
             <button
               type="button"
               onClick={() => {

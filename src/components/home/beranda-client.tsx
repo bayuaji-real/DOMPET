@@ -248,7 +248,7 @@ export function BerandaClient({
               Kantong & Dompetmu
             </h3>
             <Link
-              href="/tambah"
+              href="/dompet?tambah=1"
               className="text-[11px] font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-0.5"
             >
               + Tambah Dompet

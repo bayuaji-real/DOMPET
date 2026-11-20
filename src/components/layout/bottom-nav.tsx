@@ -724,7 +724,7 @@ export function BottomNav() {
 
       {/* Loading Modal: Memindai Struk dengan Gemini */}
       {isScanning && (
-        <div className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center animate-in fade-in">
+        <div className="fixed inset-0 z-[80] bg-black/70 flex flex-col items-center justify-center p-6 text-center animate-in fade-in">
           <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-teal-500/20 text-teal-400 border border-teal-500/30 mb-4 shadow-xl">
             <Sparkles className="h-10 w-10 animate-spin" style={{ animationDuration: "3s" }} />
           </div>
