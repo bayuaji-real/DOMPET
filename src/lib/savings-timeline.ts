@@ -197,3 +197,89 @@ export function buildSavingsTimeline(input: TimelineInput): TimelineResult {
 
   return { entries, months: months.slice(0, cut), eta };
 }
+
+/* ───────── Deret waktu per tabungan (untuk grafik) ───────── */
+
+export type Granularity = "day" | "week" | "month";
+
+export interface SeriesPoint {
+  date: string; // YYYY-MM-DD, akhir periode
+  balance: number; // saldo tabungan pada tanggal itu
+  added: number; // setoran yang masuk sejak titik sebelumnya
+}
+
+const DAY = 86_400_000;
+const toMs = (iso: string) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  return Date.UTC(y, m - 1, d);
+};
+const fromMs = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
+/** Saldo satu tabungan pada tanggal tertentu (sesudah gajian pada/sebelum tanggal itu). */
+export function balanceAt(
+  entries: TimelineEntry[],
+  goalId: string,
+  startSaved: number,
+  date: string
+): number {
+  let b = startSaved;
+  for (const e of entries) {
+    if (e.date <= date) b = e.balance[goalId] ?? b;
+    else break;
+  }
+  return b;
+}
+
+/** Tanggal terakhir yang perlu digambar: saat penuh, atau gajian terakhir. */
+export function seriesEnd(
+  entries: TimelineEntry[],
+  eta: string | "done" | null,
+  today: string
+): string {
+  const lastEntry = entries.length ? entries[entries.length - 1].date : today;
+  const end = eta && eta !== "done" ? eta : lastEntry;
+  return end < today ? today : end;
+}
+
+export function buildGoalSeries(
+  entries: TimelineEntry[],
+  goalId: string,
+  startSaved: number,
+  today: string,
+  end: string,
+  gran: Granularity
+): SeriesPoint[] {
+  const startMs = toMs(today);
+  const endMs = toMs(end);
+  const dates: number[] = [startMs];
+
+  if (gran === "day") {
+    for (let t = startMs + DAY; t <= endMs && dates.length < 800; t += DAY) dates.push(t);
+  } else if (gran === "week") {
+    for (let t = startMs + 7 * DAY; t < endMs && dates.length < 400; t += 7 * DAY) dates.push(t);
+  } else {
+    const s = new Date(startMs);
+    let y = s.getUTCFullYear();
+    let m = s.getUTCMonth();
+    for (let guard = 0; guard < 240; guard++) {
+      const last = Date.UTC(y, m + 1, 0);
+      if (last >= endMs) break;
+      if (last > startMs) dates.push(last);
+      m += 1;
+      if (m > 11) {
+        m = 0;
+        y += 1;
+      }
+    }
+  }
+  if (endMs > startMs && dates[dates.length - 1] !== endMs) dates.push(endMs);
+
+  let prev = startSaved;
+  return dates.map((t) => {
+    const date = fromMs(t);
+    const balance = balanceAt(entries, goalId, startSaved, date);
+    const added = Math.max(0, balance - prev);
+    prev = balance;
+    return { date, balance, added };
+  });
+}

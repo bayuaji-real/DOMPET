@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { formatTanggalWIB } from "@/lib/utils";
+import { SideNav } from "./side-nav";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
 
 interface TopHeaderProps {
@@ -58,7 +59,6 @@ export function TopHeader({
 
   // Nama yang ditampilkan di judul header
   const displayName = profile.name || "Sobat Dompet";
-  const isDefaultOrDompetku = !title || title === "Dompetku";
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border/50 bg-background/90 px-4 py-3 backdrop-blur-md pt-safe">
@@ -94,16 +94,17 @@ export function TopHeader({
             {greeting}
           </p>
           <h1 className="text-sm font-extrabold text-foreground leading-tight tracking-tight truncate">
-            {isDefaultOrDompetku ? displayName : title}
+            {displayName}
           </h1>
         </div>
       </Link>
 
       {/* Sisi Kanan: Tanggal Hari Ini (Tombol Tema, Setting, dan Logout telah dipindahkan ke halaman Settings) */}
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <span className="text-[10px] font-bold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full border border-border/40">
           {currentDate.split(",")[0] || "Hari Ini"}
         </span>
+        <SideNav userName={displayName} />
       </div>
     </header>
   );

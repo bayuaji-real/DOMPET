@@ -53,3 +53,30 @@ describe("buildSavingsTimeline", () => {
     expect(r2.eta.a).toBe("done");
   });
 });
+
+import { balanceAt, buildGoalSeries, seriesEnd } from "./savings-timeline";
+
+describe("deret per tabungan", () => {
+  const goals = [{ id: "a", name: "A", target: 300000, saved: 0, priority: 1, deadline: null }];
+  const paydays = [
+    { date: "2026-12-01", income: 500000, done: false, parents: 0 },
+    { date: "2026-12-15", income: 500000, done: false, parents: 0 },
+  ];
+  const r = buildSavingsTimeline({ goals, paydays, livingCost: 200000, charges: [], today: "2026-11-20" });
+
+  it("saldo sebelum gajian = saldo awal, sesudahnya naik", () => {
+    expect(balanceAt(r.entries, "a", 0, "2026-11-30")).toBe(0);
+    expect(balanceAt(r.entries, "a", 0, "2026-12-01")).toBe(300000);
+  });
+  it("harian, mingguan, bulanan berakhir di tanggal penuh dengan saldo sama", () => {
+    const end = seriesEnd(r.entries, r.eta.a, "2026-11-20");
+    expect(end).toBe("2026-12-01");
+    for (const g of ["day", "week", "month"] as const) {
+      const s = buildGoalSeries(r.entries, "a", 0, "2026-11-20", end, g);
+      expect(s[0].date).toBe("2026-11-20");
+      expect(s[s.length - 1]).toMatchObject({ date: "2026-12-01", balance: 300000 });
+      expect(s.reduce((x, p) => x + p.added, 0)).toBe(300000);
+    }
+    expect(buildGoalSeries(r.entries, "a", 0, "2026-11-20", end, "day")).toHaveLength(12);
+  });
+});

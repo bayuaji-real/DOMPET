@@ -82,6 +82,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePwaInstall } from "@/lib/pwa-install";
 import { PwaInstallModal } from "@/components/pwa-install-modal";
+import { compressImage } from "@/lib/image-compression";
 import { AvatarCropModal } from "@/components/profile/avatar-crop-modal";
 import { useFullscreen } from "@/lib/use-fullscreen";
 
@@ -249,24 +250,26 @@ export default function PengaturanPage() {
   };
 
   // Handler Unggah Foto Profil (Buka Modal Pemotong Foto)
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      showToast("Ukuran foto maksimal 5MB.");
+    if (file.type && !file.type.startsWith("image/")) {
+      showToast("File harus berupa gambar.");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      setRawCropImage(result);
+    try {
+      // Foto HP bisa 5-15MB. Kecilkan dulu (maks 1600px) supaya ringan & tidak gagal dibaca.
+      const compressed = await compressImage(file, 1600, 0.9);
+      setRawCropImage(compressed.dataUrl);
       setShowCropModal(true);
       triggerHapticFeedback();
-    };
-    reader.readAsDataURL(file);
-    e.target.value = "";
+    } catch (err) {
+      console.error("Gagal membaca foto:", err);
+      showToast("Foto tidak bisa dibaca. Coba foto lain (JPG/PNG).");
+    }
   };
 
   // Handler saat selesai potong foto

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { GoalTimeline } from "./goal-timeline";
 import { CalendarClock, CheckCircle2, Flag, PartyPopper } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah } from "@/lib/utils";
@@ -52,6 +53,7 @@ export function SavingsTimeline({ goals, todayStr }: Props) {
   const [loaded, setLoaded] = React.useState(false);
   const [selected, setSelected] = React.useState<string | null>(null);
   const [showAll, setShowAll] = React.useState(false);
+  const [mode, setMode] = React.useState<"goal" | "month">("goal");
   const chipsRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -188,6 +190,26 @@ export function SavingsTimeline({ goals, todayStr }: Props) {
         })}
       </div>
 
+      <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted/50 p-1" role="group" aria-label="Tampilan timeline">
+        {([["goal", "Per tabungan"], ["month", "Per bulan"]] as const).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            aria-pressed={mode === id}
+            onClick={() => setMode(id)}
+            className={`cursor-pointer rounded-lg py-1.5 text-xs font-bold transition-colors ${
+              mode === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {mode === "goal" ? (
+        <GoalTimeline goals={timelineGoals} result={result} todayStr={todayStr} colorOf={colorOf} />
+      ) : (
+        <>
       {/* Pilih bulan */}
       <div ref={chipsRef} className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Pilih bulan">
         {months.map((m) => {
@@ -313,6 +335,8 @@ export function SavingsTimeline({ goals, todayStr }: Props) {
       >
         {showAll ? "Kembali ke satu bulan" : `Lihat semua bulan (${months.length})`}
       </button>
+        </>
+      )}
     </section>
   );
 }
