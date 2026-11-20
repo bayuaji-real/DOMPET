@@ -61,7 +61,6 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isAuthPath = pathname.startsWith("/login");
-  const isCheckDataPath = pathname.startsWith("/cek-data");
   // Mode demo hanya aktif di development lokal (atau kalau ENABLE_DEMO_MODE=true di-set sengaja).
   const demoEnabled =
     process.env.NODE_ENV !== "production" || process.env.ENABLE_DEMO_MODE === "true";
@@ -73,8 +72,8 @@ export async function updateSession(request: NextRequest) {
     supabaseResponse.cookies.set("dompet_dev_mode", "true", { path: "/", maxAge: 86400 });
   }
 
-  // Jika user belum login dan mencoba membuka halaman selain /login dan /cek-data -> redirect ke /login
-  if (!user && !isAuthPath && !isCheckDataPath && !hasDevBypass) {
+  // Jika user belum login dan mencoba membuka halaman selain /login -> redirect ke /login
+  if (!user && !isAuthPath && !hasDevBypass) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

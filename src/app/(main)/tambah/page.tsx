@@ -22,7 +22,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatRupiah, parseRupiahInput, triggerHapticFeedback } from "@/lib/utils";
 import { createTransaction } from "@/lib/data/transactions";
 import { getWallets, type WalletBalance } from "@/lib/data/wallets";
-import { getCategories, type Category } from "@/lib/data/categories";
+import { getCategories, getCategoryEmoji, type Category } from "@/lib/data/categories";
 
 export default function TambahTransaksiPage() {
   const [tipe, setTipe] = React.useState<"PENGELUARAN" | "PEMASUKAN" | "TRANSFER">("PENGELUARAN");
@@ -380,7 +380,7 @@ export default function TambahTransaksiPage() {
                             : "border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted"
                         }`}
                       >
-                        {kat.icon && <span>{kat.icon}</span>}
+                        <span aria-hidden="true">{getCategoryEmoji(kat.icon || kat.name)}</span>
                         <span className="truncate">{kat.name}</span>
                       </button>
                     ))}

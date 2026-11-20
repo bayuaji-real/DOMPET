@@ -7,7 +7,7 @@ import {
   Home,
   PiggyBank,
   Wallet,
-  Settings,
+  LayoutGrid,
   Camera,
   ImageIcon,
   Mic,
@@ -19,6 +19,7 @@ import {
   X,
   Square,
 } from "lucide-react";
+import { MORE_ACTIVE_PREFIXES } from "@/lib/nav-items";
 import { cn, parseRupiahInput, formatRupiah } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { compressImage } from "@/lib/image-compression";
@@ -108,11 +109,6 @@ export function BottomNav() {
     }
     loadMetadata();
   }, []);
-
-  // Jangan tampilkan bottom navigation jika sedang di halaman login/auth
-  if (pathname.startsWith("/login")) {
-    return null;
-  }
 
   const showNotification = (msg: string) => {
     setToastMsg(msg);
@@ -403,15 +399,33 @@ export function BottomNav() {
     }
   };
 
+  // Pintasan dari halaman Tambah: /?scan=true buka pilihan foto struk, /?voice=true mulai merekam suara
+  React.useEffect(() => {
+    if (pathname !== "/" || typeof window === "undefined") return;
+    const q = new URLSearchParams(window.location.search);
+    const wantScan = q.get("scan") === "true";
+    const wantVoice = q.get("voice") === "true";
+    if (!wantScan && !wantVoice) return;
+    window.history.replaceState(null, "", "/");
+    if (wantScan) setIsPhotoSourceOpen(true);
+    if (wantVoice) void startVoiceRecording();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  // Jangan tampilkan bottom navigation jika sedang di halaman login/auth
+  if (pathname.startsWith("/login")) {
+    return null;
+  }
+
   const navItems = [
     { label: "Beranda", href: "/", icon: Home, isActive: pathname === "/" },
     { label: "Tabungan", href: "/tabungan", icon: PiggyBank, isActive: pathname.startsWith("/tabungan") },
     { label: "Dompet", href: "/dompet", icon: Wallet, isActive: pathname.startsWith("/dompet") },
     {
-      label: "Pengaturan",
-      href: "/pengaturan",
-      icon: Settings,
-      isActive: pathname.startsWith("/pengaturan") || pathname.startsWith("/settings") || pathname.startsWith("/profil"),
+      label: "More",
+      href: "/more",
+      icon: LayoutGrid,
+      isActive: MORE_ACTIVE_PREFIXES.some((p) => pathname.startsWith(p)),
     },
   ];
 

@@ -30,10 +30,12 @@ Bukti: di browser pane ini cookie `sb-...-auth-token` terpecah jadi 168 potongan
 Status: workaround. Cookie dibersihkan di pane ini, lalu semua normal. Di HP: hapus data situs dompet-red.vercel.app atau buka lewat incognito sekali. Pencegahan sudah ada (data: URL tak lagi dikirim ke metadata).
 
 ### BUG-009 Halaman diagnostik /cek-data terbuka tanpa login
-Severity: S3 | Case: F09 | Actual: 200 tanpa login, menampilkan host Supabase dan status auth (tanpa data, RLS aman). Saran: hapus atau lindungi sebelum dipakai umum.
+Severity: S3 | Case: F09 | Actual: 200 tanpa login, menampilkan host Supabase dan status auth (tanpa data, RLS aman).
+Status: fixed (sekarang wajib login)
 
 ### BUG-010 Header keamanan kurang (X-Frame-Options, CSP, nosniff, Referrer-Policy)
-Severity: S4 | Hanya HSTS yang terpasang. Saran: tambah di next.config.ts headers().
+Severity: S4 | Hanya HSTS yang terpasang.
+Status: fixed (nosniff, X-Frame-Options DENY, Referrer-Policy, Permissions-Policy; CSP sengaja belum dipasang)
 
 ### BUG-011 Anggaran per kategori tidak bisa dimuat/disimpan (400 dari Supabase)
 Severity: S2 | Case: F07 | Bukti: GET /rest/v1/budgets?month=eq.2026-11 → 400. Kolom `month` bertipe date, kode kirim "2026-11".
@@ -45,7 +47,7 @@ Severity: S3 | Case: F06 | Penyebab: rencana setoran per gajian (planned_per_pay
 Status: fixed (label "Belum ada rencana" kecuali tenggat sudah lewat)
 
 ### BUG-013 Side bar di desktop melekat ke tepi jendela, bukan frame aplikasi
-Severity: S4 | Di HP normal. Status: open
+Severity: S4 | Status: tidak relevan lagi (side bar dihapus)
 
 ### BUG-014 Pemasukan/Pengeluaran Bulan Ini di Beranda hanya menjumlah 5 transaksi terbaru
 Severity: S1 (angka uang salah) | Case: F02 | Penyebab: total dihitung dari daftar "Transaksi Terbaru" (limit 5).
@@ -54,9 +56,30 @@ Status: fixed (total dihitung dari semua transaksi bulan berjalan)
 ### BUG-015 Layar pembuka (splash) HP menampilkan kotak hijau; foto profil gelap setelah dipilih
 Severity: S3/S2 | Status: fixed (ikon "any" transparan + ikon maskable terpisah; pratinjau crop tidak lagi tereset setelah gambar termuat)
 
+### BUG-016 Nama ikon kategori tampil sebagai teks ("utensils Makan...", "bike Transportasi")
+Severity: S3 | Case: F03-H1 | Bukti: chip kategori di /tambah. Status: fixed (pakai emoji kategori)
+
+### BUG-017 Tab "Scan Struk" dan "Pesan Suara" di /tambah hanya membuka Beranda
+Severity: S2 | Case: F03-H3/H2 | Link ke /?scan=true dan /?voice=true tidak ditangani siapa pun.
+Status: fixed (Beranda membuka pilihan foto struk / mulai merekam suara)
+
+### BUG-018 Transaksi tidak bisa dihapus dari aplikasi
+Severity: S2 | Case: F04 | Bukti: sheet detail hanya punya tombol Tutup; fungsi deleteTransaction tidak dipakai UI. Salah ketik nominal tak bisa dibetulkan.
+Status: fixed (tombol Hapus dengan konfirmasi; edit transaksi belum ada)
+
+### BUG-019 Riwayat tidak kosong lagi setelah transaksi terakhir dihapus
+Severity: S3 | Daftar hanya diganti jika hasil query tidak kosong. Status: fixed (daftar selalu mengikuti database)
+
+### BUG-020 Transfer / setor tabungan tampil sebagai "Pemasukan" di Riwayat
+Severity: S2 | Case: F04 | Kode memetakan semua tipe selain expense menjadi PEMASUKAN (hijau, positif). Belum terlihat karena belum ada data transfer. Status: fixed (tampil netral biru dengan ikon panah dua arah, judul/kategori "Transfer"/"Tabungan", tidak ikut filter Pemasukan/Pengeluaran). Batas muat dinaikkan ke 500 transaksi.
+
 ## Hasil tes live (https://dompet-red.vercel.app, tanpa login)
 - Semua 5 endpoint /api/* → 401, juga dengan ?demo=true dan header x-demo-mode (demo mati di production).
 - Semua halaman terproteksi → redirect ke /login. Login: tanpa tombol demo, tanpa "(PWA)", validasi form kosong jalan, logo baru tampil.
+
+## Uji tulis di live (dengan izin): catat pengeluaran Rp1.000 manual
+Input "abc1x000" → "1.000" (huruf dibuang), emoji di catatan tersimpan, saldo Tunai jadi -1.000, tampil di Riwayat. Data uji sudah dihapus; saldo semua dompet kembali Rp0 dan jumlah transaksi 0.
+Catatan: saldo dompet boleh minus tanpa peringatan (S4).
 
 ## Hasil tes logika uang (SQL, rollback, data asli tidak berubah)
 9/9 lulus: saldo dompet, transfer, setor/tarik tabungan, tolak transfer ke dompet sama, tolak nominal 0/negatif, tolak setor tanpa goal, dompet/goal bertransaksi tak bisa dihapus.
@@ -66,7 +89,10 @@ RLS aktif di 9 tabel dengan 4 policy tiap tabel; 2 view security_invoker; bucket
 
 ## Perlu dicek (belum bisa direproduksi dari sini)
 - Playwright tak bisa diunduh di lingkungan ini; jalankan `npx playwright install chromium && npx playwright test` di Mac.
-- Pastikan env `ENABLE_DEMO_MODE` TIDAK ada / bukan true di Vercel (kalau true, API terbuka tanpa login).
+- ENABLE_DEMO_MODE: sudah dicek di Vercel (project dompet), tidak ada. Aman, demo mati di production.
 - Leaked Password Protection di Supabase Auth masih mati (opsional, aktifkan di dashboard).
 - npm audit: 4 moderate di rantai dev (shadcn → ts-morph), tidak ikut production.
 - ESLint: 77 error lama (mayoritas `any`, set-state-in-effect), S4, tidak memengaruhi fungsi.
+
+### BUG-021 Header ikut ter-scroll (tidak menempel di atas)
+Severity: S3 | Penyebab: kontainer frame memakai overflow-x-hidden sehingga `sticky` tidak bekerja. Status: fixed (overflow-x-clip)

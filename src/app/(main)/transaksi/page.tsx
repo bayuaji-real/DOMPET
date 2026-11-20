@@ -5,13 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { TopHeader } from "@/components/layout/top-header";
 import { formatRupiah, formatTanggal, triggerHapticFeedback } from "@/lib/utils";
-import { getTransactions } from "@/lib/data/transactions";
+import { deleteTransaction, getTransactions } from "@/lib/data/transactions";
 import { getWallets } from "@/lib/data/wallets";
 import { getCategories } from "@/lib/data/categories";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowDownRight,
   ArrowUpRight,
+  ArrowLeftRight,
   Search,
   Filter,
   Check,
@@ -49,6 +50,8 @@ interface TrxItem {
   nominal: bigint;
   tanggal: string;
   tipe: "PEMASUKAN" | "PENGELUARAN";
+  /** transfer antar dompet / setor-tarik tabungan: bukan pemasukan atau pengeluaran */
+  jenis?: "transfer" | "goal_deposit" | "goal_withdraw";
   source?: "manual" | "receipt" | "voice" | "recurring" | "payday";
   receipt_path?: string | null;
   items?: { name: string; qty: number; price: number }[];
@@ -70,6 +73,9 @@ export default function TransaksiPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [filterType, setFilterType] = React.useState<"all" | "expense" | "income" | "receipt">("all");
   const [filterOpen, setFilterOpen] = React.useState(false);
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [deleteError, setDeleteError] = React.useState<string | null>(null);
   const filterRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -212,12 +218,12 @@ export default function TransaksiPage() {
       setIsLoading(true);
       try {
         const [dbTrx, dbWallets, dbCats] = await Promise.allSettled([
-          getTransactions({ limit: 50 }),
+          getTransactions({ limit: 500 }),
           getWallets(),
           getCategories(),
         ]);
 
-        if (dbTrx.status === "fulfilled" && dbTrx.value.length > 0) {
+        if (dbTrx.status === "fulfilled") {
           const walletsMap = new Map(
             dbWallets.status === "fulfilled"
               ? dbWallets.value.map((w) => [w.id, w.name])
@@ -231,15 +237,38 @@ export default function TransaksiPage() {
 
           const liveItems: TrxItem[] = dbTrx.value.map((t) => {
             const isExpense = t.type === "expense";
+            const jenis =
+              t.type === "transfer" || t.type === "goal_deposit" || t.type === "goal_withdraw"
+                ? t.type
+                : undefined;
+            const walletName = walletsMap.get(t.wallet_id) || "Uang Tunai";
+            const toWalletName = t.to_wallet_id ? walletsMap.get(t.to_wallet_id) : undefined;
             const dt = t.date ? new Date(t.date) : new Date();
             const dateFormatted = formatTanggal(dt);
 
             return {
               id: t.id,
-              judul: t.note || (isExpense ? "Pengeluaran" : "Pemasukan"),
+              judul:
+                t.note ||
+                (jenis === "transfer"
+                  ? "Transfer saldo"
+                  : jenis === "goal_deposit"
+                    ? "Setor tabungan"
+                    : jenis === "goal_withdraw"
+                      ? "Tarik tabungan"
+                      : isExpense
+                        ? "Pengeluaran"
+                        : "Pemasukan"),
               merchant: t.merchant || undefined,
-              kategori: t.category_id ? (catsMap.get(t.category_id) || "Lainnya") : "Lainnya",
-              dompet: walletsMap.get(t.wallet_id) || "Uang Tunai",
+              kategori: jenis
+                ? jenis === "transfer"
+                  ? "Transfer"
+                  : "Tabungan"
+                : t.category_id
+                  ? catsMap.get(t.category_id) || "Lainnya"
+                  : "Lainnya",
+              dompet: jenis === "transfer" && toWalletName ? `${walletName} → ${toWalletName}` : walletName,
+              jenis,
               nominal: isExpense ? -BigInt(t.amount) : BigInt(t.amount),
               tanggal: dateFormatted,
               tipe: isExpense ? "PENGELUARAN" : "PEMASUKAN",
@@ -251,6 +280,8 @@ export default function TransaksiPage() {
 
           // Tampilkan transaksi live dari database di bagian atas
           setTransactions((prev) => {
+            // Di production hanya data asli. Data contoh hanya di mode pengembangan.
+            if (!USE_SAMPLE_DATA) return liveItems;
             const liveIds = new Set(liveItems.map((l) => l.id));
             const remainingMocks = prev.filter((p) => !liveIds.has(p.id));
             return [...liveItems, ...remainingMocks];
@@ -273,8 +304,26 @@ export default function TransaksiPage() {
     return () => window.removeEventListener("transaction_created", handleCreated);
   }, []);
 
+  const handleDelete = async () => {
+    if (!selectedTrx || isDeleting) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    const ok = await deleteTransaction(selectedTrx.id);
+    setIsDeleting(false);
+    if (!ok) {
+      setDeleteError("Gagal menghapus transaksi. Coba lagi.");
+      return;
+    }
+    setTransactions((prev) => prev.filter((t) => t.id !== selectedTrx.id));
+    setSelectedTrx(null);
+    setConfirmDelete(false);
+    window.dispatchEvent(new CustomEvent("transaction_created"));
+  };
+
   // Handle buka detail transaksi dan resolve signed URL struk
   const handleOpenDetail = async (trx: TrxItem) => {
+    setConfirmDelete(false);
+    setDeleteError(null);
     setSelectedTrx(trx);
     if (trx.receipt_path) {
       if (trx.receipt_path.startsWith("/")) {
@@ -300,8 +349,8 @@ export default function TransaksiPage() {
       if (!matchTitle && !matchCat && !matchWallet && !matchMerchant) return false;
     }
 
-    if (filterType === "expense") return trx.tipe === "PENGELUARAN";
-    if (filterType === "income") return trx.tipe === "PEMASUKAN";
+    if (filterType === "expense") return trx.tipe === "PENGELUARAN" && !trx.jenis;
+    if (filterType === "income") return trx.tipe === "PEMASUKAN" && !trx.jenis;
     if (filterType === "receipt") return trx.source === "receipt" || Boolean(trx.receipt_path);
     return true;
   });
@@ -434,7 +483,8 @@ export default function TransaksiPage() {
             <>
               <div className="divide-y divide-border/50 rounded-2xl border border-border/60 bg-card shadow-sm">
                 {filteredTransactions.slice(0, visibleCount).map((trx) => {
-                  const isIncome = trx.nominal > 0n;
+                  const isNeutral = Boolean(trx.jenis);
+                  const isIncome = trx.nominal > 0n && !isNeutral;
                   const hasReceipt = trx.source === "receipt" || Boolean(trx.receipt_path);
 
                   return (
@@ -451,13 +501,17 @@ export default function TransaksiPage() {
                           className={`flex h-9 w-9 items-center justify-center rounded-xl shrink-0 ${
                             hasReceipt
                               ? "bg-teal-500/15 text-teal-600 dark:text-teal-400"
-                              : isIncome
+                              : isNeutral
+                                ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                                : isIncome
                                 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                                 : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
                           }`}
                         >
                           {hasReceipt ? (
                             <Receipt className="h-4 w-4" />
+                          ) : isNeutral ? (
+                            <ArrowLeftRight className="h-4 w-4" />
                           ) : isIncome ? (
                             <ArrowDownRight className="h-4 w-4" />
                           ) : (
@@ -490,9 +544,11 @@ export default function TransaksiPage() {
 
                       <span
                         className={`text-xs font-bold ${
-                          isIncome
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-rose-600 dark:text-rose-400"
+                          isNeutral
+                            ? "text-sky-600 dark:text-sky-400"
+                            : isIncome
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-rose-600 dark:text-rose-400"
                         }`}
                       >
                         {formatRupiah(trx.nominal, { absolute: true })}
@@ -571,13 +627,21 @@ export default function TransaksiPage() {
               {/* Nominal & Judul */}
               <div className="rounded-2xl border border-border/70 bg-card p-4 text-center space-y-1">
                 <span className="text-[11px] text-muted-foreground font-medium">
-                  {selectedTrx.tipe === "PEMASUKAN" ? "Total Pemasukan" : "Total Pengeluaran"}
+                  {selectedTrx.jenis
+                    ? selectedTrx.jenis === "transfer"
+                      ? "Total Transfer"
+                      : "Total Setoran Tabungan"
+                    : selectedTrx.tipe === "PEMASUKAN"
+                      ? "Total Pemasukan"
+                      : "Total Pengeluaran"}
                 </span>
                 <h3
                   className={`text-2xl font-extrabold tracking-tight ${
-                    selectedTrx.nominal > 0n || selectedTrx.tipe === "PEMASUKAN"
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-rose-600 dark:text-rose-400"
+                    selectedTrx.jenis
+                      ? "text-sky-600 dark:text-sky-400"
+                      : selectedTrx.nominal > 0n || selectedTrx.tipe === "PEMASUKAN"
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-rose-600 dark:text-rose-400"
                   }`}
                 >
                   {formatRupiah(selectedTrx.nominal, { absolute: true })}
@@ -765,14 +829,45 @@ export default function TransaksiPage() {
                 )}
               </div>
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setSelectedTrx(null)}
-                className="w-full h-11 rounded-xl text-xs font-semibold"
-              >
-                Tutup
-              </Button>
+              {deleteError && (
+                <p role="alert" className="rounded-lg bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-600">
+                  {deleteError}
+                </p>
+              )}
+              {confirmDelete ? (
+                <div className="space-y-2 rounded-2xl border border-rose-500/40 bg-rose-500/5 p-3">
+                  <p className="text-xs font-semibold text-foreground">
+                    Hapus transaksi ini? Saldo dompet ikut berubah dan tidak bisa dibatalkan.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button type="button" variant="outline" onClick={() => setConfirmDelete(false)} disabled={isDeleting} className="h-10 rounded-xl text-xs font-semibold">
+                      Batal
+                    </Button>
+                    <Button type="button" onClick={handleDelete} disabled={isDeleting} className="h-10 rounded-xl bg-rose-600 text-xs font-semibold text-white hover:bg-rose-700">
+                      {isDeleting ? "Menghapus…" : "Ya, hapus"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setConfirmDelete(true)}
+                    className="h-11 rounded-xl text-xs font-semibold text-rose-600"
+                  >
+                    Hapus
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setSelectedTrx(null)}
+                    className="h-11 rounded-xl text-xs font-semibold"
+                  >
+                    Tutup
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </SheetContent>

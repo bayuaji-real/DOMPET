@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { formatTanggalWIB } from "@/lib/utils";
+import { NotificationBell, ThemeMenu } from "./header-actions";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
 
 interface TopHeaderProps {
@@ -22,12 +22,10 @@ export function TopHeader({
     avatarEmoji: "🧑‍💻",
     avatarBg: "#0d9488",
   });
-  const [currentDate, setCurrentDate] = React.useState<string>("");
   const [greeting, setGreeting] = React.useState<string>("Halo");
 
   React.useEffect(() => {
     const now = new Date();
-    setCurrentDate(formatTanggalWIB(now));
 
     const hour = now.getHours();
     if (hour >= 4 && hour < 11) setGreeting("Selamat pagi");
@@ -98,11 +96,10 @@ export function TopHeader({
         </div>
       </Link>
 
-      {/* Sisi Kanan: Tanggal Hari Ini (Tombol Tema, Setting, dan Logout telah dipindahkan ke halaman Settings) */}
+      {/* Sisi kanan: notifikasi & pilihan tema */}
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-bold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full border border-border/40">
-          {currentDate.split(",")[0] || "Hari Ini"}
-        </span>
+        <NotificationBell />
+        <ThemeMenu />
       </div>
     </header>
   );
