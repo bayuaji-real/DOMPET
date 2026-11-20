@@ -36,7 +36,6 @@ export function AvatarCropModal({
       setScale(1);
       setRotation(0);
       setPosition({ x: 0, y: 0 });
-      setNatural(null);
     }
   }, [isOpen, imageSrc]);
 
@@ -159,7 +158,18 @@ export function AvatarCropModal({
             {/* Gambar yang digeser */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              ref={imageRef}
+              key={imageSrc}
+              ref={(el) => {
+                imageRef.current = el;
+                // Gambar data-URL bisa selesai dimuat sebelum handler onLoad terpasang
+                if (el && el.complete && el.naturalWidth > 0) {
+                  setNatural((n) =>
+                    n && n.w === el.naturalWidth && n.h === el.naturalHeight
+                      ? n
+                      : { w: el.naturalWidth, h: el.naturalHeight }
+                  );
+                }
+              }}
               src={imageSrc}
               alt="Foto yang akan dipotong"
               draggable={false}

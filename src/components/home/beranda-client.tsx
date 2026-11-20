@@ -17,7 +17,7 @@ import {
 import { TopHeader } from "@/components/layout/top-header";
 import { formatRupiah, cn } from "@/lib/utils";
 import { WalletIcon } from "@/components/wallet/wallet-icon";
-import { FeatureMenu } from "./feature-menu";
+import { AnalisisCard } from "./analisis-card";
 import { PaydayCard } from "./payday-card";
 import { DueRecurringCard } from "./due-recurring-card";
 import { getWallets, type WalletBalance } from "@/lib/data/wallets";
@@ -61,6 +61,7 @@ export function BerandaClient({
   const [transactions, setTransactions] = React.useState<Transaction[]>(
     initialTransactions
   );
+  const [monthTxs, setMonthTxs] = React.useState<Transaction[]>(initialTransactions);
   const [goals, setGoals] = React.useState<GoalProgress[]>(initialGoals);
   const [paydaySchedule, setPaydaySchedule] = React.useState<PaydaySchedule | null>(
     initialPayday
@@ -94,14 +95,17 @@ export function BerandaClient({
   // Muat data live
   const loadDashboardData = React.useCallback(async () => {
     try {
-      const [wList, tList, gList, pSched, dRec, sData] = await Promise.all([
+      const today = todayJakarta();
+      const [wList, tList, gList, pSched, dRec, sData, mList] = await Promise.all([
         getWallets().catch(() => initialWallets),
         getTransactions({ limit: 5 }).catch(() => initialTransactions),
         getSavingsGoals().catch(() => initialGoals),
         getTodayPaydaySchedule(todayJakarta()).catch(() => (USE_SAMPLE_DATA ? SAMPLE_PAYDAY_SCHEDULES[0] : null)),
         getDueRecurringTransactions(todayJakarta()).catch(() => (USE_SAMPLE_DATA ? SAMPLE_RECURRING : [])),
         getUserSettings().catch(() => null),
+        getTransactions({ startDate: `${today.slice(0, 7)}-01`, endDate: today }).catch(() => null),
       ]);
+      if (mList) setMonthTxs(mList);
 
       if (wList && wList.length > 0) setWallets(wList);
       if (tList) setTransactions(tList);
@@ -136,7 +140,7 @@ export function BerandaClient({
     0n
   );
 
-  const fallbackTxs = transactions.length > 0 ? transactions : [];
+  const fallbackTxs = monthTxs;
   const pemasukanBulanIni = fallbackTxs
     .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + BigInt(Math.round(t.amount || 0)), 0n);
@@ -154,7 +158,7 @@ export function BerandaClient({
   };
 
   return (
-    <div className="flex flex-col flex-1 pb-24">
+    <div className="flex flex-col flex-1 pb-44">
       <TopHeader
         title="Dompetku"
         subtitle="Halo! Keuanganmu terkendali hari ini ✨"
@@ -242,8 +246,8 @@ export function BerandaClient({
           />
         )}
 
-        {/* Menu fitur tambahan (gaya Livin') */}
-        <FeatureMenu />
+        {/* Menu grid ala Livin' (FeatureMenu) disembunyikan dulu sampai fitur tambahan banyak */}
+        <AnalisisCard />
 
         {/* 4. Daftar Kantong & Rekening Dompet */}
         <div className="space-y-3">

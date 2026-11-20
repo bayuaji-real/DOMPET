@@ -47,6 +47,13 @@ Status: fixed (label "Belum ada rencana" kecuali tenggat sudah lewat)
 ### BUG-013 Side bar di desktop melekat ke tepi jendela, bukan frame aplikasi
 Severity: S4 | Di HP normal. Status: open
 
+### BUG-014 Pemasukan/Pengeluaran Bulan Ini di Beranda hanya menjumlah 5 transaksi terbaru
+Severity: S1 (angka uang salah) | Case: F02 | Penyebab: total dihitung dari daftar "Transaksi Terbaru" (limit 5).
+Status: fixed (total dihitung dari semua transaksi bulan berjalan)
+
+### BUG-015 Layar pembuka (splash) HP menampilkan kotak hijau; foto profil gelap setelah dipilih
+Severity: S3/S2 | Status: fixed (ikon "any" transparan + ikon maskable terpisah; pratinjau crop tidak lagi tereset setelah gambar termuat)
+
 ## Hasil tes live (https://dompet-red.vercel.app, tanpa login)
 - Semua 5 endpoint /api/* → 401, juga dengan ?demo=true dan header x-demo-mode (demo mati di production).
 - Semua halaman terproteksi → redirect ke /login. Login: tanpa tombol demo, tanpa "(PWA)", validasi form kosong jalan, logo baru tampil.

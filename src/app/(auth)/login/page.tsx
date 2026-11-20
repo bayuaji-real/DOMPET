@@ -145,7 +145,7 @@ export default function LoginPage() {
         {/* Header Brand dengan Logo Glow Bergradasi */}
         <div className="mb-6 flex flex-col items-center text-center">
           <Image
-            src="/icons/icon-192.png"
+            src="/icons/logo-tile-192.png"
             alt="Logo Dompetku"
             width={72}
             height={72}
