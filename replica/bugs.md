@@ -24,6 +24,21 @@ Severity: S3 | Case: F01 | Status: fixed
 ### BUG-007 Header ikut blur saat sheet/fitur dibuka
 Severity: S4 | Status: fixed
 
+### BUG-008 Cookie sesi lama masih membuat 494 di browser yang pernah login
+Severity: S1 untuk perangkat yang terdampak | Case: F09
+Bukti: di browser pane ini cookie `sb-...-auth-token` terpecah jadi 168 potongan (538 KB); SEMUA halaman dan /api memberi 494 (Vercel menolak sebelum app jalan, jadi kode tak bisa menyembuhkan diri).
+Status: workaround. Cookie dibersihkan di pane ini, lalu semua normal. Di HP: hapus data situs dompet-red.vercel.app atau buka lewat incognito sekali. Pencegahan sudah ada (data: URL tak lagi dikirim ke metadata).
+
+### BUG-009 Halaman diagnostik /cek-data terbuka tanpa login
+Severity: S3 | Case: F09 | Actual: 200 tanpa login, menampilkan host Supabase dan status auth (tanpa data, RLS aman). Saran: hapus atau lindungi sebelum dipakai umum.
+
+### BUG-010 Header keamanan kurang (X-Frame-Options, CSP, nosniff, Referrer-Policy)
+Severity: S4 | Hanya HSTS yang terpasang. Saran: tambah di next.config.ts headers().
+
+## Hasil tes live (https://dompet-red.vercel.app, tanpa login)
+- Semua 5 endpoint /api/* → 401, juga dengan ?demo=true dan header x-demo-mode (demo mati di production).
+- Semua halaman terproteksi → redirect ke /login. Login: tanpa tombol demo, tanpa "(PWA)", validasi form kosong jalan, logo baru tampil.
+
 ## Hasil tes logika uang (SQL, rollback, data asli tidak berubah)
 9/9 lulus: saldo dompet, transfer, setor/tarik tabungan, tolak transfer ke dompet sama, tolak nominal 0/negatif, tolak setor tanpa goal, dompet/goal bertransaksi tak bisa dihapus.
 
@@ -31,7 +46,6 @@ Severity: S4 | Status: fixed
 RLS aktif di 9 tabel dengan 4 policy tiap tabel; 2 view security_invoker; bucket receipts privat 5MB hanya gambar; semua route /api memverifikasi login; tidak ada secret di git.
 
 ## Perlu dicek (belum bisa direproduksi dari sini)
-- Probe /api/* tanpa login dari Mac: `curl -i -X POST https://dompet-red.vercel.app/api/ai-insights` (harus 401).
 - Playwright tak bisa diunduh di lingkungan ini; jalankan `npx playwright install chromium && npx playwright test` di Mac.
 - Pastikan env `ENABLE_DEMO_MODE` TIDAK ada / bukan true di Vercel (kalau true, API terbuka tanpa login).
 - Leaked Password Protection di Supabase Auth masih mati (opsional, aktifkan di dashboard).
