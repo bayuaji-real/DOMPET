@@ -9,6 +9,8 @@ import {
   Plus,
   PiggyBank,
   PieChart,
+  Wallet,
+  User,
   Camera,
   ImageIcon,
   Mic,
@@ -436,6 +438,12 @@ export function BottomNav() {
       icon: ArrowLeftRight,
       isActive: pathname.startsWith("/transaksi"),
     },
+    {
+      label: "Dompet",
+      href: "/dompet",
+      icon: Wallet,
+      isActive: pathname.startsWith("/dompet"),
+    },
     // Tombol [+] Tambah diletakkan di tengah
     {
       label: "Tambah",
@@ -454,13 +462,19 @@ export function BottomNav() {
       icon: PieChart,
       isActive: pathname.startsWith("/analisis"),
     },
+    {
+      label: "Profil",
+      href: "/profil",
+      icon: User,
+      isActive: pathname.startsWith("/profil") || pathname.startsWith("/pengaturan"),
+    },
   ];
 
   return (
     <>
       <nav
         aria-label="Navigasi Bawah"
-        className="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 w-full max-w-[430px] border-t border-border/80 bg-background/95 backdrop-blur-md px-3 pt-2 pb-6"
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 w-full max-w-[430px] border-t border-border/80 bg-background/95 backdrop-blur-md px-2 pt-1.5 pb-6"
       >
         <div className="flex items-center justify-around">
           {navItems.map((item, idx) => {
@@ -471,10 +485,10 @@ export function BottomNav() {
               return (
                 <Sheet key={idx} open={sheetOpen} onOpenChange={setSheetOpen}>
                   <SheetTrigger
-                    className="relative -top-3 flex h-13 w-13 items-center justify-center rounded-full bg-teal-500 text-zinc-950 shadow-lg shadow-teal-500/30 transition-all hover:bg-teal-400 active:scale-95 focus:outline-none cursor-pointer"
+                    className="relative -top-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-teal-500 text-zinc-950 shadow-lg shadow-teal-500/30 transition-all hover:bg-teal-400 active:scale-95 focus:outline-none cursor-pointer"
                     aria-label="Tambah Transaksi Cepat"
                   >
-                    <Plus className="h-6 w-6 stroke-[2.5]" />
+                    <Plus className="h-5.5 w-5.5 stroke-[2.5]" />
                   </SheetTrigger>
 
                   <SheetContent
@@ -606,16 +620,18 @@ export function BottomNav() {
                 key={idx}
                 href={item.href || "/"}
                 className={cn(
-                  "flex flex-col items-center gap-1 transition-colors",
+                  "flex flex-1 flex-col items-center justify-center gap-0.5 py-1 min-w-0 transition-colors cursor-pointer",
                   isActive
                     ? "text-teal-600 dark:text-teal-400 font-bold"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Icon
-                  className={cn("h-5 w-5", isActive ? "stroke-[2.5]" : "stroke-[1.75]")}
+                  className={cn("h-4.5 w-4.5 shrink-0", isActive ? "stroke-[2.5]" : "stroke-[1.75]")}
                 />
-                <span className="text-[10px] tracking-tight">{item.label}</span>
+                <span className="text-[9.5px] leading-tight tracking-tight truncate max-w-full">
+                  {item.label}
+                </span>
               </Link>
             );
           })}

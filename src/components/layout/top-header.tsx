@@ -57,10 +57,10 @@ export function TopHeader({
       <div className="flex items-center gap-1">
         <ThemeToggle />
         <Link
-          href="/pengaturan"
+          href="/profil"
           className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
-          title="Pengaturan"
-          aria-label="Pengaturan"
+          title="Profil & Pengaturan"
+          aria-label="Profil & Pengaturan"
         >
           <Settings className="h-4 w-4" />
         </Link>
