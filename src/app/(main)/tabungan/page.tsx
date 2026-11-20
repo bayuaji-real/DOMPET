@@ -74,6 +74,20 @@ export interface GoalItem {
   }[];
 }
 
+/**
+ * Jika rencana setoran per gajian belum diisi (0), status "Telat" menyesatkan
+ * selama tenggat belum lewat: tampilkan label netral. Tenggat lewat tetap "Telat".
+ */
+function badgeLabel(
+  planned: number,
+  proj: { status: string; statusLabel: string; daysRemaining: number | null }
+): string {
+  if (proj.status === "telat" && !(planned > 0) && (proj.daysRemaining ?? 0) >= 0) {
+    return "Belum ada rencana";
+  }
+  return proj.statusLabel;
+}
+
 export default function TabunganPage() {
   // Tanggal acuan: diinisialisasi dalam useEffect untuk menghindari hydration/prerender mismatch
   const [todayStr, setTodayStr] = React.useState<string>("");
@@ -533,7 +547,7 @@ export default function TabunganPage() {
                         : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
                     }`}
                   >
-                    {proj.statusLabel}
+                    {badgeLabel(goal.planned_per_payday, proj)}
                   </Badge>
                 </div>
 
@@ -815,7 +829,7 @@ export default function TabunganPage() {
                               : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                           }`}
                         >
-                          {selectedProjection.statusLabel}
+                          {badgeLabel(selectedGoal.planned_per_payday, selectedProjection)}
                         </Badge>
                       </div>
                       <SheetDescription className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">

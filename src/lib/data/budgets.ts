@@ -43,6 +43,11 @@ export const SAMPLE_BUDGETS: Budget[] = [
   },
 ];
 
+/** Kolom `month` di DB bertipe date: "2026-11" harus dikirim sebagai "2026-11-01". */
+const toDbMonth = (m: string) => (/^\d{4}-\d{2}$/.test(m) ? `${m}-01` : m);
+/** Di aplikasi, bulan selalu dipakai sebagai "YYYY-MM". */
+const normalizeBudget = (row: Budget): Budget => ({ ...row, month: String(row.month).slice(0, 7) });
+
 /**
  * Mengambil anggaran untuk bulan tertentu (format YYYY-MM)
  */
@@ -57,11 +62,12 @@ export async function getBudgets(month = "2026-11"): Promise<Budget[]> {
     const { data, error } = await supabase
       .from("budgets")
       .select("*")
-      .eq("month", month);
+      .eq("month", toDbMonth(month));
 
     if (!error && data && data.length > 0) {
-      return data;
+      return data.map(normalizeBudget);
     }
+    if (error) console.warn("Gagal fetch budgets:", error.message);
   } catch (err) {
     console.warn("Gagal fetch budgets dari DB, gunakan fallback:", err);
   }
@@ -111,7 +117,7 @@ export async function setBudget(
         {
           user_id: authUserId,
           category_id: categoryId,
-          month,
+          month: toDbMonth(month),
           limit_amount: limitAmount,
         },
         { onConflict: "user_id,category_id,month" }
@@ -123,11 +129,15 @@ export async function setBudget(
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("budget_updated"));
       }
-      return data;
+      return normalizeBudget(data);
     }
+    if (error) console.warn("Gagal menyimpan anggaran:", error.message);
   } catch (err) {
     console.warn("Gagal upsert budget di DB:", err);
   }
+
+  // Di production, jangan pura-pura sukses: anggaran yang tidak tersimpan harus terlihat gagal.
+  if (!USE_SAMPLE_DATA) return null;
 
   // Update in memory fallback
   const existing = SAMPLE_BUDGETS.find(

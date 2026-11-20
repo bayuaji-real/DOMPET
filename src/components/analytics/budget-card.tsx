@@ -30,6 +30,7 @@ export function BudgetCard({
   const [budgets, setBudgets] = React.useState<Budget[]>([]);
   const [showModal, setShowModal] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
   const [editLimits, setEditLimits] = React.useState<Record<string, string>>({});
 
   const loadBudgets = React.useCallback(async () => {
@@ -60,13 +61,20 @@ export function BudgetCard({
   const handleSaveBudget = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    setSaveError(null);
     try {
+      let failed = 0;
       for (const cat of categories) {
         const raw = editLimits[cat.id]?.replace(/\D/g, "") || "0";
         const val = Number(raw);
         if (val > 0) {
-          await setBudget(cat.id, monthKey, val);
+          const saved = await setBudget(cat.id, monthKey, val);
+          if (!saved) failed += 1;
         }
+      }
+      if (failed > 0) {
+        setSaveError(`${failed} anggaran gagal tersimpan. Coba lagi.`);
+        return;
       }
       setShowModal(false);
       await loadBudgets();
@@ -217,6 +225,11 @@ export function BudgetCard({
             </div>
 
             <form onSubmit={handleSaveBudget} className="space-y-3 pt-1">
+              {saveError && (
+                <p role="alert" className="rounded-lg bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-600">
+                  {saveError}
+                </p>
+              )}
               <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
                 {categories.map((cat) => (
                   <div

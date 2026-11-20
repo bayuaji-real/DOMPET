@@ -31,12 +31,16 @@ export function SideNav({ userName }: { userName: string }) {
       <SheetContent
         side="right"
         showCloseButton={false}
-        className="w-[78%] max-w-[300px] border-border/80 bg-background p-0 shadow-2xl"
+        overlayClassName="bg-black/30 backdrop-blur-sm"
+        className="w-[80%] max-w-[300px] gap-0 border-border/80 bg-background p-0 shadow-2xl"
       >
         <SheetTitle className="sr-only">Menu navigasi</SheetTitle>
         <SheetDescription className="sr-only">Pilih halaman Dompetku</SheetDescription>
 
-        <div className="flex items-center justify-between border-b border-border/60 px-4 pb-3 pt-5">
+        <div
+          className="flex items-center justify-between border-b border-border/60 px-5 pb-5"
+          style={{ paddingTop: "max(1.75rem, calc(env(safe-area-inset-top) + 1rem))" }}
+        >
           <div className="flex items-center gap-3 min-w-0">
             <Image
               src="/icons/icon-192.png"
@@ -60,7 +64,7 @@ export function SideNav({ userName }: { userName: string }) {
           </button>
         </div>
 
-        <nav aria-label="Navigasi utama" className="flex-1 space-y-1 overflow-y-auto p-3">
+        <nav aria-label="Navigasi utama" className="flex-1 space-y-1.5 overflow-y-auto px-4 py-5">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = isNavActive(item, pathname);
@@ -71,7 +75,7 @@ export function SideNav({ userName }: { userName: string }) {
                 onClick={() => setOpen(false)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
+                  "flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-semibold transition-colors",
                   active
                     ? "bg-teal-500/15 text-teal-700 dark:text-teal-300"
                     : "text-foreground/80 hover:bg-muted"
@@ -83,6 +87,13 @@ export function SideNav({ userName }: { userName: string }) {
             );
           })}
         </nav>
+
+        <p
+          className="border-t border-border/60 px-5 pt-4 text-center text-[11px] text-muted-foreground"
+          style={{ paddingBottom: "max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem))" }}
+        >
+          Dompetku v1.0.0
+        </p>
       </SheetContent>
     </Sheet>
   );

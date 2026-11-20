@@ -35,6 +35,18 @@ Severity: S3 | Case: F09 | Actual: 200 tanpa login, menampilkan host Supabase da
 ### BUG-010 Header keamanan kurang (X-Frame-Options, CSP, nosniff, Referrer-Policy)
 Severity: S4 | Hanya HSTS yang terpasang. Saran: tambah di next.config.ts headers().
 
+### BUG-011 Anggaran per kategori tidak bisa dimuat/disimpan (400 dari Supabase)
+Severity: S2 | Case: F07 | Bukti: GET /rest/v1/budgets?month=eq.2026-11 → 400. Kolom `month` bertipe date, kode kirim "2026-11".
+Lebih parah: gagal simpan di production diam-diam dianggap sukses (data tak tersimpan).
+Status: fixed (bulan dikirim "YYYY-MM-01", gagal simpan sekarang terlihat sebagai pesan error)
+
+### BUG-012 Badge "Telat" muncul di semua tabungan padahal tenggat belum lewat
+Severity: S3 | Case: F06 | Penyebab: rencana setoran per gajian (planned_per_payday) kosong → dianggap telat; bertentangan dengan timeline.
+Status: fixed (label "Belum ada rencana" kecuali tenggat sudah lewat)
+
+### BUG-013 Side bar di desktop melekat ke tepi jendela, bukan frame aplikasi
+Severity: S4 | Di HP normal. Status: open
+
 ## Hasil tes live (https://dompet-red.vercel.app, tanpa login)
 - Semua 5 endpoint /api/* → 401, juga dengan ?demo=true dan header x-demo-mode (demo mati di production).
 - Semua halaman terproteksi → redirect ke /login. Login: tanpa tombol demo, tanpa "(PWA)", validasi form kosong jalan, logo baru tampil.
