@@ -114,12 +114,14 @@ export function parseIndonesianSpokenNumber(input: string): number {
  */
 export function resolveRelativeDate(phrase: string, baseDate = new Date()): string {
   const clean = phrase.toLowerCase().trim();
-  const d = new Date(baseDate.getTime());
+  // Tanggal dihitung di zona Asia/Jakarta (bukan UTC), supaya jam 00:00–06:59 WIB tidak jatuh ke hari kemarin
+  const ymd = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(baseDate);
+  const d = new Date(`${ymd}T00:00:00Z`);
 
   if (clean.includes("kemarin lusa") || clean.includes("2 hari lalu") || clean.includes("dua hari lalu")) {
-    d.setDate(d.getDate() - 2);
+    d.setUTCDate(d.getUTCDate() - 2);
   } else if (clean.includes("kemarin") || clean.includes("semalam")) {
-    d.setDate(d.getDate() - 1);
+    d.setUTCDate(d.getUTCDate() - 1);
   } else {
     // "tadi", "tadi pagi", "tadi siang", "tadi malam", "hari ini"
     // tetap baseDate

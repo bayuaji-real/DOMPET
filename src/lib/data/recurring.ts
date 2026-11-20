@@ -1,3 +1,4 @@
+import { nextMonthOnDay } from "@/lib/dates";
 import { createClient, isSupabaseConfigured } from "../supabase/client";
 import type { Database, TransactionType, RecurringRule } from "@/types/database";
 import { createTransaction } from "./transactions";
@@ -128,10 +129,7 @@ export async function processRecurringTransaction(
   }
 
   // Hitung tanggal berikutnya (tambah 1 bulan)
-  const curr = new Date(target.next_date);
-  const nextMonth = new Date(curr.getFullYear(), curr.getMonth() + 1, target.day_of_month || 1);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const nextDateStr = `${nextMonth.getFullYear()}-${pad(nextMonth.getMonth() + 1)}-${pad(nextMonth.getDate())}`;
+  const nextDateStr = nextMonthOnDay(target.next_date, target.day_of_month || Number(target.next_date.slice(8, 10)) || 1);
 
   // Update next_date di Supabase
   if (!id.startsWith("rec-")) {

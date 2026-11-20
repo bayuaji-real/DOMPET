@@ -1,5 +1,6 @@
 "use client";
 
+import { todayJakarta } from "@/lib/data/sample-mode";
 import * as React from "react";
 import { WalletIcon } from "@/components/wallet/wallet-icon";
 import Link from "next/link";
@@ -113,7 +114,7 @@ export default function TambahTransaksiPage() {
         to_wallet_id: tipe === "TRANSFER" ? toWalletId : null,
         category_id: tipe === "TRANSFER" ? null : selectedCategoryId || null,
         note: judul.trim() || (tipe === "TRANSFER" ? "Transfer Antar Dompet" : tipe === "PENGELUARAN" ? "Pengeluaran" : "Pemasukan"),
-        date: new Date().toISOString(),
+        date: todayJakarta(),
         source: "manual",
       });
 

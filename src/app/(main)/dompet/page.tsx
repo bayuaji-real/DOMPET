@@ -1,5 +1,6 @@
 "use client";
 
+import { todayJakarta } from "@/lib/data/sample-mode";
 import * as React from "react";
 import { TopHeader } from "@/components/layout/top-header";
 import { formatRupiah, cn, triggerHapticFeedback } from "@/lib/utils";
@@ -181,13 +182,17 @@ export default function DompetPage() {
       : 0;
 
     try {
-      await createWallet({
+      const created = await createWallet({
         name: walletName.trim(),
         type: walletType,
         color: walletColor,
         icon: walletIcon,
         initial_balance: initialNum,
       });
+      if (!created) {
+        showToast("Gagal menyimpan dompet baru. Coba lagi.");
+        return;
+      }
 
       setShowAddModal(false);
       setAddStep(1);
@@ -230,7 +235,7 @@ export default function DompetPage() {
         wallet_id: transferFromId,
         to_wallet_id: transferToId,
         note: transferNote.trim() || "Pindah Saldo Antar Dompet",
-        date: new Date().toISOString().split("T")[0],
+        date: todayJakarta(),
       });
 
       setShowTransferModal(false);

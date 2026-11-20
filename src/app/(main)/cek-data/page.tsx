@@ -1,5 +1,6 @@
 "use client";
 
+import { todayJakarta } from "@/lib/data/sample-mode";
 import * as React from "react";
 import { TopHeader } from "@/components/layout/top-header";
 import { createClient } from "@/lib/supabase/client";
@@ -76,7 +77,7 @@ export default function CekDataPage() {
       }
 
       // 4. Ambil 3 jadwal gajian berikutnya dari payday_schedule
-      const today = new Date().toISOString().split("T")[0];
+      const today = todayJakarta();
       const { data: paydayData, error: paydayError } = await supabase
         .from("payday_schedule")
         .select("*")

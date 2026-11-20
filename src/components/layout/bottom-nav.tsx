@@ -1,5 +1,6 @@
 "use client";
 
+import { todayJakarta } from "@/lib/data/sample-mode";
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -208,7 +209,7 @@ export function BottomNav() {
       setScanResult({
         is_receipt: false,
         merchant: "Struk Baru",
-        date: new Date().toISOString().split("T")[0],
+        date: todayJakarta(),
         total: 0,
         items: [],
         suggested_category: categories[0]?.name || "Belanja Harian",
@@ -409,6 +410,12 @@ export function BottomNav() {
     window.history.replaceState(null, "", "/");
     if (wantScan) setIsPhotoSourceOpen(true);
     if (wantVoice) void startVoiceRecording();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  // Quick bar hanya ada di Beranda: kalau pindah halaman saat merekam, matikan mikrofon tanpa memproses
+  React.useEffect(() => {
+    if (pathname !== "/" && isVoiceRecording) stopVoiceRecording(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 

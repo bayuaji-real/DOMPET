@@ -124,6 +124,8 @@ export async function createWallet(
 
   if (error) {
     console.warn("Gagal membuat dompet baru di DB (fallback lokal):", error.message || error);
+    // Di production jangan pura-pura berhasil: pengguna harus tahu dompetnya tidak tersimpan
+    if (!USE_SAMPLE_DATA) return null;
     SAMPLE_WALLETS.push(newWallet);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("wallet_created"));

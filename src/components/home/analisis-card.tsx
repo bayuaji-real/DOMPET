@@ -10,6 +10,7 @@ const STATUS: Record<HealthStatus, { label: string; cls: string }> = {
   sehat: { label: "Sehat", cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
   waspada: { label: "Waspada", cls: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
   kritis: { label: "Kritis", cls: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
+  belum: { label: "Belum ada data", cls: "bg-muted text-muted-foreground" },
 };
 
 /** Ringkasan garis besar analisis bulan ini. Detail lengkap ada di halaman Analisis. */

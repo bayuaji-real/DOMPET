@@ -47,18 +47,7 @@ export function VoiceRecordingModal({
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
 
-  // Bersihkan stream dan timer saat modal ditutup
-  React.useEffect(() => {
-    if (!open) {
-      cleanupRecording();
-      setSeconds(0);
-      setIsRecording(false);
-      setIsProcessing(false);
-      setErrorMessage(null);
-    }
-  }, [open]);
-
-  const cleanupRecording = () => {
+  const cleanupRecording = React.useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -69,7 +58,21 @@ export function VoiceRecordingModal({
     }
     mediaRecorderRef.current = null;
     audioChunksRef.current = [];
-  };
+  }, []);
+
+  // Bersihkan stream dan timer saat modal ditutup
+  React.useEffect(() => {
+    if (!open) {
+      cleanupRecording();
+      setSeconds(0);
+      setIsRecording(false);
+      setIsProcessing(false);
+      setErrorMessage(null);
+    }
+  }, [open, cleanupRecording]);
+
+  // Matikan mikrofon kalau komponen dilepas (mis. pindah halaman) saat masih merekam
+  React.useEffect(() => cleanupRecording, [cleanupRecording]);
 
   // Pilih MIME type yang didukung browser (Chrome Android vs Safari iOS)
   const getSupportedMimeType = (): string => {

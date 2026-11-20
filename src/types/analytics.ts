@@ -57,7 +57,8 @@ export interface TopMerchant {
   totalSpent: number;
 }
 
-export type HealthStatus = "sehat" | "waspada" | "kritis";
+/** "belum" = belum cukup data untuk dinilai (mis. belum ada transaksi pada periode ini). */
+export type HealthStatus = "sehat" | "waspada" | "kritis" | "belum";
 
 export interface FinancialHealth {
   overallStatus: HealthStatus;

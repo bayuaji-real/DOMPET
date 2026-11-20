@@ -1,5 +1,6 @@
 "use client";
 
+import { todayJakarta } from "@/lib/data/sample-mode";
 import * as React from "react";
 import { WalletIcon } from "@/components/wallet/wallet-icon";
 import Image from "next/image";
@@ -178,8 +179,7 @@ export function ReceiptConfirmationSheet({
     if (scanResult) {
       setMerchant(scanResult.merchant || "Belanja Struk");
       setDate(
-        scanResult.date ||
-          new Date().toISOString().split("T")[0]
+        scanResult.date || todayJakarta()
       );
       setTotalFormatted(
         scanResult.total > 0 ? Number(scanResult.total).toLocaleString("id-ID") : ""

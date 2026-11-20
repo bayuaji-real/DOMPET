@@ -73,10 +73,23 @@ export async function getUserProfile(): Promise<UserProfile> {
         } catch (_) {}
       }
 
-      const safeRemoteAvatarUrl =
+      let safeRemoteAvatarUrl =
         meta.avatar_url && !meta.avatar_url.startsWith("data:")
           ? meta.avatar_url
           : profile.avatarUrl;
+
+      // Migrasi sekali jalan: foto lama yang cuma tersimpan di perangkat ini diunggah ke server
+      if (!meta.avatar_url && profile.avatarUrl?.startsWith("data:") && typeof window !== "undefined") {
+        // Beberapa komponen bisa memanggil ini bersamaan: cukup unggah sekali
+        migrationPromise ??= uploadAvatar(session.user.id, profile.avatarUrl);
+        const uploaded = await migrationPromise;
+        if (uploaded) {
+          safeRemoteAvatarUrl = uploaded;
+          try {
+            await supabase.auth.updateUser({ data: { avatar_url: uploaded } });
+          } catch {}
+        }
+      }
 
       profile = {
         ...profile,
@@ -96,6 +109,32 @@ export async function getUserProfile(): Promise<UserProfile> {
   }
 
   return profile;
+}
+
+let migrationPromise: Promise<string | null> | null = null;
+
+/** Unggah foto profil (data URL) ke bucket publik 'avatars'. Mengembalikan URL publik, atau null kalau gagal. */
+async function uploadAvatar(userId: string, dataUrl: string): Promise<string | null> {
+  try {
+    const supabase = createClient();
+    const blob = await (await fetch(dataUrl)).blob();
+    const type = blob.type && blob.type.startsWith("image/") ? blob.type : "image/jpeg";
+    const ext = type === "image/png" ? "png" : type === "image/webp" ? "webp" : "jpg";
+    const path = `${userId}/avatar-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("avatars").upload(path, blob, { contentType: type, upsert: true });
+    if (error) {
+      console.warn("Gagal unggah foto profil:", error.message);
+      return null;
+    }
+    // Hapus foto lama milik user ini supaya tidak menumpuk
+    const { data: list } = await supabase.storage.from("avatars").list(userId);
+    const old = (list ?? []).map((f) => `${userId}/${f.name}`).filter((p) => p !== path);
+    if (old.length) await supabase.storage.from("avatars").remove(old);
+    return supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+  } catch (err) {
+    console.warn("Gagal unggah foto profil:", err);
+    return null;
+  }
 }
 
 /**
@@ -133,6 +172,19 @@ export async function saveUserProfile(
     } = await supabase.auth.getSession();
 
     if (session?.user) {
+      // Foto baru (data:image/...) diunggah ke Storage 'avatars' supaya sama di semua perangkat.
+      // Yang disimpan di akun hanya alamat pendeknya (aman untuk cookie).
+      if (nextProfile.avatarUrl && nextProfile.avatarUrl.startsWith("data:")) {
+        const uploaded = await uploadAvatar(session.user.id, nextProfile.avatarUrl);
+        if (uploaded) {
+          nextProfile.avatarUrl = uploaded;
+          if (typeof window !== "undefined") {
+            localStorage.setItem("dompetku_user_profile", JSON.stringify(nextProfile));
+            window.dispatchEvent(new CustomEvent("profile_updated", { detail: nextProfile }));
+          }
+        }
+      }
+
       const isRemoteUrl =
         nextProfile.avatarUrl &&
         typeof nextProfile.avatarUrl === "string" &&

@@ -96,3 +96,66 @@ RLS aktif di 9 tabel dengan 4 policy tiap tabel; 2 view security_invoker; bucket
 
 ### BUG-021 Header ikut ter-scroll (tidak menempel di atas)
 Severity: S3 | Penyebab: kontainer frame memakai overflow-x-hidden sehingga `sticky` tidak bekerja. Status: fixed (overflow-x-clip)
+
+## Putaran QA 20 Nov 2026 (sore), di live setelah deploy 20f1313
+
+### BUG-022 Analitik selalu kosong untuk pengguna asli (server query tanpa login)
+Severity: S1 | Case: F06 | Bukti: log Supabase, request `rpc/get_financial_analytics` dan `goal_progress` dari user-agent `node` dengan role kosong (anon); hasil `wallets: []` padahal ada 4 dompet.
+Penyebab: lib/data/analytics.ts dijalankan di server (/api/analytics, /analisis) tapi memakai klien Supabase browser yang tidak membawa cookie login, sehingga RLS mengembalikan nol. Begitu ada transaksi, Beranda > Analisis, halaman Analisis, dan Insight AI tetap Rp0.
+Status: fixed (analitik memakai klien server yang membaca cookie)
+
+### BUG-023 "Hari ini" di Analisis dikunci ke 20 Nov 2026
+Severity: S1 | resolveDateRange memakai `new Date("2026-11-20T12:00:00Z")`. Mulai 21 Nov angka "Minggu/Bulan ini" salah; Desember tetap menampilkan November.
+Status: fixed (pakai tanggal WIB sebenarnya; halaman /analisis dirender per permintaan + muat ulang data saat dibuka). Tes dikunci ke tanggal tetap.
+
+### BUG-024 Transaksi jam 00:00–06:59 WIB tercatat di tanggal kemarin
+Severity: S2 | Bukti SQL: `'2026-11-20T18:30:00Z'::date` = 2026-11-20 (padahal 21 Nov 01:30 WIB). Catat manual, quick bar, transfer, suara ("tadi"/"kemarin"), dan struk tanpa tanggal memakai toISOString (UTC). Di tanggal 1 dini hari transaksi masuk ke bulan sebelumnya.
+Status: fixed (semua memakai todayJakarta(); resolveRelativeDate dihitung di WIB, ada tes dini hari)
+
+### BUG-025 Jadwal gajian & tagihan berulang dari Pengaturan selalu dibuat di November 2026
+Severity: S2 | Kode: `2026-11-${tanggal}`. Status: fixed (tanggal terdekat yang akan datang, dipotong ke akhir bulan)
+
+### BUG-026 Tagihan berulang tanggal 29–31 meloncat bulan (31 Jan → 3 Mar)
+Severity: S3 | Status: fixed (nextMonthOnDay, dipotong ke akhir bulan; ada tes)
+
+### BUG-027 Pembagian gaji tanpa tanggal dicatat pada 20 Nov 2026
+Severity: S3 | processPaydayAllocation default "2026-11-20". Status: fixed (todayJakarta)
+
+### BUG-028 Status "Kritis" padahal belum ada data
+Severity: S3 | Akun tanpa transaksi bulan ini mendapat label merah "Kondisi Kritis". Status: fixed (status "Belum ada data"; dana darurat "belum" bila biaya hidup belum diisi; ada tes)
+
+### BUG-029 Mikrofon tetap menyala setelah pindah halaman saat merekam
+Severity: S3 | Quick bar hanya ada di Beranda; pindah tab saat merekam membuat bar hilang tapi mic tetap aktif. Modal suara juga tidak mematikan mic saat dilepas.
+Status: fixed (rekaman dihentikan tanpa diproses saat pindah halaman / modal dilepas)
+
+### Dicek, bukan bug
+- Header menempel saat scroll, lonceng notifikasi, menu tema (Terang/Gelap/Sistem), halaman More: OK di live.
+- Halaman sempat "Memuat…" ±7 detik: terjadi karena panel browser uji sedang tersembunyi (timer diperlambat). Pindah halaman normal 0,15–0,7 detik.
+- Header keamanan (X-Frame-Options DENY dll.) aktif di semua halaman.
+
+### Masih terbuka (bukan bug, fitur)
+- Edit transaksi belum ada (sementara: hapus lalu catat ulang).
+- Peringatan saldo dompet jadi minus (S4).
+- ESLint: aturan gaya lama (any, set-state-in-effect), tidak memengaruhi fungsi.
+
+## Putaran 20 Nov 2026 (malam)
+
+### BUG-030 Foto profil tidak sama di perangkat lain
+Severity: S2 | Foto hanya disimpan di localStorage HP (sengaja tidak di cookie untuk menghindari 494), jadi perangkat lain tetap melihat foto lama.
+Status: fixed (bucket publik `avatars` di Supabase Storage, path {user_id}/avatar-*.jpg, RLS hanya pemilik yang boleh tulis; di akun hanya disimpan URL-nya. Foto lama di HP otomatis diunggah sekali saat app dibuka.)
+
+### BUG-031 Halaman login masih memakai logo berkotak
+Severity: S4 | Status: fixed (logo transparan). Ikon PWA/splash yang sudah terpasang di HP baru berubah setelah PWA dipasang ulang.
+
+### BUG-032 Keyboard HP menutupi kolom di halaman login
+Severity: S3 | Halaman dipusatkan vertikal + overflow-hidden, jadi tidak bisa digeser saat keyboard muncul.
+Status: fixed (viewport interactive-widget=resizes-content, halaman bisa di-scroll, kolom yang diketuk digeser ke tengah)
+
+### BUG-033 Tambah dompet "berhasil" padahal gagal tersimpan
+Severity: S2 | createWallet mengembalikan dompet palsu lokal saat DB menolak, juga di production. Status: fixed (production mengembalikan null + pesan gagal)
+
+## Fitur baru
+- Edit transaksi (Riwayat > detail > Ubah): nominal, judul, toko, kategori, dompet (asal/tujuan untuk transfer), tanggal. Jenis transaksi tidak bisa diubah.
+- Split Bill (/split-bill): item per orang, diskon/pajak/service proporsional, ongkir rata atau proporsional, pembulatan pas total, salin/bagikan WhatsApp, catat bagianku ke Riwayat. Tes: src/lib/split-bill.test.ts.
+- Rencana Keuangan AI (/rencana): jadwal gajian, biaya hidup, tagihan bulanan & target tabungan dari app (+ kebutuhan tambahan), dibagi berurutan sesuai tenggat kelipatan Rp50.000, status tepat waktu/telat, saran tempat simpan sesuai jangka waktu; Gemini menjelaskan + menyarankan dompet (tombol Buat). Tes: src/lib/financial-plan.test.ts.
+- More: "Catat Manual" dihapus (masih bisa lewat ikon pensil di quick bar Beranda); ditambah Rencana Keuangan AI dan Split Bill.

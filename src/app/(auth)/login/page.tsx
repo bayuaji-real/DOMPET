@@ -123,8 +123,15 @@ export default function LoginPage() {
     }
   };
 
+  // Saat kolom diketuk dan keyboard muncul, geser kolom ke tengah layar yang tersisa
+  const scrollFieldIntoView = (e: React.FocusEvent<HTMLDivElement>) => {
+    const el = e.target as HTMLElement;
+    if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
+    setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 300);
+  };
+
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-background">
+    <div className="relative min-h-dvh flex items-start sm:items-center justify-center overflow-x-clip bg-background px-4 pb-10 pt-[max(env(safe-area-inset-top,0px)+3rem,4rem)]" onFocusCapture={scrollFieldIntoView}>
       {/* Latar aurora: radial-gradient (tanpa filter blur, supaya tidak muncul tepi kotak) */}
       <div
         aria-hidden="true"
@@ -145,12 +152,12 @@ export default function LoginPage() {
         {/* Header Brand dengan Logo Glow Bergradasi */}
         <div className="mb-6 flex flex-col items-center text-center">
           <Image
-            src="/icons/logo-tile-192.png"
+            src="/icons/icon-512.png"
             alt="Logo Dompetku"
-            width={72}
-            height={72}
+            width={88}
+            height={88}
             priority
-            className="mb-3 h-[72px] w-[72px] rounded-[22px] shadow-lg shadow-teal-900/30 transition-transform hover:scale-105 duration-200"
+            className="mb-2 h-[88px] w-[88px] drop-shadow-[0_8px_18px_rgba(13,148,136,0.35)] transition-transform hover:scale-105 duration-200"
           />
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
             Dompetku

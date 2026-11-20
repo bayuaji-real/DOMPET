@@ -1,5 +1,6 @@
 import { createClient, isSupabaseConfigured } from "../supabase/client";
 import type { Database, TransactionType, TransactionSource } from "@/types/database";
+import { todayJakarta } from "./sample-mode";
 
 export type Transaction = Database["public"]["Tables"]["transactions"]["Row"];
 
@@ -87,7 +88,7 @@ export async function createTransaction(
     to_wallet_id: null,
     category_id: null,
     goal_id: null,
-    date: input.date || new Date().toISOString(),
+    date: input.date || todayJakarta(),
     note: input.note || null,
     merchant: input.merchant || null,
     source: input.source || "manual",
@@ -157,7 +158,7 @@ export async function createTransactions(
       to_wallet_id: null,
       category_id: null,
       goal_id: null,
-      date: input.date || new Date().toISOString(),
+      date: input.date || todayJakarta(),
       note: input.note || null,
       merchant: input.merchant || null,
       source: input.source || "manual",
@@ -205,6 +206,51 @@ export async function createTransactions(
   }
 
   return data || [];
+}
+
+export type UpdateTransactionInput = {
+  amount?: number;
+  wallet_id?: string;
+  to_wallet_id?: string | null;
+  category_id?: string | null;
+  date?: string;
+  note?: string | null;
+  merchant?: string | null;
+};
+
+/**
+ * Ubah transaksi yang sudah ada. Jenis transaksi (pemasukan/pengeluaran/transfer/tabungan) tidak diubah
+ * supaya aturan integritas tetap terjaga; saldo dompet & tabungan dihitung ulang otomatis oleh view.
+ */
+export async function updateTransaction(
+  id: string,
+  type: TransactionType,
+  input: UpdateTransactionInput
+): Promise<{ ok: boolean; error?: string }> {
+  if (input.amount !== undefined && !(input.amount > 0)) {
+    return { ok: false, error: "Nominal harus lebih dari Rp0." };
+  }
+  if (type === "transfer" && input.wallet_id && input.to_wallet_id && input.wallet_id === input.to_wallet_id) {
+    return { ok: false, error: "Dompet tujuan tidak boleh sama dengan dompet asal." };
+  }
+  const patch: Database["public"]["Tables"]["transactions"]["Update"] = {};
+  if (input.amount !== undefined) patch.amount = input.amount;
+  if (input.wallet_id) patch.wallet_id = input.wallet_id;
+  if (input.date) patch.date = input.date;
+  if (input.note !== undefined) patch.note = input.note?.trim() || null;
+  if (input.merchant !== undefined) patch.merchant = input.merchant?.trim() || null;
+  if (type === "transfer" && input.to_wallet_id) patch.to_wallet_id = input.to_wallet_id;
+  if ((type === "income" || type === "expense") && input.category_id !== undefined) {
+    patch.category_id = input.category_id || null;
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase.from("transactions").update(patch).eq("id", id);
+  if (error) {
+    console.error(`Gagal mengubah transaksi ID ${id}:`, error);
+    return { ok: false, error: "Gagal menyimpan perubahan. Coba lagi." };
+  }
+  return { ok: true };
 }
 
 export async function deleteTransaction(id: string): Promise<boolean> {

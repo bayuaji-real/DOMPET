@@ -5,9 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { TopHeader } from "@/components/layout/top-header";
 import { formatRupiah, formatTanggal, triggerHapticFeedback } from "@/lib/utils";
-import { deleteTransaction, getTransactions } from "@/lib/data/transactions";
-import { getWallets } from "@/lib/data/wallets";
-import { getCategories } from "@/lib/data/categories";
+import { deleteTransaction, getTransactions, type Transaction } from "@/lib/data/transactions";
+import { getWallets, type WalletBalance } from "@/lib/data/wallets";
+import { getCategories, type Category } from "@/lib/data/categories";
+import { EditTransactionSheet } from "@/components/transaction/edit-transaction-sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowDownRight,
@@ -64,6 +65,8 @@ interface TrxItem {
     rounding?: number | null;
   } | null;
   catatan?: string;
+  /** baris asli dari database, dipakai untuk fitur Ubah */
+  raw?: Transaction;
 }
 
 export default function TransaksiPage() {
@@ -76,6 +79,9 @@ export default function TransaksiPage() {
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
+  const [editTrx, setEditTrx] = React.useState<Transaction | null>(null);
+  const [walletList, setWalletList] = React.useState<WalletBalance[]>([]);
+  const [categoryList, setCategoryList] = React.useState<Category[]>([]);
   const filterRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -223,6 +229,9 @@ export default function TransaksiPage() {
           getCategories(),
         ]);
 
+        if (dbWallets.status === "fulfilled") setWalletList(dbWallets.value);
+        if (dbCats.status === "fulfilled") setCategoryList(dbCats.value);
+
         if (dbTrx.status === "fulfilled") {
           const walletsMap = new Map(
             dbWallets.status === "fulfilled"
@@ -275,6 +284,7 @@ export default function TransaksiPage() {
               source: (t.source as any) || "manual",
               receipt_path: t.receipt_path || undefined,
               catatan: t.note || undefined,
+              raw: t,
             };
           });
 
@@ -849,7 +859,20 @@ export default function TransaksiPage() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!selectedTrx.raw}
+                    onClick={() => {
+                      if (!selectedTrx.raw) return;
+                      setEditTrx(selectedTrx.raw);
+                      setSelectedTrx(null);
+                    }}
+                    className="h-11 rounded-xl text-xs font-semibold text-teal-700 dark:text-teal-300"
+                  >
+                    Ubah
+                  </Button>
                   <Button
                     type="button"
                     variant="outline"
@@ -872,6 +895,14 @@ export default function TransaksiPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      <EditTransactionSheet
+        trx={editTrx}
+        wallets={walletList}
+        categories={categoryList}
+        onClose={() => setEditTrx(null)}
+        onSaved={() => setEditTrx(null)}
+      />
 
       {/* Lightbox Struk Penuh */}
       {isZoomOpen && signedReceiptUrl && (

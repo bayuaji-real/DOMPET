@@ -1,5 +1,6 @@
 "use client";
 
+import { todayJakarta } from "@/lib/data/sample-mode";
 import * as React from "react";
 import { WalletIcon } from "@/components/wallet/wallet-icon";
 import { formatRupiah, cn } from "@/lib/utils";
@@ -208,7 +209,7 @@ export function VoiceConfirmationSheet({
           walletId: matchedWallet?.id || userWallets[0]?.id || "",
           categoryId: matchedCat?.id || userCategories[0]?.id || "",
           note: tx.note || "",
-          date: tx.date || new Date().toISOString().split("T")[0],
+          date: tx.date || todayJakarta(),
         };
       });
       setItems(mapped);
@@ -252,7 +253,7 @@ export function VoiceConfirmationSheet({
       walletId: userWallets[0]?.id || "",
       categoryId: userCategories[0]?.id || "",
       note: "Catatan baru",
-      date: new Date().toISOString().split("T")[0],
+      date: todayJakarta(),
     };
     setItems((prev) => [...prev, newItem]);
   };

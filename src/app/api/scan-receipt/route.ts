@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
           is_receipt: true,
           merchant: "Kopi Kenangan - Kota Kasablanka",
-          date: "2026-11-20",
+          date: todayJakarta(),
           total: 71000,
           items: [
             { name: "Kopi Kenangan Mantan (L)", qty: 2, price: 48000 },
@@ -187,7 +187,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         is_receipt: true,
         merchant: "Indomaret Point",
-        date: "2026-11-20",
+        date: todayJakarta(),
         total: 82500, // Total akhir setelah diskon Rp5.000 (bukan subtotal Rp87.500)
         items: [
           { name: "Roti Tawar Gandum", qty: 1, price: 19500 },

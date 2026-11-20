@@ -1,7 +1,8 @@
 import {
   ArrowLeftRight,
-  PenLine,
   PieChart,
+  ReceiptText,
+  Sparkles,
   PiggyBank,
   Settings,
   WalletCards,
@@ -32,7 +33,8 @@ export const MORE_GROUPS: MoreGroup[] = [
     items: [
       { label: "Riwayat Transaksi", description: "Semua arus masuk & keluar uangmu", href: "/transaksi", icon: ArrowLeftRight, tone: "bg-sky-500/15 text-sky-600 dark:text-sky-400" },
       { label: "Analisis Keuangan", description: "Arus kas, kategori, anggaran & insight AI", href: "/analisis", icon: PieChart, tone: "bg-violet-500/15 text-violet-600 dark:text-violet-400" },
-      { label: "Catat Manual", description: "Atur kategori, dompet, tanggal & transfer", href: "/tambah", icon: PenLine, tone: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+      { label: "Rencana Keuangan AI", description: "Bagi gaji ke kebutuhan, tenggat & saran dompet", href: "/rencana", icon: Sparkles, tone: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400" },
+      { label: "Split Bill", description: "Bagi tagihan adil, termasuk ongkir & pajak", href: "/split-bill", icon: ReceiptText, tone: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
       { label: "Target Tabungan", description: "Impian, proyeksi & timeline setoran", href: "/tabungan", icon: PiggyBank, tone: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
       { label: "Tambah Dompet", description: "Rekening, e-wallet, tunai, investasi", href: "/dompet?tambah=1", icon: WalletCards, tone: "bg-teal-500/15 text-teal-600 dark:text-teal-400" },
     ],
@@ -46,4 +48,4 @@ export const MORE_GROUPS: MoreGroup[] = [
 ];
 
 /** Path yang membuat tombol More di navbar tampil aktif. */
-export const MORE_ACTIVE_PREFIXES = ["/more", "/pengaturan", "/profil", "/settings", "/transaksi", "/analisis", "/tambah"];
+export const MORE_ACTIVE_PREFIXES = ["/more", "/pengaturan", "/profil", "/settings", "/transaksi", "/analisis", "/tambah", "/split-bill", "/rencana"];

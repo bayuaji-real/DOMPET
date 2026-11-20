@@ -1,7 +1,16 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 import { resolveDateRange, getAnalyticsData } from "./data/analytics";
 
 describe("Analytics Unit Tests", () => {
+  // Kunci "hari ini" ke 20 Nov 2026 (12:00 WIB) supaya tes tidak bergantung pada tanggal sebenarnya
+  beforeAll(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-20T05:00:00Z"));
+  });
+  afterAll(() => {
+    vi.useRealTimers();
+  });
+
   describe("resolveDateRange", () => {
     it("menghitung rentang bulan ini (November 2026)", () => {
       const range = resolveDateRange("month");
@@ -46,7 +55,7 @@ describe("Analytics Unit Tests", () => {
       expect(data.wallets.length).toBeGreaterThan(0);
       expect(data.topTransactions.length).toBeLessThanOrEqual(5);
       expect(data.topMerchants.length).toBeLessThanOrEqual(5);
-      expect(data.financialHealth.overallStatus).toMatch(/sehat|waspada|kritis/);
+      expect(data.financialHealth.overallStatus).toMatch(/sehat|waspada|kritis|belum/);
     });
 
     it("memastikan transfer dan setoran tabungan tidak dihitung sebagai pengeluaran belanja", async () => {

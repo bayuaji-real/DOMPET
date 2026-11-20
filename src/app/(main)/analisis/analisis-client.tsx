@@ -26,6 +26,7 @@ import {
   ArrowDownRight,
   CheckCircle2,
   X,
+  Info,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -56,12 +57,12 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
     initialData.period.type || "month"
   );
   const [data, setData] = React.useState<AnalyticsData>(initialData);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   // Custom Date Range State
   const [showCustomModal, setShowCustomModal] = React.useState(false);
-  const [customStart, setCustomStart] = React.useState(initialData.period.startDate || "2026-11-01");
-  const [customEnd, setCustomEnd] = React.useState(initialData.period.endDate || "2026-11-30");
+  const [customStart, setCustomStart] = React.useState(initialData.period.startDate);
+  const [customEnd, setCustomEnd] = React.useState(initialData.period.endDate);
 
   // Top list tab switcher
   const [topTab, setTopTab] = React.useState<"transactions" | "merchants">("transactions");
@@ -97,6 +98,12 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
     },
     []
   );
+
+  // Data awal dari server tidak membawa sesi login pengguna: selalu muat ulang data asli saat halaman dibuka
+  React.useEffect(() => {
+    fetchData(initialData.period.type || "month");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handlePeriodChange = (newPeriod: AnalyticsPeriod) => {
     if (newPeriod === "custom") {
@@ -254,7 +261,7 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
         {isLoading && (
           <div className="flex items-center justify-center gap-2 py-2 text-xs text-teal-600 dark:text-teal-400 font-semibold animate-pulse">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Memperbarui data {period}...</span>
+            <span>Memuat data terbaru...</span>
           </div>
         )}
 
@@ -276,13 +283,17 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                     ? "bg-teal-500/20 text-teal-600 dark:text-teal-400"
                     : data.financialHealth.overallStatus === "waspada"
                       ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
-                      : "bg-rose-500/20 text-rose-600 dark:text-rose-400"
+                      : data.financialHealth.overallStatus === "belum"
+                        ? "bg-muted text-muted-foreground"
+                        : "bg-rose-500/20 text-rose-600 dark:text-rose-400"
                 }`}
               >
                 {data.financialHealth.overallStatus === "sehat" ? (
                   <ShieldCheck className="h-5 w-5" />
                 ) : data.financialHealth.overallStatus === "waspada" ? (
                   <AlertTriangle className="h-5 w-5" />
+                ) : data.financialHealth.overallStatus === "belum" ? (
+                  <Info className="h-5 w-5" />
                 ) : (
                   <Flame className="h-5 w-5" />
                 )}
@@ -296,7 +307,9 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                     ? "Kondisi Sehat ✨"
                     : data.financialHealth.overallStatus === "waspada"
                       ? "Perlu Waspada ⚠️"
-                      : "Kondisi Kritis 🚨"}
+                      : data.financialHealth.overallStatus === "belum"
+                        ? "Belum Bisa Dinilai"
+                        : "Kondisi Kritis 🚨"}
                 </h3>
               </div>
             </div>
@@ -307,10 +320,12 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                   ? "bg-teal-500/20 text-teal-700 dark:text-teal-300"
                   : data.financialHealth.overallStatus === "waspada"
                     ? "bg-amber-500/20 text-amber-700 dark:text-amber-300"
-                    : "bg-rose-500/20 text-rose-700 dark:text-rose-300"
+                    : data.financialHealth.overallStatus === "belum"
+                      ? "bg-muted text-muted-foreground"
+                      : "bg-rose-500/20 text-rose-700 dark:text-rose-300"
               }`}
             >
-              {data.financialHealth.overallStatus}
+              {data.financialHealth.overallStatus === "belum" ? "belum ada data" : data.financialHealth.overallStatus}
             </span>
           </div>
 
@@ -325,10 +340,12 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                     ? "bg-teal-500/15 text-teal-600 dark:text-teal-400"
                     : data.financialHealth.savingsRateStatus === "waspada"
                       ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                      : "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                      : data.financialHealth.savingsRateStatus === "belum"
+                        ? "bg-muted text-muted-foreground"
+                        : "bg-rose-500/15 text-rose-600 dark:text-rose-400"
                 }`}
               >
-                {data.financialHealth.savingsRateStatus}
+                {data.financialHealth.savingsRateStatus === "belum" ? "belum ada data" : data.financialHealth.savingsRateStatus}
               </span>
             </div>
 
@@ -341,10 +358,12 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                     ? "bg-teal-500/15 text-teal-600 dark:text-teal-400"
                     : data.financialHealth.emergencyStatus === "waspada"
                       ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                      : "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                      : data.financialHealth.emergencyStatus === "belum"
+                        ? "bg-muted text-muted-foreground"
+                        : "bg-rose-500/15 text-rose-600 dark:text-rose-400"
                 }`}
               >
-                {data.financialHealth.emergencyStatus}
+                {data.financialHealth.emergencyStatus === "belum" ? "belum ada data" : data.financialHealth.emergencyStatus}
               </span>
             </div>
 

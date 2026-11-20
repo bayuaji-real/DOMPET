@@ -1,4 +1,19 @@
-import { createClient } from "../supabase/client";
+import { createClient as createBrowserSupabase } from "../supabase/client";
+
+/**
+ * Analitik dijalankan di server (route /api/analytics & halaman /analisis).
+ * Pakai klien server yang membaca cookie login, supaya RLS mengenali pengguna.
+ * (Klien browser di server tidak membawa sesi → semua query kembali kosong.)
+ * Di luar request (mis. unit test) cookies() melempar error, jadi jatuh ke klien biasa.
+ */
+async function getSupabase() {
+  try {
+    const { createClient } = await import("../supabase/server");
+    return await createClient();
+  } catch {
+    return createBrowserSupabase();
+  }
+}
 import type {
   AnalyticsPeriod,
   AnalyticsData,
@@ -334,8 +349,9 @@ export function resolveDateRange(
   customStart?: string,
   customEnd?: string
 ): { startDate: string; endDate: string; label: string; daysCount: number } {
-  // Tanggal patokan simulasi kalender app: 20 November 2026 (atau new Date() pengguna)
-  const now = new Date("2026-11-20T12:00:00Z");
+  // Hari ini menurut WIB. Diparse sebagai jam 12 waktu lokal supaya getDate()/getMonth() tetap tanggal yang sama
+  // baik di server (UTC) maupun di HP (WIB).
+  const now = new Date(`${todayJakarta()}T12:00:00`);
   const pad = (n: number) => String(n).padStart(2, "0");
   const formatDate = (d: Date) =>
     `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -415,6 +431,23 @@ export function resolveDateRange(
  * Mengutamakan SQL function RPC `get_financial_analytics` di database Supabase.
  * Menyediakan fallback agregasi server-side jika RPC belum dijalankan di Supabase Dashboard.
  */
+/**
+ * Jangan cap "Kritis" kalau datanya memang belum ada.
+ * - Tanpa pemasukan & pengeluaran pada periode ini => rasio menabung "belum".
+ * - Status keseluruhan dihitung hanya dari indikator yang sudah punya data.
+ */
+export function applyNoDataStatus<T extends { summary: { totalIncome: number; totalExpense: number }; financialHealth: FinancialHealth }>(data: T): T {
+  const fh = { ...data.financialHealth };
+  const noActivity = data.summary.totalIncome === 0 && data.summary.totalExpense === 0;
+  if (noActivity) fh.savingsRateStatus = "belum";
+  const known = [fh.savingsRateStatus, fh.emergencyStatus].filter((x) => x !== "belum");
+  if (noActivity || known.length === 0) fh.overallStatus = "belum";
+  else if (known.includes("kritis")) fh.overallStatus = "kritis";
+  else if (known.every((x) => x === "sehat")) fh.overallStatus = "sehat";
+  else fh.overallStatus = "waspada";
+  return { ...data, financialHealth: fh };
+}
+
 export async function getAnalyticsData(
   options: GetAnalyticsOptions = {}
 ): Promise<AnalyticsData> {
@@ -425,7 +458,7 @@ export async function getAnalyticsData(
     options.endDate
   );
 
-  const supabase = createClient();
+  const supabase = await getSupabase();
 
   // 1. Coba panggil RPC PostgreSQL Supabase `get_financial_analytics` dengan batas waktu 1.5 detik
   try {
@@ -442,7 +475,7 @@ export async function getAnalyticsData(
     ])) as any;
 
     if (!rpcError && rpcData && rpcData.summary) {
-      return {
+      return applyNoDataStatus({
         period: {
           type: period,
           label,
@@ -510,14 +543,14 @@ export async function getAnalyticsData(
           emergencyStatus: rpcData.financial_health.emergency_status || "sehat",
           goalsOnTrack: Boolean(rpcData.financial_health.goals_on_track ?? true),
         },
-      };
+      });
     }
   } catch (err) {
     // Supabase RPC belum dibuat di dashboard atau offline -> fallback otomatis
   }
 
   // 2. Fallback: Agregasi di Server / Database Client
-  return await calculateAnalyticsFallback(period, startDate, endDate, label, daysCount);
+  return applyNoDataStatus(await calculateAnalyticsFallback(period, startDate, endDate, label, daysCount));
 }
 
 /**
@@ -530,7 +563,7 @@ async function calculateAnalyticsFallback(
   label: string,
   daysCount: number
 ): Promise<AnalyticsData> {
-  const supabase = createClient();
+  const supabase = await getSupabase();
 
   // Hitung durasi periode sebelumnya
   const sDate = new Date(startDate);
@@ -854,7 +887,10 @@ async function calculateAnalyticsFallback(
   const emergencyFundMonths =
     monthlyLiving > 0 ? Math.round((emergencyFundBalance / monthlyLiving) * 10) / 10 : 0;
   let emergencyStatus: HealthStatus = "kritis";
-  if (emergencyFundMonths >= 3) {
+  if (monthlyLiving === 0 && emergencyFundBalance === 0) {
+    // Biaya hidup belum diisi di Pengaturan dan belum ada dana darurat: belum bisa dinilai
+    emergencyStatus = "belum";
+  } else if (emergencyFundMonths >= 3) {
     emergencyStatus = "sehat";
   } else if (emergencyFundMonths >= 1) {
     emergencyStatus = "waspada";

@@ -107,7 +107,7 @@ export interface ProcessPaydayParams {
  * 3. Update actual_amount di payday_schedule jika ada
  */
 export async function processPaydayAllocation(params: ProcessPaydayParams) {
-  const todayDate = params.date || "2026-11-20";
+  const todayDate = params.date || todayJakarta();
   const supabase = createClient();
 
   // 1. Catat Pemasukan Gaji

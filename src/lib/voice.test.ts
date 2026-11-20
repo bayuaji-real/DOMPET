@@ -48,6 +48,13 @@ describe("Voice Transaction Parser & Utilities (Phase 5)", () => {
     it("mengembalikan H-2 untuk 'kemarin lusa'", () => {
       expect(resolveRelativeDate("kemarin lusa beli sepatu", fixedToday)).toBe("2026-11-18");
     });
+
+    it("dini hari WIB (masih tanggal kemarin di UTC) tetap memakai tanggal WIB", () => {
+      // 01:30 WIB tanggal 1 Des = 18:30 UTC tanggal 30 Nov
+      const dini = new Date("2026-11-30T18:30:00Z");
+      expect(resolveRelativeDate("tadi", dini)).toBe("2026-12-01");
+      expect(resolveRelativeDate("kemarin", dini)).toBe("2026-11-30");
+    });
   });
 
   describe("matchWallet", () => {

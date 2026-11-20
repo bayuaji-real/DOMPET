@@ -1,5 +1,7 @@
 "use client";
 
+import { nextDateForDay } from "@/lib/dates";
+import { todayJakarta } from "@/lib/data/sample-mode";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { TopHeader } from "@/components/layout/top-header";
@@ -296,8 +298,7 @@ export default function PengaturanPage() {
         living_cost_per_payday: livingCost,
       });
 
-      const pad = (n: number) => String(n).padStart(2, "0");
-      const nextDate = `2026-11-${pad(dayNum)}`;
+      const nextDate = nextDateForDay(dayNum, todayJakarta());
 
       await createPaydaySchedule({
         date: nextDate,
@@ -421,8 +422,7 @@ export default function PengaturanPage() {
 
     try {
       const day = parseInt(newRecDay, 10) || 20;
-      const pad = (n: number) => String(n).padStart(2, "0");
-      const nextDateStr = `2026-11-${pad(day)}`;
+      const nextDateStr = nextDateForDay(day, todayJakarta());
 
       const created = await createRecurringTransaction({
         type: "expense",
@@ -474,7 +474,7 @@ export default function PengaturanPage() {
     try {
       const trxList = await getTransactions({ limit: 500 });
       const csvContent = generateTransactionsCSV(trxList);
-      const filename = `dompetku_transaksi_${new Date().toISOString().split("T")[0]}.csv`;
+      const filename = `dompetku_transaksi_${todayJakarta()}.csv`;
       triggerBrowserDownload(csvContent, filename, "text/csv;charset=utf-8;");
       showToast("File CSV transaksi berhasil diunduh!");
     } catch (err) {
@@ -514,7 +514,7 @@ export default function PengaturanPage() {
       };
 
       const jsonContent = generateBackupJSON(backupPayload);
-      const filename = `dompetku_backup_lengkap_${new Date().toISOString().split("T")[0]}.json`;
+      const filename = `dompetku_backup_lengkap_${todayJakarta()}.json`;
       triggerBrowserDownload(jsonContent, filename, "application/json");
       showToast("Backup JSON akun berhasil diunduh!");
     } catch (err) {

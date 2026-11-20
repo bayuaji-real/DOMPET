@@ -38,6 +38,8 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  // Saat keyboard HP muncul, layar ikut mengecil sehingga kolom yang sedang diketik tidak tertutup
+  interactiveWidget: "resizes-content",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#0d9488" },
     { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
