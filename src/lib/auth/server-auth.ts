@@ -40,7 +40,11 @@ export async function verifyServerAuth(
       const url = new URL(request.url);
       const isDemoQuery = url.searchParams.get("demo") === "true";
       const isDemoHeader = request.headers.get("x-demo-mode") === "true";
-      if (isDemoQuery || isDemoHeader || process.env.NODE_ENV !== "production") {
+      // Mode demo HANYA untuk development lokal (npm run dev / tes E2E).
+      // Di production (Vercel) selalu mati, kecuali sengaja diaktifkan lewat ENABLE_DEMO_MODE=true.
+      const demoEnabled =
+        process.env.NODE_ENV !== "production" || process.env.ENABLE_DEMO_MODE === "true";
+      if (demoEnabled && (isDemoQuery || isDemoHeader || process.env.NODE_ENV !== "production")) {
         isDemoAllowed = true;
       }
     } catch {

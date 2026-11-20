@@ -291,6 +291,7 @@ export default function LoginPage() {
                 )}
               </Button>
 
+{process.env.NODE_ENV !== "production" && (
               <Button
                 type="button"
                 variant="outline"
@@ -301,6 +302,7 @@ export default function LoginPage() {
               >
                 ✨ Coba Langsung (Mode Demo)
               </Button>
+              )}
 
               <button
                 type="button"
