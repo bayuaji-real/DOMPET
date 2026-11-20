@@ -17,6 +17,7 @@ import {
 import { TopHeader } from "@/components/layout/top-header";
 import { formatRupiah, cn } from "@/lib/utils";
 import { WalletIcon } from "@/components/wallet/wallet-icon";
+import { FeatureMenu } from "./feature-menu";
 import { PaydayCard } from "./payday-card";
 import { DueRecurringCard } from "./due-recurring-card";
 import { getWallets, type WalletBalance } from "@/lib/data/wallets";
@@ -159,7 +160,7 @@ export function BerandaClient({
         subtitle="Halo! Keuanganmu terkendali hari ini ✨"
       />
 
-      <div className="space-y-4 p-4">
+      <div className="space-y-5 px-4 pb-4 pt-5">
         {/* 1. Banner Saldo Total Bersih (dengan Toggle Sembunyikan Saldo) */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-700 via-teal-800 to-emerald-950 p-5 text-white shadow-xl shadow-teal-900/20">
           <div className="relative z-10">
@@ -240,6 +241,9 @@ export function BerandaClient({
             onActionComplete={loadDashboardData}
           />
         )}
+
+        {/* Menu fitur tambahan (gaya Livin') */}
+        <FeatureMenu />
 
         {/* 4. Daftar Kantong & Rekening Dompet */}
         <div className="space-y-3">

@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { formatTanggalWIB } from "@/lib/utils";
-import { SideNav } from "./side-nav";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
 
 interface TopHeaderProps {
@@ -61,7 +60,7 @@ export function TopHeader({
   const displayName = profile.name || "Sobat Dompet";
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border/50 bg-background/90 px-4 py-3 backdrop-blur-md pt-safe">
+    <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border/50 bg-background/90 px-4 pb-3.5 backdrop-blur-md" style={{ paddingTop: "max(env(safe-area-inset-top, 0px) + 0.5rem, 1.25rem)" }}>
       <Link
         href="/pengaturan"
         className="flex items-center gap-3 group transition-transform active:scale-[0.98] cursor-pointer"
@@ -104,7 +103,6 @@ export function TopHeader({
         <span className="text-[10px] font-bold text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full border border-border/40">
           {currentDate.split(",")[0] || "Hari Ini"}
         </span>
-        <SideNav userName={displayName} />
       </div>
     </header>
   );

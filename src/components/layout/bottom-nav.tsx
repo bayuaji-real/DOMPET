@@ -4,6 +4,11 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Home,
+  Plus,
+  PiggyBank,
+  Wallet,
+  Settings,
   Camera,
   ImageIcon,
   Mic,
@@ -16,7 +21,14 @@ import {
   Square,
 } from "lucide-react";
 import { cn, parseRupiahInput, formatRupiah } from "@/lib/utils";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { compressImage } from "@/lib/image-compression";
 import { uploadReceipt } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/client";
@@ -31,6 +43,7 @@ import type { ParsedVoiceTransaction } from "@/app/api/voice-transaction/route";
 
 export function BottomNav() {
   const pathname = usePathname();
+  const [sheetOpen, setSheetOpen] = React.useState(false);
   const [inputText, setInputText] = React.useState("");
   const [isRecording, setIsRecording] = React.useState(false);
   const [isProcessing, setIsProcessing] = React.useState(false);
@@ -106,7 +119,7 @@ export function BottomNav() {
   }, []);
 
   // Jangan tampilkan bottom navigation jika sedang di halaman login/auth
-  if (pathname.startsWith("/login") || pathname.startsWith("/tambah")) {
+  if (pathname.startsWith("/login")) {
     return null;
   }
 
@@ -142,12 +155,14 @@ export function BottomNav() {
       }
 
       setInputText("");
+      setSheetOpen(false);
       setVoiceTranscript(data.transcript || text);
       setVoiceTransactions(data.transactions || []);
       setIsVoiceConfirmationOpen(true);
     } catch (err: unknown) {
       console.error("Gagal memproses kalimat cepat:", err);
       showNotification(`Memproses "${text}"...`);
+      setSheetOpen(false);
     } finally {
       setIsProcessing(false);
     }
@@ -156,6 +171,7 @@ export function BottomNav() {
   // Handler pemilihan file foto struk
   const handlePhotoSelected = async (file: File) => {
     setIsPhotoSourceOpen(false);
+    setSheetOpen(false);
     setIsScanning(true);
 
     try {
@@ -219,6 +235,13 @@ export function BottomNav() {
       setIsConfirmationOpen(true);
     }
   };
+
+  // Bersihkan rekaman saat sheet ditutup
+  React.useEffect(() => {
+    if (!sheetOpen && isVoiceRecording) {
+      stopVoiceRecording(false);
+    }
+  }, [sheetOpen, isVoiceRecording]);
 
   // Mulai merekam suara langsung di quick bar
   const startVoiceRecording = async () => {
@@ -379,6 +402,7 @@ export function BottomNav() {
       }
 
       setInputText("");
+      setSheetOpen(false);
       setVoiceTranscript(data.transcript || text);
       setVoiceTransactions(data.transactions || []);
       setIsVoiceConfirmationOpen(true);
@@ -399,102 +423,187 @@ export function BottomNav() {
     }
   };
 
+  const navItems = [
+    { label: "Beranda", href: "/", icon: Home, isActive: pathname === "/" },
+    { label: "Tabungan", href: "/tabungan", icon: PiggyBank, isActive: pathname.startsWith("/tabungan") },
+    // Tombol [+] Tambah di tengah
+    { label: "Tambah", isAction: true, icon: Plus },
+    { label: "Dompet", href: "/dompet", icon: Wallet, isActive: pathname.startsWith("/dompet") },
+    {
+      label: "Pengaturan",
+      href: "/pengaturan",
+      icon: Settings,
+      isActive: pathname.startsWith("/pengaturan") || pathname.startsWith("/settings") || pathname.startsWith("/profil"),
+    },
+  ];
+
   return (
     <>
-      <div
-        className="fixed left-1/2 z-40 w-[calc(100%-1.5rem)] max-w-[406px] -translate-x-1/2"
-        style={{ bottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      <nav
+        aria-label="Navigasi Bawah"
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 w-full max-w-[430px] border-t border-border/80 bg-background/95 backdrop-blur-md px-3 pt-2.5 pb-7"
       >
-        <div
-          role="group"
-          aria-label="Catat transaksi cepat"
-          className={cn(
-            "flex items-center gap-1.5 rounded-2xl border p-1.5 shadow-xl shadow-black/15 transition-all",
-            isVoiceRecording
-              ? "border-rose-500/70 bg-card ring-2 ring-rose-500/20"
-              : "border-border/80 bg-card"
-          )}
-        >
-          <button
-            type="button"
-            onClick={() => setIsPhotoSourceOpen(true)}
-            disabled={isVoiceRecording || isProcessing}
-            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 transition-all hover:bg-teal-500/20 active:scale-95 disabled:opacity-50 dark:bg-teal-500/15 dark:text-teal-400"
-            title="Foto Struk Belanja"
-            aria-label="Foto Struk Belanja"
-          >
-            <Camera className="h-5 w-5" />
-          </button>
+        <div className="flex items-center justify-around">
+          {navItems.map((item, idx) => {
+            const Icon = item.icon;
 
-          <form onSubmit={handleQuickSubmit} className="relative flex flex-1 items-center">
-            {isVoiceRecording && (
-              <span className="pointer-events-none absolute left-3 z-10 h-2 w-2 animate-ping rounded-full bg-rose-500" />
-            )}
-            <input
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              aria-label="Catat transaksi cepat"
-              placeholder={
-                isVoiceRecording
-                  ? `Mendengarkan... (${voiceSeconds}d)`
-                  : "Misal: Nasi Padang 25rb GoPay..."
-              }
-              disabled={isProcessing}
-              className={cn(
-                "h-10 w-full rounded-xl border border-border/60 bg-muted/30 pr-10 text-xs text-foreground transition-all focus:outline-none focus:ring-1 focus:ring-teal-500/50",
-                isVoiceRecording
-                  ? "pl-8 font-semibold text-rose-600 dark:text-rose-400"
-                  : "pl-3 placeholder:text-muted-foreground/70"
-              )}
-            />
+            // Tombol Utama [+] Tambah (Floating Icon di Tengah)
+            if (item.isAction) {
+              return (
+                <Sheet key={idx} open={sheetOpen} onOpenChange={setSheetOpen}>
+                  <SheetTrigger
+                    className="relative -top-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-teal-500 text-zinc-950 shadow-lg shadow-teal-500/30 transition-all hover:bg-teal-400 active:scale-95 focus:outline-none cursor-pointer"
+                    aria-label="Tambah Transaksi Cepat"
+                  >
+                    <Plus className="h-5.5 w-5.5 stroke-[2.5]" />
+                  </SheetTrigger>
 
-            {isProcessing ? (
-              <div className="absolute right-1 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
-              </div>
-            ) : isVoiceRecording ? (
-              <button
-                type="button"
-                onClick={() => stopVoiceRecording(true)}
-                className="absolute right-1 flex h-8 w-8 animate-pulse cursor-pointer items-center justify-center rounded-lg bg-rose-500 text-white shadow-md transition-all hover:bg-rose-600"
-                title="Selesai & Catat"
-                aria-label="Selesai dan catat"
-              >
-                <Square className="h-3.5 w-3.5 fill-current" />
-              </button>
-            ) : inputText.trim().length > 0 ? (
-              <button
-                type="submit"
-                className="absolute right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-teal-600 text-white shadow-sm transition-all hover:bg-teal-700 active:scale-95"
-                title="Kirim Catatan"
-                aria-label="Kirim catatan"
-              >
-                <ArrowUp className="h-4 w-4 stroke-[2.5]" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleMicClick}
-                className="absolute right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-                title="Bicara untuk Catat Langsung"
-                aria-label="Catat dengan suara"
-              >
-                <Mic className="h-4 w-4" />
-              </button>
-            )}
-          </form>
+                  <SheetContent
+                    side="bottom"
+                    showCloseButton={false}
+                    className="mx-auto max-w-[430px] rounded-t-3xl border-border/80 bg-background/95 backdrop-blur-xl p-4 shadow-2xl"
+                  >
+                    <SheetHeader className="sr-only">
+                      <SheetTitle>Quick Entry Transaksi</SheetTitle>
+                      <SheetDescription>
+                        Input transaksi cepat via teks, foto struk, atau suara
+                      </SheetDescription>
+                    </SheetHeader>
 
-          <Link
-            href="/tambah"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground transition-all hover:text-foreground active:scale-95"
-            title="Input Manual"
-            aria-label="Input manual"
-          >
-            <PenLine className="h-5 w-5" />
-          </Link>
+                    {/* Quick Entry Bar di dalam modal */}
+                    <div
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-2xl border p-1.5 shadow-sm transition-all",
+                        isVoiceRecording
+                          ? "border-rose-500/70 ring-2 ring-rose-500/20 bg-rose-500/5"
+                          : "border-border/80 bg-muted/30"
+                      )}
+                    >
+                      {/* Tombol Kamera di kiri */}
+                      <button
+                        type="button"
+                        onClick={() => setIsPhotoSourceOpen(true)}
+                        disabled={isVoiceRecording || isProcessing}
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 hover:bg-teal-500/20 active:scale-95 transition-all dark:bg-teal-500/15 dark:text-teal-400 cursor-pointer disabled:opacity-50"
+                        title="Foto Struk Belanja"
+                        aria-label="Foto Struk Belanja"
+                      >
+                        <Camera className="h-5 w-5" />
+                      </button>
+
+                      {/* Search / Text Bar di tengah */}
+                      <form
+                        onSubmit={handleQuickSubmit}
+                        className="relative flex flex-1 items-center"
+                      >
+                        {isVoiceRecording && (
+                          <div className="absolute left-3 flex items-center gap-1.5 pointer-events-none z-10">
+                            <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping" />
+                          </div>
+                        )}
+                        <input
+                          type="text"
+                          value={inputText}
+                          onChange={(e) => setInputText(e.target.value)}
+                          placeholder={
+                            isVoiceRecording
+                              ? `Mendengarkan... (${voiceSeconds}d)`
+                              : "Misal: Nasi Padang 25rb GoPay..."
+                          }
+                          disabled={isProcessing}
+                          className={cn(
+                            "w-full h-11 rounded-xl bg-card pr-10 text-xs text-foreground focus:outline-none focus:ring-1.5 focus:ring-teal-500/50 transition-all border border-border/60 shadow-inner",
+                            isVoiceRecording
+                              ? "pl-8 text-rose-600 dark:text-rose-400 font-semibold"
+                              : "pl-3 placeholder:text-muted-foreground/70"
+                          )}
+                          autoFocus
+                        />
+
+                        {/* Mic / Stop / Send Button di kanan */}
+                        {isProcessing ? (
+                          <div className="absolute right-1.5 flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
+                          </div>
+                        ) : isVoiceRecording ? (
+                          <button
+                            type="button"
+                            onClick={() => stopVoiceRecording(true)}
+                            className="absolute right-1.5 flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500 hover:bg-rose-600 text-white animate-pulse shadow-md transition-all cursor-pointer"
+                            title="Selesai & Catat"
+                          >
+                            <Square className="h-3.5 w-3.5 fill-current" />
+                          </button>
+                        ) : inputText.trim().length > 0 ? (
+                          <button
+                            type="submit"
+                            className="absolute right-1.5 flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600 text-white hover:bg-teal-700 active:scale-95 transition-all shadow-sm cursor-pointer"
+                            title="Kirim Catatan"
+                          >
+                            <ArrowUp className="h-4 w-4 stroke-[2.5]" />
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleMicClick}
+                            className="absolute right-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer"
+                            title="Bicara untuk Catat Langsung"
+                          >
+                            <Mic className="h-4 w-4" />
+                          </button>
+                        )}
+                      </form>
+                    </div>
+
+                    {/* Pilihan: Input Manual (Hanya satu opsi bersih di bawah quick bar) */}
+                    <div className="pt-2 border-t border-border/50">
+                      <Link
+                        href="/tambah"
+                        onClick={() => setSheetOpen(false)}
+                        className="flex items-center gap-3 rounded-2xl border border-border/60 bg-muted/20 p-2.5 transition-colors hover:bg-muted text-xs active:scale-[0.99]"
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                          <PenLine className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-foreground">
+                            Input Manual
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Atur kategori, dompet spesifik, tanggal & transfer
+                          </p>
+                        </div>
+                      </Link>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              );
+            }
+
+            // Item Navigasi Biasa (Link)
+            const isActive = item.isActive;
+            return (
+              <Link
+                key={idx}
+                href={item.href || "/"}
+                className={cn(
+                  "flex flex-1 flex-col items-center justify-center gap-0.5 py-1 min-w-0 transition-colors cursor-pointer",
+                  isActive
+                    ? "text-teal-600 dark:text-teal-400 font-bold"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon
+                  className={cn("h-4.5 w-4.5 shrink-0", isActive ? "stroke-[2.5]" : "stroke-[1.75]")}
+                />
+                <span className="text-[9.5px] leading-tight tracking-tight truncate max-w-full">
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
         </div>
-      </div>
+      </nav>
 
       {/* Inputs Tersembunyi untuk Kamera & Galeri */}
       <input
