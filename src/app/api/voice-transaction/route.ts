@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateJson, GeminiPart, GeminiError } from "@/lib/ai/gemini";
 import { createClient } from "@/lib/supabase/server";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
+import { voiceTransactionSchema } from "@/lib/validation";
 
 export interface ParsedVoiceTransaction {
   type: "income" | "expense" | "transfer";
@@ -25,6 +26,10 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json().catch(() => ({}));
+    const parsed = voiceTransactionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Input tidak valid." }, { status: 400 });
+    }
     const {
       audioBase64,
       mimeType,

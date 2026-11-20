@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { generateJson } from "@/lib/ai/gemini";
 import { createClient } from "@/lib/supabase/server";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
+import { aiInsightsSchema } from "@/lib/validation";
 
 interface AIInsightResponse {
   insights: string[];
@@ -16,6 +17,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = aiInsightsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, error: "Input tidak valid." }, { status: 400 });
+    }
     const {
       periodKey,
       periodLabel,
