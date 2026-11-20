@@ -45,7 +45,25 @@ const daysBetween = (a: string, b: string) =>
 export function NotificationBell() {
   const [open, setOpen] = React.useState(false);
   const [items, setItems] = React.useState<Notice[]>([]);
+  const [readIds, setReadIds] = React.useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = localStorage.getItem("dompet_read_notifs");
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch {
+      return [];
+    }
+  });
   const ref = useDismiss(open, () => setOpen(false));
+
+  const unread = items.filter((n) => !readIds.includes(n.id));
+  const markAllRead = () => {
+    const ids = items.map((n) => n.id);
+    setReadIds(ids);
+    try {
+      localStorage.setItem("dompet_read_notifs", JSON.stringify(ids));
+    } catch {}
+  };
 
   React.useEffect(() => {
     let cancelled = false;
@@ -110,21 +128,32 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={`Notifikasi${items.length ? `, ${items.length} baru` : ""}`}
+        aria-label={`Notifikasi${unread.length ? `, ${unread.length} baru` : ""}`}
         aria-expanded={open}
         className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-border/60 bg-muted/40 text-foreground transition-colors hover:bg-muted active:scale-95"
       >
         <Bell className="h-4.5 w-4.5" />
-        {items.length > 0 && (
+        {unread.length > 0 && (
           <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
-            {items.length}
+            {unread.length}
           </span>
         )}
       </button>
 
       {open && (
         <div className="absolute right-0 top-11 z-50 w-72 overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
-          <p className="border-b border-border/60 px-4 py-2.5 text-xs font-extrabold text-foreground">Notifikasi</p>
+          <div className="flex items-center justify-between border-b border-border/60 px-4 py-2.5">
+            <p className="text-xs font-extrabold text-foreground">Notifikasi</p>
+            {unread.length > 0 && (
+              <button
+                type="button"
+                onClick={markAllRead}
+                className="cursor-pointer text-[11px] font-semibold text-teal-600 hover:underline dark:text-teal-400"
+              >
+                Tandai sudah dibaca
+              </button>
+            )}
+          </div>
           {items.length === 0 ? (
             <p className="px-4 py-6 text-center text-xs text-muted-foreground">Belum ada notifikasi. Semua beres ✨</p>
           ) : (
