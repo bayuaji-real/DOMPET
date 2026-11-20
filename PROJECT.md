@@ -172,11 +172,11 @@ Koneksi: `https://yupcalxuirodvfwovtzu.supabase.co`
   * Rasio menabung: >20% sehat, 10–20% waspada, <10% kritis
   * Dana darurat: ≥3 bulan biaya hidup sehat, 1–3 waspada, <1 kritis
   * Tabungan bertenggat sesuai jadwal: on-track / telat
-- [x] Wawasan Otomatis (*Wawasan Kami ✨*): Tombol "Wawasan Kami" memicu Route Handler `/api/ai-insights` yang mengirimkan ringkasan angka agregasi ke Gemini API, menghasilkan 3–5 poin wawasan berbahasa Indonesia santai + 1 rekomendasi konkret (*actionable tip*), dicache di database Supabase per user & periode agar hemat panggilan API.
+- [x] Wawasan Otomatis (*Insight AI ✨*): Tombol "Insight AI" memicu Route Handler `/api/ai-insights` yang mengirimkan ringkasan angka agregasi ke Gemini API, menghasilkan 3–5 poin wawasan berbahasa Indonesia santai + 1 rekomendasi konkret (*actionable tip*), dicache di database Supabase per user & periode agar hemat panggilan API.
 - [x] Arsitektur Agregasi Database: Disediakan SQL function / RPC Supabase (`get_financial_analytics`) di `scripts/create_analytics_rpc.sql` serta fallback agregasi server-side lengkap.
 - [x] Script Seed Data Contoh 2 Bulan (`scripts/seed-analytics-sample.ts`) dengan flag pembersihan `--cleanup` via `npm run seed:analytics:clean`.
 - [x] Format nominal bersih tanpa tanda plus (`+`) atau minus (`-`) pada seluruh komponen transaksi & analisis (murni dibedakan via warna merah untuk pengeluaran, teal/hijau untuk pemasukan).
-- [x] Copywriting konsisten tanpa kata "AI", diganti dengan sudut pandang "Kami" ("Wawasan Kami").
+- [x] Copywriting konsisten & ringkas: Menggunakan label **"Insight AI ✨"**.
 - [x] Server-side rendering (SSR) dengan `initialData` di `page.tsx` memastikan halaman terbuka seketika tanpa flash loading.
 - [x] Unit test Vitest 100% lulus (6/6 test di `src/lib/analytics.test.ts`, total 44/44 test di seluruh suite).
 
@@ -214,8 +214,37 @@ Koneksi: `https://yupcalxuirodvfwovtzu.supabase.co`
   * 7/7 unit test Vitest Phase 7 lulus 100% (total 51/51 unit test di seluruh repository).
   * Seluruh alur (A → F) telah diverifikasi visual menggunakan browser mobile headless dengan tangkapan layar (screenshots) tersimpan di direktori artefak.
 
-### Phase Berikutnya
-- [ ] *Pending*
+### Phase 8: Audit Keamanan, Pengujian E2E, UX, Performa, Deploy & Dokumentasi (SELESAI ✅)
+- [x] **1. Audit Keamanan & Hardening RLS:**
+  * **RLS (Row Level Security) Aktif 100%:** Diterapkan di seluruh 9 tabel database Supabase (`wallets`, `transactions`, `categories`, `savings_goals`, `savings_history`, `payday_schedule`, `recurring_bills`, `budgets`, `ai_insights`).
+  * **Kebijakan Isolasi Data:** Seluruh query SELECT, INSERT, UPDATE, dan DELETE dipagari filter kepemilikan ketat `auth.uid() = user_id`.
+  * **Storage Bucket Security:** Bucket Storage `'receipts'` dikonfigurasi sebagai bucket privat dengan RLS policy yang hanya mengizinkan user mengunggah dan membaca file di direktori miliknya sendiri (`(storage.foldername(name))[1] = auth.uid()::text`).
+  * **Supabase Security Advisor Fix:** Fungsi PostgreSQL RPC `get_financial_analytics` dilengkapi klausul `SET search_path = public, pg_temp;` untuk menangkal potensi eskalasi *search path hijacking*.
+  * **Server-Side Authentication:** Dibuat helper `verifyServerAuth()` di `src/lib/auth/server-auth.ts`. Seluruh 5 Route Handler (`/api/scan-receipt`, `/api/voice-transaction`, `/api/ai-insights`, `/api/analytics`, `/api/ai-health`) memvalidasi session cookie pengguna secara ketat dan menolak request tanpa autentikasi (401 Unauthorized).
+  * **Frontend Bundle Sanitization:** Verifikasi bundle memastikan tidak ada API key rahasia (`SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`) yang terekspos ke browser; hanya environment variable publik berspesifikasi `NEXT_PUBLIC_*` yang digunakan di client.
+- [x] **2. Pengujian Otomatis End-to-End (E2E Testing):**
+  * Script E2E komprehensif (`scripts/e2e-main-flow.mjs`) menguji alur utama aplikasi secara otomatis di browser mobile headless:
+    1. Login via tombol Mode Demo di `/login` → Beranda
+    2. Tambah dompet baru (*SeaBank Tabungan*, saldo Rp500.000) di tab Dompet `/pengaturan`
+    3. Catat transaksi pengeluaran manual (Rp35.000 *"Makan Siang Soto Ayam"*) di `/tambah`
+    4. Catat transaksi transfer antar dompet (Rp100.000 *"Top up GoPay dari BCA"*) di `/tambah`
+    5. Setor tabungan (Rp250.000 ke target *"Dana Darurat"*) di `/tabungan`
+    6. Cek dasbor Analisis Arus Kas & Kesehatan Finansial di `/analisis`
+  * Seluruh 6 langkah lulus 100% dan menghasilkan screenshot verifikasi visual di direktori artefak (`e2e_01` s/d `e2e_06`).
+- [x] **3. UX & Polish Mobile Native:**
+  * **Skeleton Loader:** Komponen `src/components/ui/skeleton.tsx` untuk loading state halus di daftar transaksi dan ringkasan finansial tanpa layout shift.
+  * **Empty State Ramah:** Menampilkan ilustrasi dan pesan hangat (*"Belum ada transaksi, yuk catat yang pertama"*) disertai tombol langsung ke halaman tambah transaksi.
+  * **Pesan Error Bahasa Indonesia:** Validasi form dan pesan kegagalan ramah pemula, jelas, dan solutif.
+  * **Haptic Feedback:** Integrasi getaran taktil halus (`triggerHapticFeedback()`) saat pengguna menyimpan transaksi, transfer, atau memuat data tambahan di perangkat mobile yang mendukung `navigator.vibrate`.
+- [x] **4. Performa & Optimasi PWA:**
+  * **Pagination / Virtual Loading:** Daftar transaksi pada `/transaksi` mengimplementasikan mekanisme batching *"Muat Lebih Banyak"* untuk menjaga scrolling tetap 60fps meskipun memiliki ratusan transaksi.
+  * **PWA & Mobile Meta Tags:** Web app manifest (`src/app/manifest.ts`), ikon responsif 192px & 512px, Apple touch icon, `viewportFit: "cover"`, dan warna tema konsisten (`#0D9488`).
+- [x] **5. Panduan Deploy ke Vercel (`DEPLOY.md`):**
+  * Dokumentasi lengkap langkah demi langkah dengan bahasa sederhana untuk menghubungkan repositori GitHub ke Vercel, setup Environment Variables, dan konfigurasi Supabase Auth Redirect URLs.
+- [x] **6. Dokumentasi Proyek Komprehensif (`README.md`):**
+  * Berisi panduan instalasi lokal, dependensi, arsitektur folder, tata cara backup/export data, dan checklist pengujian.
+
+---
 
 ---
 

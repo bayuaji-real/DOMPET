@@ -610,12 +610,12 @@ export function VoiceConfirmationSheet({
               <div className="text-right">
                 {totalExpense > 0 && (
                   <span className="text-xs font-extrabold text-rose-600 dark:text-rose-400 block">
-                    {formatRupiah(totalExpense)}
+                    {formatRupiah(totalExpense, { absolute: true })}
                   </span>
                 )}
                 {totalIncome > 0 && (
                   <span className="text-xs font-extrabold text-teal-600 dark:text-teal-400 block">
-                    {formatRupiah(totalIncome)}
+                    {formatRupiah(totalIncome, { absolute: true })}
                   </span>
                 )}
               </div>

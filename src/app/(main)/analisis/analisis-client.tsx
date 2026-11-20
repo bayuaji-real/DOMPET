@@ -66,7 +66,7 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
   // Top list tab switcher
   const [topTab, setTopTab] = React.useState<"transactions" | "merchants">("transactions");
 
-  // AI Insight State ("Wawasan Kami")
+  // AI Insight State ("Insight AI")
   const [insight, setInsight] = React.useState<AIInsightResult | null>(null);
   const [isInsightLoading, setIsInsightLoading] = React.useState(false);
   const [insightError, setInsightError] = React.useState<string | null>(null);
@@ -108,7 +108,7 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
     fetchData(newPeriod);
   };
 
-  // Request Wawasan Kami (Gemini API)
+  // Request Insight AI (Gemini API)
   const handleRequestInsight = async (force = false) => {
     if (!data || isInsightLoading) return;
     setIsInsightLoading(true);

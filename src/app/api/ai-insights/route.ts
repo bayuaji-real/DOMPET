@@ -3,8 +3,6 @@ import { generateJson } from "@/lib/ai/gemini";
 import { createClient } from "@/lib/supabase/server";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
 
-export const dynamic = "force-dynamic";
-
 interface AIInsightResponse {
   insights: string[];
   actionable_tip: string;

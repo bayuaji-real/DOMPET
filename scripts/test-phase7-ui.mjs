@@ -80,10 +80,10 @@ async function main() {
     await page.goto("http://localhost:3000/analisis?demo=true", { waitUntil: "domcontentloaded", timeout: 15000 });
     await new Promise((r) => setTimeout(r, 2000));
 
-    // Verify "Rekomendasi Keuangan" is displayed instead of "Wawasan Kami"
+    // Verify "Insight AI" is displayed
     const analysisText = await page.evaluate(() => {
       return {
-        hasRekomendasi: document.body.innerText.includes("Rekomendasi Keuangan"),
+        hasInsightAI: document.body.innerText.includes("Insight AI"),
         hasWawasan: document.body.innerText.includes("Wawasan Kami"),
         hasBudget: document.body.innerText.includes("Anggaran per Kategori"),
       };

@@ -3,8 +3,6 @@ import { getAnalyticsData } from "@/lib/data/analytics";
 import type { AnalyticsPeriod } from "@/types/analytics";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
 
-export const dynamic = "force-dynamic";
-
 export async function GET(request: NextRequest) {
   try {
     const auth = await verifyServerAuth(request);
