@@ -826,7 +826,7 @@ export default function PengaturanPage() {
                       <Smartphone className="h-4.5 w-4.5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-foreground">Download Aplikasi (PWA)</p>
+                      <p className="text-xs font-bold text-foreground">Download Aplikasi</p>
                       <p className="text-[10px] text-muted-foreground truncate">
                         Pasang di layar utama HP untuk akses cepat tanpa browser
                       </p>
@@ -1663,7 +1663,7 @@ export default function PengaturanPage() {
               <div className="p-3.5 rounded-2xl bg-muted/20 border border-border/60 space-y-1.5">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                  <p className="font-extrabold text-foreground">Dompetku v1.0.0 (PWA)</p>
+                  <p className="font-extrabold text-foreground">Dompetku v1.0.0</p>
                 </div>
                 <p>
                   Aplikasi pencatatan keuangan pribadi modern berstandar Progressive Web App (PWA)

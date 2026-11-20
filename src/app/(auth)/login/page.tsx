@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Wallet,
   Loader2,
   AlertCircle,
   CheckCircle2,
@@ -23,6 +22,7 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FullscreenToggle } from "@/components/fullscreen-toggle";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import { usePwaInstall } from "@/lib/pwa-install";
 import { PwaInstallModal } from "@/components/pwa-install-modal";
 
@@ -125,13 +125,15 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-background">
-      {/* Ambient Aurora Glow Orbs */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[380px] w-[380px] rounded-full bg-teal-500/20 blur-[110px] dark:bg-teal-500/15" />
-        <div className="absolute top-1/3 -right-24 h-72 w-72 rounded-full bg-emerald-500/15 blur-[95px] dark:bg-emerald-500/10" />
-        <div className="absolute -bottom-24 -left-20 h-80 w-80 rounded-full bg-teal-600/15 blur-[105px] dark:bg-teal-600/10" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-15%,rgba(13,148,136,0.12),transparent)]" />
-      </div>
+      {/* Latar aurora: radial-gradient (tanpa filter blur, supaya tidak muncul tepi kotak) */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(60% 45% at 50% 0%, rgba(20,184,166,0.20) 0%, rgba(20,184,166,0) 70%), radial-gradient(45% 40% at 100% 35%, rgba(16,185,129,0.14) 0%, rgba(16,185,129,0) 70%), radial-gradient(50% 40% at 0% 100%, rgba(13,148,136,0.14) 0%, rgba(13,148,136,0) 70%)",
+        }}
+      />
 
       {/* Tombol Fullscreen & Theme toggle di pojok kanan atas */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-1">
@@ -142,10 +144,14 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-[400px]">
         {/* Header Brand dengan Logo Glow Bergradasi */}
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="relative mb-3 flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-tr from-teal-500 to-emerald-400 text-white shadow-xl shadow-teal-500/30 ring-4 ring-teal-500/15 transition-transform hover:scale-105 duration-200">
-            <Wallet className="h-7 w-7" />
-            <div className="absolute inset-0 rounded-3xl bg-white/10" />
-          </div>
+          <Image
+            src="/icons/icon-192.png"
+            alt="Logo Dompetku"
+            width={72}
+            height={72}
+            priority
+            className="mb-3 h-[72px] w-[72px] rounded-[22px] shadow-lg shadow-teal-900/30 transition-transform hover:scale-105 duration-200"
+          />
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
             Dompetku
           </h1>
@@ -339,25 +345,14 @@ export default function LoginPage() {
                 )}
               </Button>
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  router.push("/?demo=true");
-                }}
-                className="w-full h-10 rounded-2xl border-teal-500/30 bg-teal-500/5 hover:bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold text-xs transition-all cursor-pointer shadow-xs"
-              >
-                ✨ Coba Langsung (Mode Demo)
-              </Button>
-
-              {/* Tombol Download Aplikasi (PWA) */}
+              {/* Tombol Download Aplikasi */}
               <button
                 type="button"
                 onClick={promptInstall}
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl border border-border/70 bg-card hover:bg-muted/50 text-foreground text-xs font-semibold transition-all cursor-pointer group shadow-xs active:scale-[0.98]"
               >
                 <Download className="h-4 w-4 text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform" />
-                <span>{isInstalled ? "Aplikasi Sudah Terpasang ✓" : "Download Aplikasi (PWA)"}</span>
+                <span>{isInstalled ? "Aplikasi Sudah Terpasang ✓" : "Download Aplikasi"}</span>
               </button>
             </div>
           </form>
