@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse, type NextRequest } from "next/server";
+import { rateLimit } from "@/lib/rate-limit";
 
 export interface VerifiedAuth {
   authenticated: boolean;
@@ -23,6 +24,18 @@ export async function verifyServerAuth(
     } = await supabase.auth.getUser();
 
     if (user && !error) {
+      // #3 Antrean: batasi permintaan per user agar endpoint AI tidak diserbu.
+      const rl = rateLimit(`api:${user.id}`);
+      if (!rl.ok) {
+        return {
+          authenticated: false,
+          userId: user.id,
+          response: NextResponse.json(
+            { success: false, error: "Terlalu banyak permintaan. Coba lagi sebentar." },
+            { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+          ),
+        };
+      }
       return {
         authenticated: true,
         userId: user.id,
@@ -41,9 +54,8 @@ export async function verifyServerAuth(
       const isDemoQuery = url.searchParams.get("demo") === "true";
       const isDemoHeader = request.headers.get("x-demo-mode") === "true";
       // Mode demo HANYA untuk development lokal (npm run dev / tes E2E).
-      // Di production (Vercel) selalu mati, kecuali sengaja diaktifkan lewat ENABLE_DEMO_MODE=true.
-      const demoEnabled =
-        process.env.NODE_ENV !== "production" || process.env.ENABLE_DEMO_MODE === "true";
+      // #5 Celah demo ditutup di production: hanya aktif saat development / E2E lokal.
+      const demoEnabled = process.env.NODE_ENV !== "production";
       if (demoEnabled && (isDemoQuery || isDemoHeader || process.env.NODE_ENV !== "production")) {
         isDemoAllowed = true;
       }

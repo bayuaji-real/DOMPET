@@ -61,9 +61,8 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isAuthPath = pathname.startsWith("/login");
-  // Mode demo hanya aktif di development lokal (atau kalau ENABLE_DEMO_MODE=true di-set sengaja).
-  const demoEnabled =
-    process.env.NODE_ENV !== "production" || process.env.ENABLE_DEMO_MODE === "true";
+  // #5 Mode demo HANYA di development lokal. Di production selalu mati (celah ditutup).
+  const demoEnabled = process.env.NODE_ENV !== "production";
   const isDemoParam = demoEnabled && request.nextUrl.searchParams.get("demo") === "true";
   const hasDevBypass =
     demoEnabled && (request.cookies.get("dompet_dev_mode")?.value === "true" || isDemoParam);
