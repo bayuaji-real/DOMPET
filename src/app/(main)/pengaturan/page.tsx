@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { WalletIcon } from "@/components/wallet/wallet-icon";
+import { WALLET_TYPE_LABEL, getPresetById, presetToIcon, searchPresets } from "@/lib/wallet-presets";
 import { TopHeader } from "@/components/layout/top-header";
 import { formatRupiah, cn, triggerHapticFeedback } from "@/lib/utils";
 import {
@@ -68,6 +70,9 @@ export default function PengaturanPage() {
   // Form Tambah Dompet
   const [newWalletName, setNewWalletName] = React.useState("");
   const [newWalletType, setNewWalletType] = React.useState<"bank" | "ewallet" | "cash" | "investasi">("bank");
+  const [newWalletPresetId, setNewWalletPresetId] = React.useState<string | null>(null);
+  const [presetQuery, setPresetQuery] = React.useState("");
+  const presetResults = React.useMemo(() => searchPresets(presetQuery), [presetQuery]);
   const [newWalletBalance, setNewWalletBalance] = React.useState("");
   const [isAddingWallet, setIsAddingWallet] = React.useState(false);
 
@@ -186,21 +191,25 @@ export default function PengaturanPage() {
         type: newWalletType,
         initial_balance: balanceNum,
         color:
-          newWalletType === "bank"
+          getPresetById(newWalletPresetId ?? "")?.color ??
+          (newWalletType === "bank"
             ? "#0284c7"
             : newWalletType === "ewallet"
               ? "#0d9488"
               : newWalletType === "cash"
                 ? "#16a34a"
-                : "#8b5cf6",
-        icon:
-          newWalletType === "bank"
-            ? "Building2"
+                : "#8b5cf6"),
+        icon: (() => {
+          const preset = getPresetById(newWalletPresetId ?? "");
+          if (preset) return presetToIcon(preset);
+          return newWalletType === "bank"
+            ? "landmark"
             : newWalletType === "ewallet"
-              ? "Smartphone"
+              ? "smartphone"
               : newWalletType === "cash"
-                ? "Banknote"
-                : "TrendingUp",
+                ? "banknote"
+                : "trending-up";
+        })(),
         is_archived: false,
         sort_order: wallets.length + 1,
       });
@@ -208,6 +217,8 @@ export default function PengaturanPage() {
       triggerHapticFeedback([30, 50, 30]);
       setNewWalletName("");
       setNewWalletBalance("");
+      setNewWalletPresetId(null);
+      setPresetQuery("");
       setGeneralToast("Dompet baru berhasil ditambahkan!");
       setTimeout(() => setGeneralToast(null), 3000);
       await loadAll();
@@ -520,6 +531,51 @@ export default function PengaturanPage() {
               </h3>
 
               <form onSubmit={handleAddWallet} className="space-y-3">
+                {/* Pilih bank / e-wallet (logo otomatis) */}
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Cari bank / e-wallet (BCA, GoPay, Jago...)"
+                    value={presetQuery}
+                    onChange={(e) => setPresetQuery(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-border/80 bg-background text-xs font-medium placeholder:text-muted-foreground outline-none focus:border-teal-500"
+                  />
+                  <div className="grid grid-cols-4 gap-2 max-h-56 overflow-y-auto pr-1">
+                    {presetResults.map((p) => {
+                      const active = newWalletPresetId === p.id;
+                      return (
+                        <button
+                          type="button"
+                          key={p.id}
+                          onClick={() => {
+                            triggerHapticFeedback(10);
+                            setNewWalletPresetId(p.id);
+                            setNewWalletName(p.name);
+                            setNewWalletType(p.type);
+                          }}
+                          className={cn(
+                            "flex flex-col items-center gap-1 rounded-xl border p-2 text-center transition-all cursor-pointer",
+                            active
+                              ? "border-teal-500 bg-teal-500/10 ring-1 ring-teal-500/40"
+                              : "border-border/60 bg-muted/20 hover:bg-muted/50",
+                          )}
+                          title={`${p.name} · ${WALLET_TYPE_LABEL[p.type]}`}
+                        >
+                          <WalletIcon icon={presetToIcon(p)} color={p.color} size={32} />
+                          <span className="text-[9px] font-semibold leading-tight line-clamp-2 text-foreground">
+                            {p.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                    {presetResults.length === 0 && (
+                      <p className="col-span-4 text-[10px] text-muted-foreground py-2">
+                        Tidak ketemu. Ketik nama dompetnya di bawah, nanti pakai ikon umum.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 <input
                   type="text"
                   placeholder="Nama Dompet (misal: SeaBank, Bank Jago, OVO)"
@@ -573,12 +629,7 @@ export default function PengaturanPage() {
                 {wallets.map((w) => (
                   <div key={w.id} className="py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div
-                        className="h-8 w-8 rounded-xl flex items-center justify-center text-white text-xs font-bold"
-                        style={{ backgroundColor: w.color || "#0d9488" }}
-                      >
-                        {w.name.substring(0, 2).toUpperCase()}
-                      </div>
+                      <WalletIcon icon={w.icon} color={w.color} size={32} />
                       <div>
                         <p className="text-xs font-bold text-foreground">{w.name}</p>
                         <p className="text-[10px] text-muted-foreground capitalize">{w.type}</p>

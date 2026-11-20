@@ -72,7 +72,7 @@ export function BottomNav() {
   const audioChunksRef = React.useRef<Blob[]>([]);
 
   // Data dompet & kategori
-  const [wallets, setWallets] = React.useState<{ id: string; name: string }[]>([]);
+  const [wallets, setWallets] = React.useState<{ id: string; name: string; icon?: string | null; color?: string | null }[]>([]);
   const [categories, setCategories] = React.useState<{ id: string; name: string }[]>([]);
 
   // Refs input kamera & galeri
@@ -89,7 +89,7 @@ export function BottomNav() {
         ]);
 
         if (wData.status === "fulfilled" && wData.value.length > 0) {
-          setWallets(wData.value.map((w) => ({ id: w.id, name: w.name })));
+          setWallets(wData.value.map((w) => ({ id: w.id, name: w.name, icon: w.icon, color: w.color })));
         } else {
           setWallets([
             { id: "w-cash", name: "Uang Tunai" },

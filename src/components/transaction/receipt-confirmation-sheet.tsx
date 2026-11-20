@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { WalletIcon } from "@/components/wallet/wallet-icon";
 import Image from "next/image";
 import { formatRupiah, cn } from "@/lib/utils";
 import {
@@ -50,38 +51,16 @@ export interface ReceiptConfirmationSheetProps {
   scanResult: ScanReceiptResult | null;
   imagePreviewUrl: string | null;
   receiptPath: string | null;
-  userWallets?: { id: string; name: string }[];
+  userWallets?: { id: string; name: string; icon?: string | null; color?: string | null }[];
   userCategories?: { id: string; name: string }[];
   onSuccess?: (savedData: { merchant: string; total: number }) => void;
 }
 
-function getWalletIcon(name?: string) {
-  const n = (name || "").toLowerCase();
-  if (n.includes("tunai") || n.includes("cash") || n.includes("uang")) {
-    return <Banknote className="h-4 w-4" />;
-  }
-  if (
-    n.includes("gopay") ||
-    n.includes("ovo") ||
-    n.includes("dana") ||
-    n.includes("shopee") ||
-    n.includes("linkaja") ||
-    n.includes("qris")
-  ) {
-    return <Smartphone className="h-4 w-4" />;
-  }
-  if (
-    n.includes("bca") ||
-    n.includes("mandiri") ||
-    n.includes("bri") ||
-    n.includes("bni") ||
-    n.includes("jago") ||
-    n.includes("bank") ||
-    n.includes("cimb")
-  ) {
-    return <Landmark className="h-4 w-4" />;
-  }
-  return <Wallet className="h-4 w-4" />;
+function getWalletIcon(
+  wallet?: { icon?: string | null; color?: string | null } | null,
+  size = 24,
+) {
+  return <WalletIcon icon={wallet?.icon} color={wallet?.color} size={size} />;
 }
 
 function getWalletSubtitle(name?: string) {
@@ -542,7 +521,7 @@ export function ReceiptConfirmationSheet({
                 >
                   <div className="flex items-center gap-2 min-w-0 pr-1">
                     <div className="h-6 w-6 rounded-lg bg-teal-500/15 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
-                      {getWalletIcon(selectedWallet?.name)}
+                      {getWalletIcon(selectedWallet, 24)}
                     </div>
                     <span className="text-xs font-bold text-foreground truncate">
                       {selectedWallet?.name || "Pilih Dompet"}
@@ -854,7 +833,7 @@ export function ReceiptConfirmationSheet({
                             : "bg-muted text-muted-foreground"
                         )}
                       >
-                        {getWalletIcon(w.name)}
+                        {getWalletIcon(w, 40)}
                       </div>
                       <div className="min-w-0">
                         <p className="text-xs font-bold leading-tight truncate">{w.name}</p>

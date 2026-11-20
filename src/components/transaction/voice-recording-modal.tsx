@@ -21,7 +21,7 @@ import type {
 export interface VoiceRecordingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  userWallets?: { id: string; name: string }[];
+  userWallets?: { id: string; name: string; icon?: string | null; color?: string | null }[];
   userCategories?: { id: string; name: string }[];
   onProcessed: (data: {
     transcript: string;

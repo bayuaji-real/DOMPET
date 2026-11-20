@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { WalletIcon } from "@/components/wallet/wallet-icon";
 import { formatRupiah, cn } from "@/lib/utils";
 import {
   Sheet,
@@ -47,7 +48,7 @@ export interface VoiceConfirmationSheetProps {
   onOpenChange: (open: boolean) => void;
   transcript: string;
   initialTransactions: ParsedVoiceTransaction[];
-  userWallets?: { id: string; name: string }[];
+  userWallets?: { id: string; name: string; icon?: string | null; color?: string | null }[];
   userCategories?: { id: string; name: string }[];
   onSuccess?: (savedCount: number) => void;
 }
@@ -63,33 +64,11 @@ interface EditableTransactionItem {
   date: string;
 }
 
-function getWalletIcon(name?: string) {
-  const n = (name || "").toLowerCase();
-  if (n.includes("tunai") || n.includes("cash") || n.includes("uang")) {
-    return <Banknote className="h-4 w-4" />;
-  }
-  if (
-    n.includes("gopay") ||
-    n.includes("ovo") ||
-    n.includes("dana") ||
-    n.includes("shopee") ||
-    n.includes("linkaja") ||
-    n.includes("qris")
-  ) {
-    return <Smartphone className="h-4 w-4" />;
-  }
-  if (
-    n.includes("bca") ||
-    n.includes("mandiri") ||
-    n.includes("bri") ||
-    n.includes("bni") ||
-    n.includes("jago") ||
-    n.includes("bank") ||
-    n.includes("cimb")
-  ) {
-    return <Landmark className="h-4 w-4" />;
-  }
-  return <Wallet className="h-4 w-4" />;
+function getWalletIcon(
+  wallet?: { icon?: string | null; color?: string | null } | null,
+  size = 24,
+) {
+  return <WalletIcon icon={wallet?.icon} color={wallet?.color} size={size} />;
 }
 
 function getWalletSubtitle(name?: string) {
@@ -548,7 +527,7 @@ export function VoiceConfirmationSheet({
                           >
                             <div className="flex items-center gap-1.5 min-w-0 pr-1">
                               <div className="h-5 w-5 rounded-md bg-teal-500/15 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
-                                {getWalletIcon(currentWallet?.name)}
+                                {getWalletIcon(currentWallet, 20)}
                               </div>
                               <span className="text-xs font-bold text-foreground truncate">
                                 {currentWallet?.name || "Pilih"}
@@ -711,7 +690,7 @@ export function VoiceConfirmationSheet({
                             : "bg-muted text-muted-foreground"
                         )}
                       >
-                        {getWalletIcon(w.name)}
+                        {getWalletIcon(w, 40)}
                       </div>
                       <div className="min-w-0">
                         <p className="text-xs font-bold leading-tight truncate">{w.name}</p>

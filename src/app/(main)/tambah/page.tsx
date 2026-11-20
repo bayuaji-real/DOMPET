@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { WalletIcon } from "@/components/wallet/wallet-icon";
 import Link from "next/link";
 import { TopHeader } from "@/components/layout/top-header";
 import {
@@ -286,8 +287,13 @@ export default function TambahTransaksiPage() {
                               : "border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted"
                           }`}
                         >
-                          <div className="font-bold truncate">{w.name}</div>
-                          <div className="text-[10px] opacity-75">{formatRupiah(w.balance)}</div>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <WalletIcon icon={w.icon} color={w.color} size={28} />
+                            <div className="min-w-0">
+                              <div className="font-bold truncate">{w.name}</div>
+                              <div className="text-[10px] opacity-75">{formatRupiah(w.balance)}</div>
+                            </div>
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -312,8 +318,13 @@ export default function TambahTransaksiPage() {
                               : "border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted"
                           }`}
                         >
-                          <div className="font-bold truncate">{w.name}</div>
-                          <div className="text-[10px] opacity-75">{formatRupiah(w.balance)}</div>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <WalletIcon icon={w.icon} color={w.color} size={28} />
+                            <div className="min-w-0">
+                              <div className="font-bold truncate">{w.name}</div>
+                              <div className="text-[10px] opacity-75">{formatRupiah(w.balance)}</div>
+                            </div>
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -337,8 +348,13 @@ export default function TambahTransaksiPage() {
                             : "border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted"
                         }`}
                       >
-                        <div className="font-bold truncate">{w.name}</div>
-                        <div className="text-[10px] opacity-75">{formatRupiah(w.balance)}</div>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <WalletIcon icon={w.icon} color={w.color} size={28} />
+                          <div className="min-w-0">
+                            <div className="font-bold truncate">{w.name}</div>
+                            <div className="text-[10px] opacity-75">{formatRupiah(w.balance)}</div>
+                          </div>
+                        </div>
                       </button>
                     ))}
                   </div>

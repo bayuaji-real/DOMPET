@@ -24,6 +24,15 @@ const LUCIDE_WALLET_ICONS: Record<string, LucideIcon> = {
   "trending-up": TrendingUp,
   "credit-card": CreditCard,
   "piggy-bank": PiggyBank,
+  // nama lama (PascalCase) yang sempat dipakai di kode
+  Wallet: Wallet,
+  Banknote: Banknote,
+  Building2: Landmark,
+  Landmark: Landmark,
+  Smartphone: Smartphone,
+  TrendingUp: TrendingUp,
+  CreditCard: CreditCard,
+  PiggyBank: PiggyBank,
 };
 
 /**
