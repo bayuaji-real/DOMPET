@@ -374,13 +374,14 @@ export default function TambahTransaksiPage() {
                           triggerHapticFeedback(10);
                           setSelectedCategoryId(kat.id);
                         }}
-                        className={`rounded-xl border py-2 px-1 text-center text-[11px] truncate transition-all cursor-pointer ${
+                        className={`rounded-xl border py-2 px-1 text-center text-[11px] truncate transition-all cursor-pointer flex items-center justify-center gap-1 ${
                           selectedCategoryId === kat.id
                             ? "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300 font-bold"
                             : "border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted"
                         }`}
                       >
-                        {kat.name}
+                        {kat.icon && <span>{kat.icon}</span>}
+                        <span className="truncate">{kat.name}</span>
                       </button>
                     ))}
                   </div>

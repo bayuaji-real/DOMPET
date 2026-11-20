@@ -3,13 +3,41 @@ import type { Database, CategoryType } from "@/types/database";
 
 export type Category = Database["public"]["Tables"]["categories"]["Row"];
 
+export const DEFAULT_CATEGORY_EMOJIS = [
+  "🍔", "⚡", "🛒", "🚗", "🎬", "💰", "💵", "💊", "📚", "🏠", "☕", "🎮", "✈️", "🏷️"
+];
+
+export function getCategoryEmoji(iconOrName?: string | null, type?: "expense" | "income"): string {
+  if (!iconOrName) return type === "income" ? "💰" : "🏷️";
+  
+  // Jika sudah berupa emoji (single/double character non-ascii or matching emoji)
+  if (/\p{Extended_Pictographic}/u.test(iconOrName)) {
+    return iconOrName;
+  }
+
+  const n = iconOrName.toLowerCase();
+  if (n.includes("makan") || n.includes("minum") || n.includes("food") || n.includes("utensils")) return "🍔";
+  if (n.includes("tagihan") || n.includes("receipt") || n.includes("listrik") || n.includes("wifi")) return "⚡";
+  if (n.includes("belanja") || n.includes("grocer") || n.includes("shopping")) return "🛒";
+  if (n.includes("trans") || n.includes("bensin") || n.includes("car")) return "🚗";
+  if (n.includes("hiburan") || n.includes("tv") || n.includes("film") || n.includes("nonton")) return "🎬";
+  if (n.includes("gaji") || n.includes("salary") || n.includes("briefcase")) return "💰";
+  if (n.includes("bonus") || n.includes("sampingan") || n.includes("wallet")) return "💵";
+  if (n.includes("medis") || n.includes("sehat") || n.includes("obat")) return "💊";
+  if (n.includes("pendidikan") || n.includes("buku") || n.includes("kuliah")) return "📚";
+  if (n.includes("rumah") || n.includes("kost")) return "🏠";
+  if (n.includes("kopi") || n.includes("cafe")) return "☕";
+
+  return type === "income" ? "💰" : "🏷️";
+}
+
 export const SAMPLE_CATEGORIES: Category[] = [
   {
     id: "c-food",
     user_id: "demo-user",
     name: "Makanan & Minuman",
     type: "expense",
-    icon: "Utensils",
+    icon: "🍔",
     color: "#14b8a6",
     sort_order: 1,
     is_default: true,
@@ -20,7 +48,7 @@ export const SAMPLE_CATEGORIES: Category[] = [
     user_id: "demo-user",
     name: "Tagihan",
     type: "expense",
-    icon: "Receipt",
+    icon: "⚡",
     color: "#0284c7",
     sort_order: 2,
     is_default: true,
@@ -31,7 +59,7 @@ export const SAMPLE_CATEGORIES: Category[] = [
     user_id: "demo-user",
     name: "Belanja Harian",
     type: "expense",
-    icon: "ShoppingBag",
+    icon: "🛒",
     color: "#ec4899",
     sort_order: 3,
     is_default: true,
@@ -42,7 +70,7 @@ export const SAMPLE_CATEGORIES: Category[] = [
     user_id: "demo-user",
     name: "Transportasi",
     type: "expense",
-    icon: "Car",
+    icon: "🚗",
     color: "#6366f1",
     sort_order: 4,
     is_default: true,
@@ -53,7 +81,7 @@ export const SAMPLE_CATEGORIES: Category[] = [
     user_id: "demo-user",
     name: "Hiburan",
     type: "expense",
-    icon: "Tv",
+    icon: "🎬",
     color: "#a855f7",
     sort_order: 5,
     is_default: true,
@@ -64,7 +92,7 @@ export const SAMPLE_CATEGORIES: Category[] = [
     user_id: "demo-user",
     name: "Gaji",
     type: "income",
-    icon: "Briefcase",
+    icon: "💰",
     color: "#10b981",
     sort_order: 6,
     is_default: true,
@@ -75,7 +103,7 @@ export const SAMPLE_CATEGORIES: Category[] = [
     user_id: "demo-user",
     name: "Bonus & Sampingan",
     type: "income",
-    icon: "Wallet",
+    icon: "💵",
     color: "#eab308",
     sort_order: 7,
     is_default: true,
@@ -123,7 +151,7 @@ export async function createCategory(
       user_id: "demo-user",
       name: category.name,
       type: category.type,
-      icon: category.icon || "Tag",
+      icon: category.icon || getCategoryEmoji(category.name, category.type),
       color: category.color || "#0d9488",
       sort_order: category.sort_order || SAMPLE_CATEGORIES.length + 1,
       is_default: false,

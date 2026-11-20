@@ -30,10 +30,10 @@ export function TopHeader({
     setCurrentDate(formatTanggalWIB(now));
 
     const hour = now.getHours();
-    if (hour >= 4 && hour < 11) setGreeting("Selamat Pagi");
-    else if (hour >= 11 && hour < 15) setGreeting("Selamat Siang");
-    else if (hour >= 15 && hour < 18) setGreeting("Selamat Sore");
-    else setGreeting("Selamat Malam");
+    if (hour >= 4 && hour < 11) setGreeting("Selamat pagi");
+    else if (hour >= 11 && hour < 15) setGreeting("Selamat siang");
+    else if (hour >= 15 && hour < 18) setGreeting("Selamat sore");
+    else setGreeting("Selamat malam");
 
     const loadProfile = async () => {
       const p = await getUserProfile();
@@ -88,17 +88,14 @@ export function TopHeader({
           <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-background" />
         </div>
 
-        {/* Teks Sapaan & Nama Orang */}
+        {/* Teks Sapaan & Nama Orang (Tepat 2 Baris Sesuai Request) */}
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-teal-600 dark:text-teal-400 leading-none mb-1">
-            {greeting}, {displayName.split(" ")[0]} 👋
+          <p className="text-xs font-semibold text-teal-600 dark:text-teal-400 leading-none mb-1">
+            {greeting}
           </p>
           <h1 className="text-sm font-extrabold text-foreground leading-tight tracking-tight truncate">
             {isDefaultOrDompetku ? displayName : title}
           </h1>
-          <p className="text-[10px] text-muted-foreground leading-none mt-0.5">
-            {subtitle || "Keuanganmu terkendali hari ini ✨"}
-          </p>
         </div>
       </Link>
 

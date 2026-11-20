@@ -18,12 +18,16 @@ import {
   Camera,
   Mic,
   ShieldCheck,
+  Download,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
+import { usePwaInstall } from "@/lib/pwa-install";
+import { PwaInstallModal } from "@/components/pwa-install-modal";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { isInstalled, isIOS, showModal, setShowModal, promptInstall } = usePwaInstall();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
@@ -343,6 +347,16 @@ export default function LoginPage() {
               >
                 ✨ Coba Langsung (Mode Demo)
               </Button>
+
+              {/* Tombol Download Aplikasi (PWA) */}
+              <button
+                type="button"
+                onClick={promptInstall}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl border border-border/70 bg-card hover:bg-muted/50 text-foreground text-xs font-semibold transition-all cursor-pointer group shadow-xs active:scale-[0.98]"
+              >
+                <Download className="h-4 w-4 text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform" />
+                <span>{isInstalled ? "Aplikasi Sudah Terpasang ✓" : "Download Aplikasi (PWA)"}</span>
+              </button>
             </div>
           </form>
         </div>
@@ -363,6 +377,13 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      <PwaInstallModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        isIOS={isIOS}
+        isInstalled={isInstalled}
+      />
     </div>
   );
 }

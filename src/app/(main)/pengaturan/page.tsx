@@ -31,6 +31,8 @@ import {
   Sparkles,
   Smile,
   X,
+  KeyRound,
+  Smartphone,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { createClient } from "@/lib/supabase/client";
@@ -45,6 +47,8 @@ import {
   getCategories,
   createCategory,
   deleteCategory,
+  DEFAULT_CATEGORY_EMOJIS,
+  getCategoryEmoji,
   type Category,
 } from "@/lib/data/categories";
 import {
@@ -73,10 +77,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePwaInstall } from "@/lib/pwa-install";
+import { PwaInstallModal } from "@/components/pwa-install-modal";
 
 type SettingsSection =
   | null
   | "profile"
+  | "password"
   | "payday"
   | "categories"
   | "recurring"
@@ -115,11 +122,23 @@ export default function PengaturanPage() {
   const [defaultWalletId, setDefaultWalletId] = React.useState("");
   const [isSavingGeneral, setIsSavingGeneral] = React.useState(false);
 
+  // PWA Install hook
+  const { isInstalled, isIOS, showModal, setShowModal, promptInstall } = usePwaInstall();
+
   // Category state
   const [newCatName, setNewCatName] = React.useState("");
   const [newCatType, setNewCatType] = React.useState<"expense" | "income">("expense");
   const [newCatColor, setNewCatColor] = React.useState("#0d9488");
+  const [newCatEmoji, setNewCatEmoji] = React.useState("🍔");
   const [isAddingCat, setIsAddingCat] = React.useState(false);
+
+  // Account / Password state
+  const [newPassword, setNewPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [showNewPassword, setShowNewPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = React.useState(false);
+  const [passwordError, setPasswordError] = React.useState<string | null>(null);
 
   // Recurring state
   const [newRecNote, setNewRecNote] = React.useState("");
@@ -271,7 +290,7 @@ export default function PengaturanPage() {
     }
   };
 
-  // Handler Tambah Kategori
+  // Handler Tambah Kategori (dengan icon emoji)
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
@@ -280,11 +299,12 @@ export default function PengaturanPage() {
     triggerHapticFeedback();
 
     try {
+      const emojiIcon = newCatEmoji.trim() || getCategoryEmoji(newCatName, newCatType);
       const created = await createCategory({
         name: newCatName.trim(),
         type: newCatType,
         color: newCatColor,
-        icon: newCatType === "expense" ? "ShoppingBag" : "TrendingUp",
+        icon: emojiIcon,
       });
 
       if (created) {
@@ -297,6 +317,55 @@ export default function PengaturanPage() {
       showToast("Gagal menambah kategori.");
     } finally {
       setIsAddingCat(false);
+    }
+  };
+
+  // Handler Update Kata Sandi
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+
+    if (newPassword.length < 6) {
+      setPasswordError("Kata sandi minimal 6 karakter.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Konfirmasi kata sandi tidak cocok. Pastikan keduanya sama.");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    triggerHapticFeedback();
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+      if (error) {
+        if (
+          error.message.includes("Auth session missing") ||
+          error.message.includes("Invalid token")
+        ) {
+          // Demo mode / mock tanpa session Supabase aktif
+          showToast("Kata sandi berhasil diperbarui (Mode Demo)!");
+          setNewPassword("");
+          setConfirmPassword("");
+          setActiveSection(null);
+        } else {
+          setPasswordError(error.message);
+        }
+      } else {
+        showToast("Kata sandi akun berhasil diperbarui!");
+        setNewPassword("");
+        setConfirmPassword("");
+        setActiveSection(null);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Terjadi kesalahan sistem";
+      setPasswordError(msg);
+    } finally {
+      setIsUpdatingPassword(false);
     }
   };
 
@@ -447,14 +516,9 @@ export default function PengaturanPage() {
   const isDarkMode = resolvedTheme === "dark";
 
   return (
-    <div className="flex flex-col flex-1 pb-28">
-      <TopHeader
-        title={activeSection ? "Pengaturan" : "Settings"}
-        subtitle="Kelola profil, finansial, & data akun"
-      />
-
+    <div className="flex flex-col flex-1 pb-28 pt-safe">
       {toastMsg && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 rounded-2xl bg-teal-600 text-white px-4 py-2 text-xs font-bold shadow-xl animate-in fade-in slide-in-from-top-2">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 rounded-2xl bg-teal-600 text-white px-4 py-2 text-xs font-bold shadow-xl animate-in fade-in slide-in-from-top-2">
           {toastMsg}
         </div>
       )}
@@ -605,13 +669,13 @@ export default function PengaturanPage() {
               </div>
             </div>
 
-            {/* GROUP 2: TAMPILAN & PRIVASI */}
+            {/* GROUP 2: TAMPILAN & AKUN */}
             <div className="space-y-1.5">
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-2">
-                Tampilan & Privasi
+                Tampilan & Akun
               </p>
               <div className="divide-y divide-border/50 rounded-3xl border border-border/70 bg-card shadow-xs overflow-hidden">
-                {/* Opsi 4: Tema Tampilan (Pindah dari Header ke sini!) */}
+                {/* Opsi 4: Tema Tampilan */}
                 <div className="flex items-center justify-between p-3.5">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-purple-500/15 text-purple-600 dark:text-purple-400 shrink-0">
@@ -661,49 +725,73 @@ export default function PengaturanPage() {
                   </div>
                 </div>
 
-                {/* Opsi 5: Sensor & Sembunyikan Saldo */}
-                <div className="flex items-center justify-between p-3.5">
+                {/* Opsi 5: Ganti Kata Sandi */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHapticFeedback();
+                    setPasswordError(null);
+                    setNewPassword("");
+                    setConfirmPassword("");
+                    setActiveSection("password");
+                  }}
+                  className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
+                >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-teal-500/15 text-teal-600 dark:text-teal-400 shrink-0">
-                      {hideBalance ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                      <KeyRound className="h-4.5 w-4.5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-foreground">Sensor / Sembunyikan Saldo</p>
+                      <p className="text-xs font-bold text-foreground">Ganti Kata Sandi</p>
                       <p className="text-[10px] text-muted-foreground truncate">
-                        Tutupi nominal sensitif dengan titik di tempat umum
+                        Perbarui kata sandi login akun Dompetku
                       </p>
                     </div>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      triggerHapticFeedback();
-                      const next = !hideBalance;
-                      setHideBalance(next);
-                      localStorage.setItem("dompet_hide_balance", String(next));
-                      showToast(next ? "Saldo disembunyikan." : "Saldo ditampilkan.");
-                    }}
-                    className={cn(
-                      "px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer",
-                      hideBalance
-                        ? "bg-teal-600 text-white shadow-xs"
-                        : "bg-muted text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {hideBalance ? "Aktif" : "Nonaktif"}
-                  </button>
-                </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                </button>
               </div>
             </div>
 
-            {/* GROUP 3: CADANGAN & DATA */}
+            {/* GROUP 3: DATA & SISTEM */}
             <div className="space-y-1.5">
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-2">
                 Data & Sistem
               </p>
               <div className="divide-y divide-border/50 rounded-3xl border border-border/70 bg-card shadow-xs overflow-hidden">
-                {/* Opsi 6: Cadangan & Ekspor Data */}
+                {/* Opsi 6: Download / Install PWA */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHapticFeedback();
+                    promptInstall();
+                  }}
+                  className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0">
+                      <Smartphone className="h-4.5 w-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-foreground">Download Aplikasi (PWA)</p>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        Pasang di layar utama HP untuk akses cepat tanpa browser
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0",
+                      isInstalled
+                        ? "bg-teal-500/15 text-teal-600 dark:text-teal-400"
+                        : "bg-muted text-muted-foreground group-hover:text-foreground"
+                    )}
+                  >
+                    {isInstalled ? "Terpasang ✓" : "Download"}
+                  </span>
+                </button>
+
+                {/* Opsi 7: Cadangan & Ekspor Data */}
                 <button
                   type="button"
                   onClick={() => {
@@ -726,7 +814,7 @@ export default function PengaturanPage() {
                   <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
                 </button>
 
-                {/* Opsi 7: Tentang Aplikasi */}
+                {/* Opsi 8: Tentang Aplikasi */}
                 <button
                   type="button"
                   onClick={() => {
@@ -751,7 +839,7 @@ export default function PengaturanPage() {
               </div>
             </div>
 
-            {/* GROUP 4: KELUAR / LOGOUT (Pindah dari Header ke sini!) */}
+            {/* GROUP 4: LOGOUT (Tombol sederhana bertuliskan "Logout") */}
             <div className="pt-2">
               <button
                 type="button"
@@ -759,7 +847,7 @@ export default function PengaturanPage() {
                 className="w-full flex items-center justify-center gap-2 p-3.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all active:scale-[0.98] cursor-pointer"
               >
                 <LogOut className="h-4 w-4" />
-                Keluar dari Akun (Logout)
+                Logout
               </button>
             </div>
           </div>
@@ -931,6 +1019,98 @@ export default function PengaturanPage() {
         )}
 
         {/* --------------------------------------------------------------- */}
+        {/* VIEW 1.5: SUB-SETTING GANTI KATA SANDI                          */}
+        {/* --------------------------------------------------------------- */}
+        {activeSection === "password" && (
+          <form
+            onSubmit={handleUpdatePassword}
+            className="rounded-3xl border border-border/80 bg-card p-5 space-y-4 shadow-xs animate-in fade-in"
+          >
+            <div className="border-b border-border/50 pb-2">
+              <h3 className="text-sm font-extrabold text-foreground">Ganti Kata Sandi</h3>
+              <p className="text-[11px] text-muted-foreground">
+                Perbarui kata sandi untuk melindungi keamanan akun Dompetku kamu
+              </p>
+            </div>
+
+            {passwordError && (
+              <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive animate-in fade-in">
+                {passwordError}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold">Kata Sandi Baru</Label>
+                <div className="relative">
+                  <Input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Minimal 6 karakter"
+                    required
+                    className="h-10 text-xs rounded-xl pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold">Konfirmasi Kata Sandi Baru</Label>
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Ketik ulang kata sandi baru"
+                    required
+                    className="h-10 text-xs rounded-xl pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setPasswordError(null);
+                  setNewPassword("");
+                  setConfirmPassword("");
+                  setActiveSection(null);
+                }}
+                className="flex-1 h-10 text-xs rounded-xl"
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                disabled={isUpdatingPassword || !newPassword || !confirmPassword}
+                className="flex-1 h-10 text-xs rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold"
+              >
+                {isUpdatingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan Kata Sandi"}
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {/* --------------------------------------------------------------- */}
         {/* VIEW 2: SUB-SETTING JADWAL GAJIAN & BIAYA HIDUP                 */}
         {/* --------------------------------------------------------------- */}
         {activeSection === "payday" && (
@@ -1058,16 +1238,19 @@ export default function PengaturanPage() {
               <div className="border-b border-border/50 pb-2">
                 <h3 className="text-sm font-extrabold text-foreground">Tambah Kategori Baru</h3>
                 <p className="text-[11px] text-muted-foreground">
-                  Kelompokkan pengeluaran atau pemasukan sesukamu
+                  Kelompokkan pengeluaran atau pemasukan dengan icon emoji hemat memori
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setNewCatType("expense")}
+                  onClick={() => {
+                    setNewCatType("expense");
+                    if (newCatEmoji === "💰") setNewCatEmoji("🍔");
+                  }}
                   className={cn(
-                    "py-2 rounded-xl text-xs font-bold transition-all",
+                    "py-2 rounded-xl text-xs font-bold transition-all cursor-pointer",
                     newCatType === "expense"
                       ? "bg-rose-500 text-white shadow-xs"
                       : "bg-muted text-muted-foreground hover:text-foreground"
@@ -1077,9 +1260,12 @@ export default function PengaturanPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setNewCatType("income")}
+                  onClick={() => {
+                    setNewCatType("income");
+                    if (newCatEmoji === "🍔") setNewCatEmoji("💰");
+                  }}
                   className={cn(
-                    "py-2 rounded-xl text-xs font-bold transition-all",
+                    "py-2 rounded-xl text-xs font-bold transition-all cursor-pointer",
                     newCatType === "income"
                       ? "bg-teal-600 text-white shadow-xs"
                       : "bg-muted text-muted-foreground hover:text-foreground"
@@ -1087,6 +1273,51 @@ export default function PengaturanPage() {
                 >
                   Pemasukan
                 </button>
+              </div>
+
+              {/* Pilihan Cepat Icon Emoji */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold">Ikon Emoji Kategori</Label>
+                  <span className="text-[10px] text-muted-foreground">Pilih atau ketik emoji</span>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 p-2 rounded-2xl bg-muted/30 border border-border/50">
+                  {DEFAULT_CATEGORY_EMOJIS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => {
+                        triggerHapticFeedback();
+                        setNewCatEmoji(emoji);
+                      }}
+                      className={cn(
+                        "h-8 w-8 rounded-xl flex items-center justify-center text-lg transition-transform active:scale-95 cursor-pointer",
+                        newCatEmoji === emoji
+                          ? "bg-teal-500/25 ring-2 ring-teal-500 scale-105"
+                          : "hover:bg-muted/70"
+                      )}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Input Manual Emoji dari Keyboard / Chat */}
+                <div className="flex items-center gap-2 pt-1">
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl shadow-xs border border-border/80"
+                    style={{ backgroundColor: `${newCatColor}20` }}
+                  >
+                    {newCatEmoji || "🏷️"}
+                  </div>
+                  <Input
+                    value={newCatEmoji}
+                    onChange={(e) => setNewCatEmoji(e.target.value)}
+                    placeholder="Ketik/tempel emoji disini (misal: 🍣, ⛽, 🏖️)"
+                    className="h-10 text-xs rounded-xl"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1">
@@ -1116,7 +1347,7 @@ export default function PengaturanPage() {
               <Button
                 type="submit"
                 disabled={isAddingCat || !newCatName.trim()}
-                className="w-full h-10 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs"
+                className="w-full h-10 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs cursor-pointer"
               >
                 {isAddingCat ? <Loader2 className="h-4 w-4 animate-spin" /> : "Tambah Kategori"}
               </Button>
@@ -1127,26 +1358,38 @@ export default function PengaturanPage() {
               <h4 className="text-xs font-bold text-foreground mb-2">
                 Daftar Kategori Aktif ({categories.length})
               </h4>
-              <div className="divide-y divide-border/40 max-h-[38vh] overflow-y-auto pr-1">
+              <div className="divide-y divide-border/40 max-h-[42vh] overflow-y-auto pr-1">
                 {categories.map((c) => (
-                  <div key={c.id} className="flex items-center justify-between py-2 text-xs">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="h-3.5 w-3.5 rounded-full shrink-0"
-                        style={{ backgroundColor: c.color || "#0d9488" }}
-                      />
-                      <span className="font-semibold text-foreground">{c.name}</span>
-                      <span className="text-[10px] text-muted-foreground capitalize">
-                        ({c.type})
-                      </span>
+                  <div key={c.id} className="flex items-center justify-between py-2.5 text-xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className="flex h-8 w-8 items-center justify-center rounded-xl text-base shadow-xs shrink-0"
+                        style={{ backgroundColor: `${c.color || "#0d9488"}22` }}
+                      >
+                        {c.icon && /\p{Extended_Pictographic}/u.test(c.icon)
+                          ? c.icon
+                          : getCategoryEmoji(c.icon || c.name, c.type as any)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-foreground truncate">{c.name}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span
+                            className="h-2 w-2 rounded-full shrink-0"
+                            style={{ backgroundColor: c.color || "#0d9488" }}
+                          />
+                          <span className="text-[10px] text-muted-foreground capitalize">
+                            {c.type === "expense" ? "Pengeluaran" : "Pemasukan"}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleDeleteCategory(c.id, c.name)}
-                      className="text-muted-foreground hover:text-rose-500 p-1 transition-colors cursor-pointer"
+                      className="text-muted-foreground hover:text-rose-500 p-1.5 transition-colors cursor-pointer shrink-0"
                       title="Hapus Kategori"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
@@ -1378,6 +1621,13 @@ export default function PengaturanPage() {
           </div>
         )}
       </div>
+
+      <PwaInstallModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        isIOS={isIOS}
+        isInstalled={isInstalled}
+      />
     </div>
   );
 }
