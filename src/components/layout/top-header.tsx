@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { NotificationBell, ThemeMenu } from "./header-actions";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
@@ -15,6 +15,7 @@ interface TopHeaderProps {
 
 export function TopHeader({ title, subtitle }: TopHeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [profile, setProfile] = React.useState<UserProfile>({
     name: "Bayu Aji",
     email: "bayuaji@dompetku.id",
@@ -47,35 +48,18 @@ export function TopHeader({ title, subtitle }: TopHeaderProps) {
   }, []);
 
   const displayName = profile.name || "Sobat Dompet";
-  const isSub = Boolean(title);
+  const hasTitle = Boolean(title);
+  // Halaman utama (menu bawah) tidak perlu tombol kembali
+  const TAB_ROOTS = ["/", "/dompet", "/transaksi", "/tabungan", "/more", "/analisis"];
+  const showBack = hasTitle && !TAB_ROOTS.includes(pathname || "/");
 
   return (
-    <header
-      className="sticky top-0 z-30 flex items-center justify-between border-b border-border/50 bg-background/90 px-4 pb-3.5 backdrop-blur-md"
-      style={{ paddingTop: "max(env(safe-area-inset-top, 0px) + 0.5rem, 1.25rem)" }}
-    >
-      {isSub ? (
-        // Halaman dalam: tombol kembali + judul halaman
-        <div className="flex min-w-0 items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            aria-label="Kembali"
-            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border/60 bg-muted/40 text-foreground transition-colors hover:bg-muted active:scale-95"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div className="min-w-0">
-            <h1 className="truncate text-base font-extrabold leading-tight tracking-tight text-foreground">
-              {title}
-            </h1>
-            {subtitle ? (
-              <p className="truncate text-xs leading-tight text-muted-foreground">{subtitle}</p>
-            ) : null}
-          </div>
-        </div>
-      ) : (
-        // Beranda: avatar + sapaan + nama
+    <header className="sticky top-0 z-30 border-b border-border/50 bg-background/90 backdrop-blur-md">
+      <div
+        className="flex items-center justify-between px-4 pb-3"
+        style={{ paddingTop: "max(env(safe-area-inset-top, 0px) + 0.5rem, 1.25rem)" }}
+      >
+      {/* Sapaan + avatar: SELALU tampil di semua halaman */}
         <Link
           href="/pengaturan"
           className="group flex cursor-pointer items-center gap-3 transition-transform active:scale-[0.98]"
@@ -108,12 +92,34 @@ export function TopHeader({ title, subtitle }: TopHeaderProps) {
             </h1>
           </div>
         </Link>
-      )}
 
       <div className="flex items-center gap-2">
         <NotificationBell />
         <ThemeMenu />
       </div>
+      </div>
+
+      {/* Baris judul halaman + tombol kembali (di bawah sapaan, tidak menutupi) */}
+      {hasTitle ? (
+        <div className="flex items-center gap-2 border-t border-border/40 px-3 py-2">
+          {showBack ? (
+            <button
+              type="button"
+              onClick={() => router.back()}
+              aria-label="Kembali"
+              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted active:scale-95"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          ) : null}
+          <div className={showBack ? "min-w-0" : "min-w-0 px-1"}>
+            <h2 className="truncate text-sm font-bold leading-tight text-foreground">{title}</h2>
+            {subtitle ? (
+              <p className="truncate text-[11px] leading-tight text-muted-foreground">{subtitle}</p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </header>
   );
 }
