@@ -7,22 +7,28 @@
  * - Pengeluaran per Dompet
  * - Top 5 Transaksi & Toko Paling Sering
  *
- * Jalankan: npx tsx scripts/seed-analytics-sample.ts
- * Hapus data contoh: npx tsx scripts/seed-analytics-sample.ts --cleanup
+ * CARA PAKAI (HANYA untuk database STAGING, bukan database utama):
+ * 1. Buat file .env.staging.local (sudah diabaikan git) berisi:
+ *      NEXT_PUBLIC_SUPABASE_URL=<url project staging>
+ *      SUPABASE_SERVICE_ROLE_KEY=<key project staging>
+ *      SEED_BLOCKED_PROJECT_REFS=<ref database utama, pisahkan koma bila lebih dari satu>
+ *      SEED_CONFIRM_STAGING=yes
+ *    Skrip ini TIDAK membaca .env.local (yang biasanya menunjuk ke database utama)
+ *    dan tidak punya URL bawaan. Skrip menolak jalan bila ref di URL ada di
+ *    SEED_BLOCKED_PROJECT_REFS atau bila SEED_CONFIRM_STAGING bukan "yes".
+ * 2. Jalankan: npx tsx scripts/seed-analytics-sample.ts
+ *    Hapus data contoh: npx tsx scripts/seed-analytics-sample.ts --cleanup
  */
 
 import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
 import * as path from "path";
+import { assertSafeSeedEnv } from "./seed-guard";
 
-dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
+dotenv.config({ path: path.resolve(process.cwd(), ".env.staging.local") });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://yupcalxuirodvfwovtzu.supabase.co";
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  "";
+// Wajib lolos pengaman sebelum koneksi dibuat. Tidak ada nilai bawaan.
+const { url: supabaseUrl, key: supabaseKey } = assertSafeSeedEnv(process.env);
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -31,7 +37,7 @@ const SAMPLE_TAG = "[SAMPLE_PHASE_6]";
 async function main() {
   const isCleanup = process.argv.includes("--cleanup");
 
-  console.log("🌱 Menghubungkan ke Supabase...");
+  console.log("🌱 Menghubungkan ke Supabase staging...");
 
   // Dapatkan daftar dompet & kategori yang ada
   const [walletsRes, catsRes, goalsRes] = await Promise.all([

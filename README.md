@@ -97,7 +97,7 @@ DOMPET/
 ├── public/                 # Aset statis, ikon PWA (192px, 512px, favicon, apple-icon)
 ├── scripts/                # Script utilitas, seed data analisis, dan runner test E2E
 │   ├── e2e-main-flow.mjs   # Automasi pengujian alur utama pengguna (E2E)
-│   ├── seed-analytics-sample.ts # Script seed contoh transaksi 2 bulan
+│   ├── seed-analytics-sample.ts # Script seed contoh transaksi 2 bulan (hanya staging, lihat komentar di file)
 │   └── test-phase7-ui.mjs  # Verifikasi antarmuka headless
 ├── src/
 │   ├── app/                # Next.js App Router
