@@ -42,7 +42,7 @@ Aplikasi catatan keuangan pribadi berbahasa Indonesia, didesain mobile-first unt
 
 ## 🗄️ Skema Database Supabase (Public Schema)
 
-Koneksi: `https://yupcalxuirodvfwovtzu.supabase.co`
+Koneksi: lewat `NEXT_PUBLIC_SUPABASE_URL` di environment (jangan menulis alamat/ref proyek di dokumen ini).
 
 ### Tabel:
 - **`wallets`**: `id`, `user_id`, `name`, `type ('bank'|'ewallet'|'cash'|'investasi')`, `initial_balance`, `color`, `icon`, `is_archived`, `sort_order`

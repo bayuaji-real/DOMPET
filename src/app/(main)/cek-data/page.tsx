@@ -155,13 +155,6 @@ export default function CekDataPage() {
 
           <CardContent className="p-4 pt-2 space-y-2.5 text-xs">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-muted-foreground">Endpoint:</span>
-              <code className="rounded bg-muted px-2 py-0.5 text-[11px] font-mono text-teal-700 dark:text-teal-300 truncate">
-                yupcalxuirodvfwovtzu.supabase.co
-              </code>
-            </div>
-
-            <div className="flex items-center gap-2">
               <span className="font-semibold text-muted-foreground">Status:</span>
               {connectionSuccess ? (
                 <Badge className="bg-teal-600 hover:bg-teal-700 text-white rounded-lg gap-1 text-[11px]">
