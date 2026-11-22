@@ -88,6 +88,17 @@
      node scripts/e2e-main-flow.mjs
      ```
 
+7. **Seed Data Contoh (hanya database STAGING):**
+   Buat file `.env.staging.local` (diabaikan git). URL, key, dan ref di bawah **harus dari satu proyek staging yang sama**:
+   ```bash
+   NEXT_PUBLIC_SUPABASE_URL=<url proyek staging>
+   SUPABASE_SERVICE_ROLE_KEY=<key proyek staging>
+   SEED_ALLOWED_PROJECT_REF=<ref proyek staging, sama dengan ref di URL>
+   SEED_BLOCKED_PROJECT_REFS=<ref database utama, pisahkan koma>
+   SEED_CONFIRM_STAGING=yes
+   ```
+   Skrip berhenti bila salah satu kosong, ref di URL tidak sama dengan `SEED_ALLOWED_PROJECT_REF`, atau ref di URL ada di daftar larangan (larangan selalu menang). Format URL harus persis `https://<ref>.supabase.co`. Lalu jalankan `npm run seed:analytics` (hapus data contoh: `npm run seed:analytics:clean`).
+
 ---
 
 ## 📁 Struktur Folder Proyek

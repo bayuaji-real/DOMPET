@@ -11,11 +11,13 @@
  * 1. Buat file .env.staging.local (sudah diabaikan git) berisi:
  *      NEXT_PUBLIC_SUPABASE_URL=<url project staging>
  *      SUPABASE_SERVICE_ROLE_KEY=<key project staging>
+ *      SEED_ALLOWED_PROJECT_REF=<ref project staging, harus sama dengan ref di URL>
  *      SEED_BLOCKED_PROJECT_REFS=<ref database utama, pisahkan koma bila lebih dari satu>
  *      SEED_CONFIRM_STAGING=yes
  *    Skrip ini TIDAK membaca .env.local (yang biasanya menunjuk ke database utama)
  *    dan tidak punya URL bawaan. Skrip menolak jalan bila ref di URL ada di
- *    SEED_BLOCKED_PROJECT_REFS atau bila SEED_CONFIRM_STAGING bukan "yes".
+ *    SEED_BLOCKED_PROJECT_REFS, tidak sama dengan SEED_ALLOWED_PROJECT_REF,
+ *    atau bila SEED_CONFIRM_STAGING bukan "yes".
  * 2. Jalankan: npx tsx scripts/seed-analytics-sample.ts
  *    Hapus data contoh: npx tsx scripts/seed-analytics-sample.ts --cleanup
  */
