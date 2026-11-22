@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  assertSafeE2eEnv,
   assertSafeSeedEnv,
   extractProjectRef,
   parseAllowedRef,
@@ -167,5 +168,57 @@ describe("seed-guard: variasi bypass ref database utama", () => {
 
   it("spasi di dalam URL ditolak", () => {
     expect(codeOf(withUrl("https://stagingref123 .supabase.co"))).toBe("URL_INVALID");
+  });
+});
+
+describe("assertSafeE2eEnv (pagar tes end-to-end staging)", () => {
+  function e2eCode(env: SeedEnv): SeedGuardCode | null {
+    try {
+      assertSafeE2eEnv(env);
+      return null;
+    } catch (e) {
+      if (e instanceof SeedGuardError) return e.code;
+      throw e;
+    }
+  }
+
+  it("lolos untuk staging yang cocok", () => {
+    expect(e2eCode(base)).toBeNull();
+  });
+
+  it("URL kosong atau tidak ada ditolak", () => {
+    expect(e2eCode({ ...base, NEXT_PUBLIC_SUPABASE_URL: "" })).toBe("MISSING_CREDENTIALS");
+    expect(e2eCode({ ...base, NEXT_PUBLIC_SUPABASE_URL: undefined })).toBe("MISSING_CREDENTIALS");
+  });
+
+  it("ref di daftar larangan ditolak (larangan menang atas izin)", () => {
+    expect(
+      e2eCode({
+        ...base,
+        NEXT_PUBLIC_SUPABASE_URL: "https://prodref999.supabase.co",
+        SEED_ALLOWED_PROJECT_REF: "prodref999",
+      })
+    ).toBe("REF_BLOCKED");
+  });
+
+  it("ref tidak cocok dengan daftar izin ditolak", () => {
+    expect(e2eCode({ ...base, NEXT_PUBLIC_SUPABASE_URL: "https://lain123.supabase.co" })).toBe("REF_NOT_ALLOWED");
+  });
+
+  it("daftar izin/larang kosong ditolak", () => {
+    expect(e2eCode({ ...base, SEED_ALLOWED_PROJECT_REF: "" })).toBe("ALLOWLIST_MISSING");
+    expect(e2eCode({ ...base, SEED_BLOCKED_PROJECT_REFS: "" })).toBe("BLOCKLIST_EMPTY");
+  });
+
+  it("pesan error tidak memuat ref atau URL", () => {
+    for (const url of ["https://prodref999.supabase.co", "https://lain123.supabase.co"]) {
+      try {
+        assertSafeE2eEnv({ ...base, NEXT_PUBLIC_SUPABASE_URL: url });
+        throw new Error("harus ditolak");
+      } catch (e) {
+        const msg = (e as Error).message;
+        expect(msg).not.toMatch(/prodref999|lain123|stagingref123|supabase\.co/);
+      }
+    }
   });
 });

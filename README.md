@@ -87,6 +87,11 @@
      ```bash
      node scripts/e2e-main-flow.mjs
      ```
+   - **E2E Playwright di staging (aman):**
+     ```bash
+     npm run test:e2e:staging
+     ```
+     Memuat `.env.staging.local` (isi sama seperti bagian Seed di bawah; `.env.local` tidak diubah, butuh Node 20.6+), lalu menjalankan Playwright dengan `E2E_STAGING=1`. Sebelum tes jalan, config menolak bila URL Supabase kosong, ref-nya ada di `SEED_BLOCKED_PROJECT_REFS`, atau tidak sama dengan `SEED_ALLOWED_PROJECT_REF`. Di mode ini server dev lama tidak dipakai ulang. Jangan pakai `npm run test:e2e` untuk database utama.
 
 7. **Seed Data Contoh (hanya database STAGING):**
    Buat file `.env.staging.local` (diabaikan git). URL, key, dan ref di bawah **harus dari satu proyek staging yang sama**:

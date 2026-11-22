@@ -77,30 +77,11 @@ export function parseAllowedRef(raw: string | undefined): string | null {
   return REF_PATTERN.test(v) ? v : null;
 }
 
-/** Validasi env. Melempar SeedGuardError bila tidak aman. */
-export function assertSafeSeedEnv(env: SeedEnv): SeedConfig {
-  const url = env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  const key = (
-    env.SUPABASE_SERVICE_ROLE_KEY ||
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    ""
-  ).trim();
-
-  if (!url || !key) {
-    throw new SeedGuardError(
-      "MISSING_CREDENTIALS",
-      "NEXT_PUBLIC_SUPABASE_URL dan key Supabase wajib diisi di .env.staging.local (tanpa nilai bawaan)."
-    );
-  }
-
-  if (env.SEED_CONFIRM_STAGING !== "yes") {
-    throw new SeedGuardError(
-      "NOT_CONFIRMED",
-      "Ditolak: set SEED_CONFIRM_STAGING=yes untuk memastikan target adalah database staging."
-    );
-  }
-
+/**
+ * Pagar daftar larang + daftar izin untuk satu URL Supabase.
+ * Dipakai bersama oleh skrip seed dan tes end-to-end staging.
+ */
+export function assertUrlRefAllowed(env: SeedEnv, url: string): void {
   const blocked = parseBlockedRefs(env.SEED_BLOCKED_PROJECT_REFS);
   if (blocked.length === 0) {
     throw new SeedGuardError(
@@ -144,6 +125,45 @@ export function assertSafeSeedEnv(env: SeedEnv): SeedConfig {
       "Ditolak: project di URL tidak cocok dengan SEED_ALLOWED_PROJECT_REF."
     );
   }
+}
+
+/** Pagar untuk tes end-to-end mode staging: URL wajib ada dan lolos pagar ref. */
+export function assertSafeE2eEnv(env: SeedEnv): void {
+  const url = env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  if (!url) {
+    throw new SeedGuardError(
+      "MISSING_CREDENTIALS",
+      "NEXT_PUBLIC_SUPABASE_URL wajib diisi di .env.staging.local (tanpa nilai bawaan)."
+    );
+  }
+  assertUrlRefAllowed(env, url);
+}
+
+/** Validasi env. Melempar SeedGuardError bila tidak aman. */
+export function assertSafeSeedEnv(env: SeedEnv): SeedConfig {
+  const url = env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = (
+    env.SUPABASE_SERVICE_ROLE_KEY ||
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    ""
+  ).trim();
+
+  if (!url || !key) {
+    throw new SeedGuardError(
+      "MISSING_CREDENTIALS",
+      "NEXT_PUBLIC_SUPABASE_URL dan key Supabase wajib diisi di .env.staging.local (tanpa nilai bawaan)."
+    );
+  }
+
+  if (env.SEED_CONFIRM_STAGING !== "yes") {
+    throw new SeedGuardError(
+      "NOT_CONFIRMED",
+      "Ditolak: set SEED_CONFIRM_STAGING=yes untuk memastikan target adalah database staging."
+    );
+  }
+
+  assertUrlRefAllowed(env, url);
 
   return { url, key };
 }

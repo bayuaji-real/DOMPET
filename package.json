@@ -10,7 +10,8 @@
     "test": "vitest run",
     "seed:analytics": "npx tsx scripts/seed-analytics-sample.ts",
     "seed:analytics:clean": "npx tsx scripts/seed-analytics-sample.ts --cleanup",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:staging": "E2E_STAGING=1 node --env-file=.env.staging.local node_modules/@playwright/test/cli.js test"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
