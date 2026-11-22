@@ -1,10 +1,12 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { connection, NextResponse, type NextRequest } from "next/server";
 import { getAnalyticsData } from "@/lib/data/analytics";
 import type { AnalyticsPeriod } from "@/types/analytics";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
 import { analyticsQuerySchema } from "@/lib/validation";
 
 export async function GET(request: NextRequest) {
+  // Rute ini membaca cookie login, jadi harus selalu jalan saat ada request (bukan saat build).
+  await connection();
   try {
     const auth = await verifyServerAuth(request);
     if (!auth.authenticated && auth.response) {
