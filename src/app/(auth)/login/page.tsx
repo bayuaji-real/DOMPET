@@ -181,7 +181,7 @@ export default function LoginPage() {
               className={cn(
                 "py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer",
                 !isRegisterMode
-                  ? "bg-background text-foreground shadow-xs font-bold"
+                  ? "bg-background text-foreground shadow-sm ring-1 ring-teal-600/40 font-bold"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -198,7 +198,7 @@ export default function LoginPage() {
               className={cn(
                 "py-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer",
                 isRegisterMode
-                  ? "bg-background text-foreground shadow-xs font-bold"
+                  ? "bg-background text-foreground shadow-sm ring-1 ring-teal-600/40 font-bold"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -338,7 +338,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold text-xs shadow-lg shadow-teal-500/25 active:scale-[0.98] transition-all cursor-pointer"
+                className="w-full h-11 rounded-2xl [background-color:var(--color-teal-700)] bg-gradient-to-r from-teal-700 to-emerald-700 hover:from-teal-800 hover:to-emerald-800 text-white font-bold text-xs shadow-lg shadow-teal-500/25 active:scale-[0.98] transition-all cursor-pointer"
               >
                 {loading ? (
                   <>
