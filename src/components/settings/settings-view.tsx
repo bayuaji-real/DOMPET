@@ -1668,8 +1668,8 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
               <div className="p-3.5 rounded-2xl bg-muted/20 border border-border/60 space-y-1">
                 <p className="font-bold text-foreground">Keamanan & Privasi Data:</p>
                 <p>
-                  Setiap baris data dilindungi oleh enkripsi PostgreSQL Row Level Security (RLS) di
-                  Supabase Cloud. Data Anda tidak pernah dijual atau dibagikan ke pihak ketiga.
+                  Data keuanganmu tersimpan terenkripsi di server aman dan hanya bisa dilihat oleh akunmu
+                  sendiri. Data tidak pernah dijual atau dibagikan ke pihak ketiga.
                 </p>
               </div>
 

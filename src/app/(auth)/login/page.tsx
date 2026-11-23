@@ -55,7 +55,7 @@ export default function LoginPage() {
 
     if (!isEnvConfigured) {
       setErrorMsg(
-        "Koneksi Supabase belum diatur. Silakan periksa .env.local kamu."
+        "Layanan masuk sedang dalam perbaikan. Coba lagi beberapa saat lagi."
       );
       return;
     }
@@ -224,7 +224,7 @@ export default function LoginPage() {
                 <div className="flex items-start gap-2">
                   <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                   <p className="leading-relaxed">
-                    Kredensial Supabase di <code className="bg-amber-500/20 px-1 rounded">.env.local</code> belum lengkap.
+                    Layanan masuk sedang dalam perbaikan. Coba lagi beberapa saat lagi.
                   </p>
                 </div>
               </div>

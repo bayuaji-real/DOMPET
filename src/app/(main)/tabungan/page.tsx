@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { notify } from "@/lib/notify";
 import { TopHeader } from "@/components/layout/top-header";
 import { SavingsTimeline } from "@/components/tabungan/savings-timeline";
 import { formatRupiah, formatTanggalWIB } from "@/lib/utils";
@@ -244,7 +245,7 @@ export default function TabunganPage() {
     const res = await deleteSavingsGoal(deleteTarget.id, deleteMoveTo);
     setSaving(false);
     if (!res.ok) {
-      alert("Gagal menghapus tabungan. Coba lagi.");
+      notify("Gagal menghapus tabungan. Coba lagi.");
       return;
     }
     showToast(`Tabungan "${deleteTarget.name}" dihapus, uangnya dipindah.`);
@@ -282,7 +283,7 @@ export default function TabunganPage() {
       return true;
     } catch (err) {
       console.error(err);
-      alert("Gagal menyimpan ke database. Coba lagi.");
+      notify("Gagal menyimpan ke database. Coba lagi.");
       return false;
     } finally {
       setSaving(false);
@@ -390,7 +391,7 @@ export default function TabunganPage() {
     const plannedNum = parseInt(formPlannedPayday.replace(/\D/g, "") || "0", 10);
 
     if (!formName.trim() || targetNum <= 0) {
-      alert("Nama tabungan dan target nominal wajib diisi!");
+      notify("Nama tabungan dan target nominal wajib diisi!");
       return;
     }
 
@@ -438,7 +439,7 @@ export default function TabunganPage() {
       await loadData();
     } catch (err) {
       console.error(err);
-      alert("Gagal menyimpan ke database. Coba lagi.");
+      notify("Gagal menyimpan ke database. Coba lagi.");
     } finally {
       setSaving(false);
     }
@@ -451,7 +452,7 @@ export default function TabunganPage() {
   ) => {
     if (!selectedGoal) return false;
     if (!selectedWallet) {
-      alert("Pilih dompet dulu. Kalau belum ada dompet, tambahkan di Pengaturan.");
+      notify("Pilih dompet dulu. Kalau belum ada dompet, tambahkan di Pengaturan.");
       return false;
     }
     setSaving(true);
@@ -474,7 +475,7 @@ export default function TabunganPage() {
       return true;
     } catch (err) {
       console.error(err);
-      alert("Gagal mencatat ke database. Coba lagi.");
+      notify("Gagal mencatat ke database. Coba lagi.");
       return false;
     } finally {
       setSaving(false);
@@ -504,7 +505,7 @@ export default function TabunganPage() {
     if (amountNum <= 0) return;
 
     if (amountNum > selectedGoal.current_amount) {
-      alert("Nominal penarikan melebihi saldo tabungan saat ini!");
+      notify("Nominal penarikan melebihi saldo tabungan saat ini!");
       return;
     }
 

@@ -43,13 +43,13 @@ interface GenerateOptions {
 function friendly(status: number): string {
   if (status === 429) return "Mohon maaf, jaringan kami sedang padat. Coba lagi sebentar lagi, atau isi manual dulu ya.";
   if (status === 400) return "Kami belum bisa membaca data ini. Coba ulangi, atau isi manual.";
-  if (status === 401 || status === 403) return "Kunci layanan bermasalah. Cek konfigurasi di .env.local.";
+  if (status === 401 || status === 403) return "Fitur AI sedang dalam perbaikan. Coba lagi nanti ya.";
   return "Mohon maaf, jaringan kami sedang padat. Coba lagi sebentar lagi, atau isi manual dulu ya.";
 }
 
 async function callModel(model: string, parts: GeminiPart[], opts: GenerateOptions) {
   const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new GeminiError("GEMINI_API_KEY belum diisi", 500, "Fitur pencatatan otomatis belum diatur (GEMINI_API_KEY kosong).");
+  if (!key) throw new GeminiError("GEMINI_API_KEY belum diisi", 500, "Fitur pencatatan otomatis sedang dalam perbaikan. Coba lagi nanti ya.");
 
   const body: Record<string, unknown> = {
     contents: [{ role: "user", parts }],
@@ -155,7 +155,7 @@ interface ChatOptions {
 
 async function callChatModel(model: string, turns: ChatTurn[], opts: ChatOptions) {
   const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new GeminiError("GEMINI_API_KEY belum diisi", 500, "Fitur AI belum diatur (GEMINI_API_KEY kosong).");
+  if (!key) throw new GeminiError("GEMINI_API_KEY belum diisi", 500, "Fitur AI sedang dalam perbaikan. Coba lagi nanti ya.");
 
   const body: Record<string, unknown> = {
     contents: turns.map((t) => ({ role: t.role, parts: [{ text: t.text }] })),
