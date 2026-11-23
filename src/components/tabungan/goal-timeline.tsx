@@ -75,7 +75,7 @@ export function GoalTimeline({ goals, result, todayStr, colorOf }: Props) {
   return (
     <div className="space-y-3">
       {/* Pilih tabungan */}
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Pilih tabungan">
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Pilih tabungan">
         {goals.map((g) => {
           const active = g.id === goal.id;
           return (
@@ -84,7 +84,7 @@ export function GoalTimeline({ goals, result, todayStr, colorOf }: Props) {
               type="button"
               aria-pressed={active}
               onClick={() => setGoalId(g.id)}
-              className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${
+              className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${
                 active ? "border-transparent text-white" : "border-border/70 bg-card text-foreground"
               }`}
               style={active ? { background: colorOf(g.id) } : undefined}

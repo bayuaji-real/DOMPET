@@ -7,7 +7,8 @@ import { formatRupiah, formatTanggalWIB } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { todayJakarta } from "@/lib/data/sample-mode";
 import type { Database } from "@/types/database";
-import type { WalletBalance } from "@/lib/data/wallets";
+import { isSpendableWallet, type WalletBalance } from "@/lib/data/wallets";
+import { deleteSavingsGoal } from "@/lib/data/goals";
 import {
   calculateSavingsProjection,
   type SavingsProjectionResult,
@@ -25,6 +26,7 @@ import {
   CheckCircle2,
   Clock,
   Pencil,
+  Trash2,
   X,
   ChevronRight,
   Loader2,
@@ -189,6 +191,8 @@ export default function TabunganPage() {
   const [activeDetailView, setActiveDetailView] = React.useState<"detail" | "deposit" | "withdraw">("detail");
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [isChatOpen, setIsChatOpen] = React.useState(false);
+  const [deleteTarget, setDeleteTarget] = React.useState<GoalItem | null>(null);
+  const [deleteMoveTo, setDeleteMoveTo] = React.useState("");
   const [editingGoal, setEditingGoal] = React.useState<GoalItem | null>(null);
 
   // State form Setor & Tarik
@@ -232,6 +236,21 @@ export default function TabunganPage() {
   const totalTerkumpul = goals.reduce((acc, g) => acc + g.current_amount, 0);
   const totalTarget = goals.reduce((acc, g) => acc + g.target_amount, 0);
   const totalKekurangan = Math.max(0, totalTarget - totalTerkumpul);
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || !deleteMoveTo) return;
+    setSaving(true);
+    const res = await deleteSavingsGoal(deleteTarget.id, deleteMoveTo);
+    setSaving(false);
+    if (!res.ok) {
+      alert("Gagal menghapus tabungan. Coba lagi.");
+      return;
+    }
+    showToast(`Tabungan "${deleteTarget.name}" dihapus, uangnya dipindah.`);
+    setDeleteTarget(null);
+    setSelectedGoalId(null);
+    await loadData();
+  };
 
   // Buat tabungan dari hasil chat AI (angka kelayakan dihitung server, bukan AI)
   const createFromProposal = async (pr: SavingsProposal): Promise<boolean> => {
@@ -926,6 +945,18 @@ export default function TabunganPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => {
+                          setDeleteTarget(selectedGoal);
+                          setDeleteMoveTo(wallets.find(isSpendableWallet)?.id ?? "");
+                        }}
+                        className="h-8 w-8 rounded-lg text-muted-foreground hover:text-rose-500 cursor-pointer"
+                        title="Hapus Tabungan"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => setSelectedGoalId(null)}
                         className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
                       >
@@ -1167,6 +1198,32 @@ export default function TabunganPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-[360px] space-y-3 rounded-2xl border border-border bg-card p-5 shadow-2xl">
+            <h3 className="text-sm font-bold text-foreground">Hapus tabungan &quot;{deleteTarget.name}&quot;?</h3>
+            <p className="text-xs text-muted-foreground">
+              Uang terkumpul {formatRupiah(deleteTarget.current_amount)} tidak hilang. Pilih dompet tujuan untuk memindahkannya.
+            </p>
+            <select
+              value={deleteMoveTo}
+              onChange={(e) => setDeleteMoveTo(e.target.value)}
+              className="h-10 w-full cursor-pointer rounded-xl border border-border bg-background px-3 text-xs"
+            >
+              {wallets.filter(isSpendableWallet).map((w) => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
+            </select>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => setDeleteTarget(null)} className="h-9 flex-1 cursor-pointer rounded-xl text-xs">Batal</Button>
+              <Button type="button" disabled={saving || !deleteMoveTo} onClick={handleConfirmDelete} className="h-9 flex-1 cursor-pointer rounded-xl bg-rose-600 text-xs font-bold text-white hover:bg-rose-500">
+                {saving ? "Menghapus..." : "Hapus"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Chat AI pembuat tabungan */}
       <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
