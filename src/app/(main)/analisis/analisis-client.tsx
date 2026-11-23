@@ -65,6 +65,7 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
   const [customEnd, setCustomEnd] = React.useState(initialData.period.endDate);
 
   // Top list tab switcher
+  const [catView, setCatView] = React.useState<"donat" | "batang">("donat");
   const [topTab, setTopTab] = React.useState<"transactions" | "merchants">("transactions");
 
   // AI Insight State ("Insight AI")
@@ -559,9 +560,27 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
             </span>
           </div>
 
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted/50 p-1" role="group" aria-label="Bentuk grafik kategori">
+            {([["donat", "Donat (porsi)"], ["batang", "Batang (urutan)"]] as const).map(([id, lbl]) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={catView === id}
+                onClick={() => setCatView(id)}
+                className={`cursor-pointer rounded-lg py-1.5 text-[11px] font-bold transition-colors ${catView === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+              >
+                {lbl}
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            {catView === "donat" ? "Donat: enak untuk melihat porsi tiap kategori dari total." : "Batang: enak untuk membandingkan mana yang paling besar."}
+          </p>
+
           {isMounted && data.categories.length > 0 ? (
             <div className="space-y-4">
               {/* Donut Chart */}
+              {catView === "donat" ? (
               <div className="h-48 w-full flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -595,9 +614,24 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {data.categories.map((cat) => (
+                    <div key={cat.id} className="space-y-1">
+                      <div className="flex justify-between text-[11px] font-semibold text-foreground">
+                        <span className="truncate">{cat.name}</span>
+                        <span>{formatRupiah(cat.nominal, { absolute: true })}</span>
+                      </div>
+                      <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                        <div className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, cat.percentage))}%`, backgroundColor: cat.color }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Daftar Kategori Terurut */}
-              <div className="space-y-2 divide-y divide-border/30">
+              <div className={`space-y-2 divide-y divide-border/30 ${catView === "batang" ? "hidden" : ""}`}>
                 {data.categories.map((cat) => (
                   <div key={cat.id} className="flex items-center justify-between pt-2 text-xs">
                     <div className="flex items-center gap-2.5 min-w-0">
