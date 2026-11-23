@@ -3,9 +3,7 @@ import {
   PieChart,
   ReceiptText,
   Sparkles,
-  PiggyBank,
-  Settings,
-  WalletCards,
+    Settings,
   type LucideIcon,
 } from "lucide-react";
 
@@ -24,7 +22,7 @@ export interface MoreGroup {
 }
 
 /**
- * Daftar menu di halaman More. Mau tambah fitur baru? Tambah satu objek di grup yang cocok
+ * Daftar menu di halaman More. Hanya fitur yang TIDAK ada di navbar bawah (Beranda, Tabungan, Dompet, More). Mau tambah fitur baru? Tambah satu objek di grup yang cocok
  * (atau buat grup baru). Navbar bawah sengaja tetap ringkas: Beranda, Tabungan, Dompet, More.
  */
 export const MORE_GROUPS: MoreGroup[] = [
@@ -35,8 +33,6 @@ export const MORE_GROUPS: MoreGroup[] = [
       { label: "Analisis Keuangan", description: "Arus kas, kategori, anggaran & insight AI", href: "/analisis", icon: PieChart, tone: "bg-violet-500/15 text-violet-600 dark:text-violet-400" },
       { label: "Rencana Keuangan AI", description: "Bagi gaji ke kebutuhan, tenggat & saran dompet", href: "/rencana", icon: Sparkles, tone: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400" },
       { label: "Split Bill", description: "Bagi tagihan adil, termasuk ongkir & pajak", href: "/split-bill", icon: ReceiptText, tone: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
-      { label: "Target Tabungan", description: "Impian, proyeksi & timeline setoran", href: "/tabungan", icon: PiggyBank, tone: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
-      { label: "Tambah Dompet", description: "Rekening, e-wallet, tunai, investasi", href: "/dompet?tambah=1", icon: WalletCards, tone: "bg-teal-500/15 text-teal-600 dark:text-teal-400" },
     ],
   },
   {

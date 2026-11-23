@@ -38,6 +38,7 @@ import {
   type WalletType,
 } from "@/lib/wallet-presets";
 import { WalletIcon } from "@/components/wallet/wallet-icon";
+import { WalletPicker } from "@/components/wallet/wallet-picker";
 import { WalletDetailSheet } from "@/components/wallet/wallet-detail-sheet";
 import { createTransaction } from "@/lib/data/transactions";
 import { Button } from "@/components/ui/button";
@@ -678,36 +679,13 @@ export default function DompetPage() {
             </div>
 
             <form onSubmit={handleExecuteTransfer} className="space-y-3.5">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-[11px] font-semibold text-muted-foreground">Dari Dompet</Label>
-                  <select
-                    value={transferFromId}
-                    onChange={(e) => setTransferFromId(e.target.value)}
-                    className="w-full h-10 rounded-xl border border-border/80 bg-background px-2.5 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500"
-                  >
-                    {wallets.map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.name} ({formatRupiah(w.balance, { absolute: true })})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-[11px] font-semibold text-muted-foreground">Ke Dompet</Label>
-                  <select
-                    value={transferToId}
-                    onChange={(e) => setTransferToId(e.target.value)}
-                    className="w-full h-10 rounded-xl border border-border/80 bg-background px-2.5 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500"
-                  >
-                    {wallets.map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.name} ({formatRupiah(w.balance, { absolute: true })})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-rose-600 dark:text-rose-400">Dari Dompet (Asal)</Label>
+                <WalletPicker wallets={wallets} value={transferFromId} onChange={setTransferFromId} tone="from" keyPrefix="from" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-teal-600 dark:text-teal-400">Ke Dompet (Tujuan)</Label>
+                <WalletPicker wallets={wallets} value={transferToId} onChange={setTransferToId} tone="to" keyPrefix="to" />
               </div>
 
               <div className="space-y-1">

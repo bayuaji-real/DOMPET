@@ -3,6 +3,7 @@
 import { todayJakarta } from "@/lib/data/sample-mode";
 import * as React from "react";
 import { WalletIcon } from "@/components/wallet/wallet-icon";
+import { WalletPicker } from "@/components/wallet/wallet-picker";
 import Link from "next/link";
 import { TopHeader } from "@/components/layout/top-header";
 import {
@@ -273,62 +274,14 @@ export default function TambahTransaksiPage() {
                     <Label className="text-xs font-semibold text-rose-600 dark:text-rose-400">
                       Dari Dompet (Asal)
                     </Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {wallets.map((w) => (
-                        <button
-                          type="button"
-                          key={`from-${w.id}`}
-                          onClick={() => {
-                            triggerHapticFeedback(10);
-                            setSelectedWalletId(w.id);
-                          }}
-                          className={`rounded-xl border p-2.5 text-left text-xs font-medium transition-all cursor-pointer ${
-                            selectedWalletId === w.id
-                              ? "border-rose-500 bg-rose-500/10 text-rose-700 dark:text-rose-300 font-semibold"
-                              : "border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <WalletIcon icon={w.icon} color={w.color} size={28} />
-                            <div className="min-w-0">
-                              <div className="font-bold truncate">{w.name}</div>
-                              <div className="text-[10px] opacity-75">{formatRupiah(w.balance)}</div>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
+                    <WalletPicker wallets={wallets} value={selectedWalletId} onChange={(id) => { triggerHapticFeedback(10); setSelectedWalletId(id); }} tone="from" keyPrefix="from" />
                   </div>
 
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-teal-600 dark:text-teal-400">
                       Ke Dompet (Tujuan)
                     </Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {wallets.map((w) => (
-                        <button
-                          type="button"
-                          key={`to-${w.id}`}
-                          onClick={() => {
-                            triggerHapticFeedback(10);
-                            setToWalletId(w.id);
-                          }}
-                          className={`rounded-xl border p-2.5 text-left text-xs font-medium transition-all cursor-pointer ${
-                            toWalletId === w.id
-                              ? "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300 font-semibold"
-                              : "border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <WalletIcon icon={w.icon} color={w.color} size={28} />
-                            <div className="min-w-0">
-                              <div className="font-bold truncate">{w.name}</div>
-                              <div className="text-[10px] opacity-75">{formatRupiah(w.balance)}</div>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
+                    <WalletPicker wallets={wallets} value={toWalletId} onChange={(id) => { triggerHapticFeedback(10); setToWalletId(id); }} tone="to" keyPrefix="to" />
                   </div>
                 </div>
               ) : (
