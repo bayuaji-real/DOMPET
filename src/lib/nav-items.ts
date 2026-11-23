@@ -3,6 +3,7 @@ import {
   PieChart,
   ReceiptText,
   Sparkles,
+  MessagesSquare,
     Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -32,6 +33,7 @@ export const MORE_GROUPS: MoreGroup[] = [
       { label: "Riwayat Transaksi", description: "Semua arus masuk & keluar uangmu", href: "/transaksi", icon: ArrowLeftRight, tone: "bg-sky-500/15 text-sky-600 dark:text-sky-400" },
       { label: "Analisis Keuangan", description: "Arus kas, kategori, anggaran & insight AI", href: "/analisis", icon: PieChart, tone: "bg-violet-500/15 text-violet-600 dark:text-violet-400" },
       { label: "Rencana Keuangan AI", description: "Bagi gaji ke kebutuhan, tenggat & saran dompet", href: "/rencana", icon: Sparkles, tone: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400" },
+      { label: "Tanya Keuangan (AI)", description: "Konsultasi bebas soal uangmu, berdasarkan datamu", href: "/chat", icon: MessagesSquare, tone: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },
       { label: "Split Bill", description: "Bagi tagihan adil, termasuk ongkir & pajak", href: "/split-bill", icon: ReceiptText, tone: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
     ],
   },
@@ -44,4 +46,4 @@ export const MORE_GROUPS: MoreGroup[] = [
 ];
 
 /** Path yang membuat tombol More di navbar tampil aktif. */
-export const MORE_ACTIVE_PREFIXES = ["/more", "/pengaturan", "/profil", "/settings", "/transaksi", "/analisis", "/tambah", "/split-bill", "/rencana"];
+export const MORE_ACTIVE_PREFIXES = ["/more", "/pengaturan", "/profil", "/settings", "/transaksi", "/analisis", "/tambah", "/split-bill", "/rencana", "/chat", "/bantuan"];
