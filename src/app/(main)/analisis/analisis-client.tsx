@@ -731,6 +731,8 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                     dataKey="label"
                     stroke="#71717a"
                     fontSize={10}
+                    interval={0}
+                    tickFormatter={(v: string) => String(v).split(" ")[0]}
                     tickLine={false}
                     axisLine={false}
                   />
@@ -739,7 +741,7 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                     fontSize={9}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(val) => `${val >= 1000000 ? (val / 1000000).toFixed(0) + "jt" : val}`}
+                    tickFormatter={(val) => (val >= 1000000 ? `${(val / 1000000).toFixed(val % 1000000 === 0 ? 0 : 1)}jt` : val >= 1000 ? `${Math.round(val / 1000)}rb` : `${val}`)}
                   />
                   <RechartsTooltip
                     formatter={(value: any, name: any) => [
@@ -763,6 +765,8 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                     dataKey="label"
                     stroke="#71717a"
                     fontSize={10}
+                    interval={0}
+                    tickFormatter={(v: string) => String(v).split(" ")[0]}
                     tickLine={false}
                     axisLine={false}
                   />
@@ -771,7 +775,7 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                     fontSize={9}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(val) => `${val >= 1000000 ? (val / 1000000).toFixed(0) + "jt" : val}`}
+                    tickFormatter={(val) => (val >= 1000000 ? `${(val / 1000000).toFixed(val % 1000000 === 0 ? 0 : 1)}jt` : val >= 1000 ? `${Math.round(val / 1000)}rb` : `${val}`)}
                   />
                   <RechartsTooltip
                     formatter={(value: any, name: any) => [

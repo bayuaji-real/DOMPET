@@ -618,7 +618,7 @@ export default function TransaksiPage() {
                             <ArrowUpRight className="h-4 w-4" />
                           )}
                         </div>
-                        <div className="space-y-0.5">
+                        <div className="min-w-0 flex-1 space-y-0.5">
                           <div className="flex items-center gap-1.5">
                             <p className="text-xs font-bold leading-tight text-foreground">
                               {trx.judul}
@@ -632,7 +632,7 @@ export default function TransaksiPage() {
                               </Badge>
                             )}
                           </div>
-                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0 text-[10px] text-muted-foreground [&>span]:whitespace-nowrap">
                             <span>{trx.dompet}</span>
                             <span>•</span>
                             <span>{trx.kategori}</span>
@@ -643,7 +643,7 @@ export default function TransaksiPage() {
                       </div>
 
                       <span
-                        className={`w-28 shrink-0 text-right tabular-nums whitespace-nowrap text-xs font-bold ${
+                        className={`w-24 shrink-0 text-right tabular-nums whitespace-nowrap text-xs font-bold ${
                           isNeutral
                             ? "text-sky-600 dark:text-sky-400"
                             : isIncome
