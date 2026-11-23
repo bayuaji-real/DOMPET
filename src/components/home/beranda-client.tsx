@@ -220,9 +220,11 @@ export function BerandaClient({
                 const isIncome = trx.type === "income";
 
                 return (
-                  <div
+                  <Link
                     key={trx.id}
-                    className="flex items-center justify-between py-2.5 first:pt-1 last:pb-1 text-xs gap-3"
+                    href={`/transaksi?id=${trx.id}`}
+                    aria-label={`Lihat detail transaksi ${trx.note || "Transaksi"}`}
+                    className="flex cursor-pointer items-center justify-between gap-3 py-2.5 text-xs transition-colors first:pt-1 last:pb-1 hover:bg-muted/40 active:scale-[0.99]"
                   >
                     <div className="min-w-0 pr-2">
                       <p className="font-bold text-foreground truncate">
@@ -251,7 +253,8 @@ export function BerandaClient({
                         {trx.source || "manual"}
                       </span>
                     </div>
-                  </div>
+                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  </Link>
                 );
               })
             ) : (

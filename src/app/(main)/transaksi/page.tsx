@@ -74,7 +74,13 @@ export default function TransaksiPage() {
   const [isZoomOpen, setIsZoomOpen] = React.useState(false);
   const [signedReceiptUrl, setSignedReceiptUrl] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [filterType, setFilterType] = React.useState<"all" | "expense" | "income" | "receipt">("all");
+  const [filterType, setFilterType] = React.useState<"all" | "expense" | "income" | "receipt" | "transfer" | "savings">("all");
+  // Filter lanjutan: tanggal, dompet, kategori
+  const [showAdvanced, setShowAdvanced] = React.useState(false);
+  const [dateFrom, setDateFrom] = React.useState("");
+  const [dateTo, setDateTo] = React.useState("");
+  const [walletFilter, setWalletFilter] = React.useState("");
+  const [categoryFilter, setCategoryFilter] = React.useState("");
   const [filterOpen, setFilterOpen] = React.useState(false);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
@@ -109,6 +115,8 @@ export default function TransaksiPage() {
     { value: "receipt", label: "Foto Struk" },
     { value: "expense", label: "Pengeluaran" },
     { value: "income", label: "Pemasukan" },
+    { value: "transfer", label: "Transfer" },
+    { value: "savings", label: "Tabungan" },
   ] as const;
   const activeFilterLabel = FILTER_OPTIONS.find((o) => o.value === filterType)?.label ?? "Semua";
   const [isLoading, setIsLoading] = React.useState(false);
@@ -349,7 +357,27 @@ export default function TransaksiPage() {
     }
   };
 
-  const filteredTransactions = transactions.filter((trx) => {
+  // Buka detail langsung kalau datang dari Beranda (/transaksi?id=...)
+  const openedFromLink = React.useRef(false);
+  React.useEffect(() => {
+    if (isLoading || openedFromLink.current || transactions.length === 0) return;
+    const id = new URLSearchParams(window.location.search).get("id");
+    if (!id) return;
+    const found = transactions.find((t) => t.id === id);
+    if (found) {
+      openedFromLink.current = true;
+      setTimeout(() => void handleOpenDetail(found), 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, transactions]);
+
+  const filteredTransactions = [...transactions]
+    .sort((a, b) => {
+      const ka = `${(a.raw?.date || "").slice(0, 10)}|${a.raw?.created_at || ""}`;
+      const kb = `${(b.raw?.date || "").slice(0, 10)}|${b.raw?.created_at || ""}`;
+      return ka < kb ? 1 : ka > kb ? -1 : 0;
+    })
+    .filter((trx) => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchTitle = trx.judul.toLowerCase().includes(q);
@@ -359,6 +387,15 @@ export default function TransaksiPage() {
       if (!matchTitle && !matchCat && !matchWallet && !matchMerchant) return false;
     }
 
+    const raw = trx.raw;
+    const day = (raw?.date || "").slice(0, 10);
+    if (dateFrom && day && day < dateFrom) return false;
+    if (dateTo && day && day > dateTo) return false;
+    if (walletFilter && raw && raw.wallet_id !== walletFilter && raw.to_wallet_id !== walletFilter) return false;
+    if (categoryFilter && raw?.category_id !== categoryFilter) return false;
+
+    if (filterType === "transfer") return trx.jenis === "transfer";
+    if (filterType === "savings") return trx.jenis === "goal_deposit" || trx.jenis === "goal_withdraw";
     if (filterType === "expense") return trx.tipe === "PENGELUARAN" && !trx.jenis;
     if (filterType === "income") return trx.tipe === "PEMASUKAN" && !trx.jenis;
     if (filterType === "receipt") return trx.source === "receipt" || Boolean(trx.receipt_path);
@@ -439,12 +476,65 @@ export default function TransaksiPage() {
           </div>
         </div>
 
+        {/* Filter lanjutan: tanggal, dompet, kategori */}
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            aria-expanded={showAdvanced}
+            className="flex cursor-pointer items-center gap-1.5 px-1 text-[11px] font-bold text-teal-600 hover:underline dark:text-teal-400"
+          >
+            <Filter className="h-3 w-3" />
+            {showAdvanced ? "Sembunyikan filter" : "Filter tanggal, dompet, kategori"}
+            {(dateFrom || dateTo || walletFilter || categoryFilter) && (
+              <span className="rounded-full bg-teal-500/15 px-1.5 text-[9px]">aktif</span>
+            )}
+          </button>
+          {showAdvanced && (
+            <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border/60 bg-card p-3">
+              <label className="space-y-1 text-[11px] font-semibold text-muted-foreground">
+                Dari tanggal
+                <Input type="date" value={dateFrom} max={dateTo || undefined} onChange={(e) => setDateFrom(e.target.value)} className="h-9 rounded-xl text-xs" />
+              </label>
+              <label className="space-y-1 text-[11px] font-semibold text-muted-foreground">
+                Sampai tanggal
+                <Input type="date" value={dateTo} min={dateFrom || undefined} onChange={(e) => setDateTo(e.target.value)} className="h-9 rounded-xl text-xs" />
+              </label>
+              <label className="space-y-1 text-[11px] font-semibold text-muted-foreground">
+                Dompet
+                <select value={walletFilter} onChange={(e) => setWalletFilter(e.target.value)} className="h-9 w-full rounded-xl border border-border/60 bg-muted/40 px-2 text-xs text-foreground">
+                  <option value="">Semua dompet</option>
+                  {walletList.map((w) => (
+                    <option key={w.id} value={w.id}>{w.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="space-y-1 text-[11px] font-semibold text-muted-foreground">
+                Kategori
+                <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="h-9 w-full rounded-xl border border-border/60 bg-muted/40 px-2 text-xs text-foreground">
+                  <option value="">Semua kategori</option>
+                  {categoryList.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={() => { setDateFrom(""); setDateTo(""); setWalletFilter(""); setCategoryFilter(""); setFilterType("all"); setSearchQuery(""); }}
+                className="col-span-2 h-9 cursor-pointer rounded-xl border border-border/60 text-xs font-bold text-foreground hover:bg-muted/50"
+              >
+                Reset semua filter
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Daftar Transaksi */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground px-1">
             <div className="flex items-center gap-1.5">
               <Calendar className="h-3.5 w-3.5" />
-              <span>November 2026</span>
+              <span>Terbaru di atas</span>
             </div>
             <span className="text-[11px] font-normal">
               {filteredTransactions.length} transaksi

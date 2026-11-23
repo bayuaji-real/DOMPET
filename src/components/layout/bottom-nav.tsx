@@ -63,6 +63,17 @@ export function BottomNav() {
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
   const audioChunksRef = React.useRef<Blob[]>([]);
+  // Refs tambahan: nilai terbaru yang dibaca dari timer/callback (menghindari state basi)
+  const inputTextRef = React.useRef("");
+  const lastActivityRef = React.useRef(0);
+  const startedAtRef = React.useRef(0);
+  const hadSpeechRef = React.useRef(false);
+  const isRecordingRef = React.useRef(false);
+  const finishingRef = React.useRef(false);
+  const audioCtxRef = React.useRef<AudioContext | null>(null);
+  const finishRef = React.useRef<(process: boolean, message?: string) => void>(() => undefined);
+  // Popup ketik manual (latar buram)
+  const [isManualOpen, setIsManualOpen] = React.useState(false);
 
   // Data dompet & kategori
   const [wallets, setWallets] = React.useState<{ id: string; name: string; icon?: string | null; color?: string | null }[]>([]);
@@ -221,126 +232,182 @@ export function BottomNav() {
     }
   };
 
-  // Mulai merekam suara langsung di quick bar
+  // Mulai merekam suara langsung di quick bar.
+  // Berhenti otomatis: ~2,5 detik hening setelah bicara, 8 detik kalau tidak ada suara sama sekali, atau 60 detik.
   const startVoiceRecording = async () => {
+    if (isRecordingRef.current || isProcessing) return;
+    isRecordingRef.current = true;
+    finishingRef.current = false;
+    hadSpeechRef.current = false;
+    startedAtRef.current = Date.now();
+    lastActivityRef.current = Date.now();
+    audioChunksRef.current = [];
+    inputTextRef.current = "";
     setIsVoiceRecording(true);
     setVoiceSeconds(0);
     setInputText("");
-    audioChunksRef.current = [];
 
-    // 1. Coba Web Speech Recognition bawaan browser (Gratis, 0 token, ketik langsung)
-    if (typeof window !== "undefined") {
-      const SpeechRecognition =
-        (window as any).SpeechRecognition ||
-        (window as any).webkitSpeechRecognition;
+    const SpeechRecognitionCtor =
+      typeof window !== "undefined"
+        ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+        : null;
+    let useRecognition = false;
 
-      if (SpeechRecognition) {
-        try {
-          const recognition = new SpeechRecognition();
-          recognition.lang = "id-ID";
-          recognition.continuous = true;
-          recognition.interimResults = true;
-
-          recognition.onresult = (event: any) => {
-            let text = "";
-            for (let i = 0; i < event.results.length; i++) {
-              text += event.results[i][0].transcript;
-            }
-            if (text) {
-              setInputText(text);
-            }
-          };
-
-          recognition.onerror = (e: any) => {
-            console.warn("Speech recognition error:", e);
-          };
-
-          recognition.start();
-          recognitionRef.current = recognition;
-        } catch (err) {
-          console.warn("Speech recognition init error:", err);
-        }
+    // Jalur 1: pengenalan suara bawaan browser (gratis). Mikrofon hanya dipakai SATU jalur
+    // supaya tidak berebut dengan perekam audio (dugaan penyebab voice gagal di HP).
+    if (SpeechRecognitionCtor) {
+      try {
+        const recognition = new SpeechRecognitionCtor();
+        recognition.lang = "id-ID";
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.onresult = (event: any) => {
+          let text = "";
+          for (let i = 0; i < event.results.length; i++) text += event.results[i][0].transcript;
+          if (text.trim()) {
+            hadSpeechRef.current = true;
+            lastActivityRef.current = Date.now();
+            inputTextRef.current = text;
+            setInputText(text);
+          }
+        };
+        recognition.onerror = (e: any) => {
+          if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
+            finishRef.current(false, "Akses mikrofon ditolak. Izinkan mikrofon di pengaturan browser.");
+          }
+        };
+        // Browser HP sering menghentikan pengenalan sendiri; sambung lagi selama masih merekam
+        recognition.onend = () => {
+          if (isRecordingRef.current && !finishingRef.current) {
+            try {
+              recognition.start();
+            } catch {}
+          }
+        };
+        recognition.start();
+        recognitionRef.current = recognition;
+        useRecognition = true;
+      } catch (err) {
+        console.warn("Speech recognition init error:", err);
       }
     }
 
-    // 2. MediaRecorder stream sebagai audio fallback
-    try {
-      if (navigator.mediaDevices?.getUserMedia) {
+    // Jalur 2 (cadangan): rekam audio, deteksi hening lewat tingkat suara
+    if (!useRecognition) {
+      try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         streamRef.current = stream;
-
-        const candidates = [
-          "audio/webm;codecs=opus",
-          "audio/webm",
-          "audio/mp4",
-          "audio/aac",
-          "audio/wav",
-        ];
+        const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/aac", "audio/wav"];
         const mimeType = candidates.find((t) => MediaRecorder.isTypeSupported(t)) || "";
         const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
         mediaRecorderRef.current = mr;
-
         mr.ondataavailable = (e) => {
-          if (e.data && e.data.size > 0) {
-            audioChunksRef.current.push(e.data);
-          }
+          if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
         };
-
         mr.start(250);
+
+        const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+        if (Ctx) {
+          const ctx: AudioContext = new Ctx();
+          audioCtxRef.current = ctx;
+          const analyser = ctx.createAnalyser();
+          analyser.fftSize = 512;
+          ctx.createMediaStreamSource(stream).connect(analyser);
+          const buf = new Uint8Array(analyser.fftSize);
+          const poll = () => {
+            if (!isRecordingRef.current) return;
+            analyser.getByteTimeDomainData(buf);
+            let sum = 0;
+            for (let i = 0; i < buf.length; i++) {
+              const v = (buf[i] - 128) / 128;
+              sum += v * v;
+            }
+            if (Math.sqrt(sum / buf.length) > 0.04) {
+              hadSpeechRef.current = true;
+              lastActivityRef.current = Date.now();
+            }
+            setTimeout(poll, 150);
+          };
+          poll();
+        } else {
+          // Tanpa pengukur suara: anggap sudah bicara, berhenti oleh batas waktu
+          hadSpeechRef.current = true;
+        }
+      } catch (err) {
+        console.warn("Microphone stream error:", err);
+        finishRef.current(false, "Mikrofon tidak bisa dipakai. Izinkan akses mikrofon di pengaturan browser.");
+        return;
       }
-    } catch (err) {
-      console.warn("Microphone stream error:", err);
     }
 
-    // 3. Timer maks 60 detik
     timerRef.current = setInterval(() => {
-      setVoiceSeconds((prev) => {
-        if (prev >= 59) {
-          stopVoiceRecording(true);
-          return 60;
-        }
-        return prev + 1;
-      });
-    }, 1000);
+      const now = Date.now();
+      const secs = Math.floor((now - startedAtRef.current) / 1000);
+      setVoiceSeconds(secs);
+      if (secs >= 60) finishRef.current(true);
+      else if (hadSpeechRef.current && now - lastActivityRef.current >= 2500) finishRef.current(true);
+      else if (!hadSpeechRef.current && now - startedAtRef.current >= 8000) {
+        finishRef.current(false, "Tidak ada suara terdengar. Coba lagi ya.");
+      }
+    }, 300);
   };
 
-  // Berhenti merekam suara langsung di quick bar
-  const stopVoiceRecording = (shouldProcess = true) => {
+  // Berhenti merekam. Kalau shouldProcess, tunggu hasil terakhir lalu kirim ke server.
+  const stopVoiceRecording = (shouldProcess = true, message?: string) => {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
+    isRecordingRef.current = false;
     setIsVoiceRecording(false);
 
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-
-    if (recognitionRef.current) {
+    const recognition = recognitionRef.current;
+    recognitionRef.current = null;
+    if (recognition) {
+      recognition.onend = null;
       try {
-        recognitionRef.current.stop();
-      } catch {}
-      recognitionRef.current = null;
-    }
-
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      try {
-        mediaRecorderRef.current.stop();
+        recognition.stop();
       } catch {}
     }
 
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+    const release = () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
-    }
+      audioCtxRef.current?.close().catch(() => undefined);
+      audioCtxRef.current = null;
+    };
+    const done = () => {
+      release();
+      if (shouldProcess) void processSpokenInput();
+      else if (message) showNotification(message);
+    };
 
-    if (shouldProcess) {
-      setTimeout(() => {
-        processSpokenInput();
-      }, 300);
+    const mr = mediaRecorderRef.current;
+    mediaRecorderRef.current = null;
+    if (mr && mr.state !== "inactive") {
+      // tunggu potongan audio terakhir sebelum diproses
+      mr.onstop = done;
+      try {
+        mr.stop();
+      } catch {
+        done();
+      }
+    } else {
+      // beri waktu hasil akhir pengenalan suara masuk
+      setTimeout(done, 400);
     }
   };
+  finishRef.current = stopVoiceRecording;
 
   // Kirim hasil suara / ketik langsung ke server route
   const processSpokenInput = async () => {
-    const text = inputText.trim();
+    const text = inputTextRef.current.trim();
+    if (!text && audioChunksRef.current.length === 0) {
+      showNotification("Tidak ada suara terdengar. Coba lagi ya.");
+      return;
+    }
     setIsProcessing(true);
 
     try {
@@ -351,21 +418,13 @@ export function BottomNav() {
 
       if (text) {
         bodyPayload.textPrompt = text;
-      } else if (audioChunksRef.current.length > 0) {
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: mediaRecorderRef.current?.mimeType || "audio/webm",
-        });
-        const buffer = await audioBlob.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
+      } else {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const bytes = new Uint8Array(await audioBlob.arrayBuffer());
         let binary = "";
-        for (let i = 0; i < bytes.byteLength; i++) {
-          binary += String.fromCharCode(bytes[i]);
-        }
+        for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
         bodyPayload.audioBase64 = btoa(binary);
         bodyPayload.mimeType = audioBlob.type || "audio/webm";
-      } else {
-        setIsProcessing(false);
-        return;
       }
 
       const res = await fetch("/api/voice-transaction", {
@@ -373,13 +432,13 @@ export function BottomNav() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyPayload),
       });
-
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.error || "Gagal memproses suara");
       }
 
       setInputText("");
+      inputTextRef.current = "";
       setVoiceTranscript(data.transcript || text);
       setVoiceTransactions(data.transactions || []);
       setIsVoiceConfirmationOpen(true);
@@ -396,7 +455,7 @@ export function BottomNav() {
     if (isVoiceRecording) {
       stopVoiceRecording(true);
     } else {
-      startVoiceRecording();
+      void startVoiceRecording();
     }
   };
 
@@ -464,76 +523,102 @@ export function BottomNav() {
             <Camera className="h-5 w-5" />
           </button>
 
-          <form onSubmit={handleQuickSubmit} className="relative flex flex-1 items-center">
-            {isVoiceRecording && (
-              <span className="pointer-events-none absolute left-3 z-10 h-2 w-2 animate-ping rounded-full bg-rose-500" />
+          {/* Menekan bar membuka popup ketik manual */}
+          <button
+            type="button"
+            onClick={() => setIsManualOpen(true)}
+            disabled={isVoiceRecording || isProcessing}
+            aria-label="Ketik transaksi"
+            className={cn(
+              "flex h-10 min-w-0 flex-1 cursor-text items-center gap-2 rounded-xl border px-3 text-left text-xs transition-all disabled:cursor-default",
+              isVoiceRecording
+                ? "border-rose-500/40 bg-rose-500/5 font-semibold text-rose-600 dark:text-rose-400"
+                : "border-border/60 bg-muted/30 text-muted-foreground/80 hover:bg-muted/50"
             )}
-            <input
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              aria-label="Catat transaksi cepat"
-              placeholder={
-                isVoiceRecording
-                  ? `Mendengarkan... (${voiceSeconds}d)`
-                  : "Misal: Nasi Padang 25rb GoPay..."
-              }
-              disabled={isProcessing}
-              className={cn(
-                "h-10 w-full rounded-xl border border-border/60 bg-muted/30 pr-10 text-xs text-foreground transition-all focus:outline-none focus:ring-1 focus:ring-teal-500/50",
-                isVoiceRecording
-                  ? "pl-8 font-semibold text-rose-600 dark:text-rose-400"
-                  : "pl-3 placeholder:text-muted-foreground/70"
-              )}
-            />
-
-            {isProcessing ? (
-              <div className="absolute right-1 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
-              </div>
-            ) : isVoiceRecording ? (
-              <button
-                type="button"
-                onClick={() => stopVoiceRecording(true)}
-                className="absolute right-1 flex h-8 w-8 animate-pulse cursor-pointer items-center justify-center rounded-lg bg-rose-500 text-white shadow-md transition-all hover:bg-rose-600"
-                title="Selesai & Catat"
-                aria-label="Selesai dan catat"
-              >
-                <Square className="h-3.5 w-3.5 fill-current" />
-              </button>
-            ) : inputText.trim().length > 0 ? (
-              <button
-                type="submit"
-                className="absolute right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-teal-600 text-white shadow-sm transition-all hover:bg-teal-700 active:scale-95"
-                title="Kirim Catatan"
-                aria-label="Kirim catatan"
-              >
-                <ArrowUp className="h-4 w-4 stroke-[2.5]" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleMicClick}
-                className="absolute right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-                title="Bicara untuk Catat Langsung"
-                aria-label="Catat dengan suara"
-              >
-                <Mic className="h-4 w-4" />
-              </button>
-            )}
-          </form>
-
-          <Link
-            href="/tambah"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground transition-all hover:text-foreground active:scale-95"
-            title="Input Manual"
-            aria-label="Input manual"
           >
-            <PenLine className="h-5 w-5" />
-          </Link>
+            {isProcessing ? (
+              <>
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin text-teal-500" />
+                <span className="truncate">Memproses...</span>
+              </>
+            ) : isVoiceRecording ? (
+              <>
+                <span className="h-2 w-2 shrink-0 animate-ping rounded-full bg-rose-500" />
+                <span className="truncate">{inputText || `Mendengarkan... (${voiceSeconds}d)`}</span>
+              </>
+            ) : (
+              <span className="truncate">Ketik: Nasi Padang 25rb GoPay...</span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleMicClick}
+            disabled={isProcessing}
+            className={cn(
+              "flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl text-white shadow-sm transition-all active:scale-95 disabled:opacity-50",
+              isVoiceRecording ? "animate-pulse bg-rose-500 hover:bg-rose-600" : "bg-teal-600 hover:bg-teal-700"
+            )}
+            title={isVoiceRecording ? "Selesai dan catat" : "Bicara untuk catat langsung"}
+            aria-label={isVoiceRecording ? "Selesai dan catat" : "Catat dengan suara"}
+          >
+            {isVoiceRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-5 w-5" />}
+          </button>
         </div>
       </div>
       )}
+
+      {/* Popup ketik manual: latar diburamkan, isian langsung di atas keyboard */}
+      <Sheet open={isManualOpen} onOpenChange={setIsManualOpen}>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          overlayClassName="bg-black/50 backdrop-blur-sm"
+          className="mx-auto max-w-[430px] rounded-t-3xl border-border/80 bg-background px-5 pb-6 pt-4 shadow-2xl"
+        >
+          <SheetTitle className="text-sm font-extrabold">Catat transaksi</SheetTitle>
+          <form
+            onSubmit={(e) => {
+              setIsManualOpen(false);
+              void handleQuickSubmit(e);
+            }}
+            className="space-y-3"
+          >
+            <textarea
+              autoFocus
+              value={inputText}
+              onChange={(e) => {
+                setInputText(e.target.value);
+                inputTextRef.current = e.target.value;
+              }}
+              rows={3}
+              maxLength={500}
+              aria-label="Tulis transaksi"
+              placeholder="Misal: Nasi Padang 25rb GoPay, kopi 18rb tunai"
+              className="w-full resize-none rounded-xl border border-border/60 bg-muted/30 p-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-teal-500/50"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Tulis seperti ngobrol. Kalau dompet tidak disebut, masuk ke Uang Tunai.
+            </p>
+            <div className="flex gap-2">
+              <Link
+                href="/tambah"
+                onClick={() => setIsManualOpen(false)}
+                className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-border/70 text-xs font-bold text-foreground hover:bg-muted/50"
+              >
+                <PenLine className="h-4 w-4" /> Form lengkap
+              </Link>
+              <button
+                type="submit"
+                disabled={!inputText.trim() || isProcessing}
+                className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-teal-600 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50"
+              >
+                <ArrowUp className="h-4 w-4" /> Catat
+              </button>
+            </div>
+          </form>
+        </SheetContent>
+      </Sheet>
 
       <nav
         aria-label="Navigasi Bawah"
