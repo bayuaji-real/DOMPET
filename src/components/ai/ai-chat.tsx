@@ -1,14 +1,25 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Send } from "lucide-react";
+import { CheckCheck, Send } from "lucide-react";
 import type { AIChatResponse, SavingsProposal } from "@/app/api/ai-chat/route";
+import { getUserProfile, type UserProfile } from "@/lib/user-profile";
+import { ASSISTANT_AVATAR, ASSISTANT_GREETING, ASSISTANT_NAME } from "@/components/ai/ruby";
 
 export type { SavingsProposal };
+
 
 interface Msg {
   role: "user" | "model";
   text: string;
+  /** Jam kirim (WIB), mis. "09:41". */
+  time?: string;
+}
+
+function nowLabel(): string {
+  return new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Jakarta" })
+    .format(new Date())
+    .replace(".", ":");
 }
 
 /** Tampilkan teks AI: baris "- " jadi poin, **tebal** dirapikan. */
@@ -34,8 +45,86 @@ function RichText({ text }: { text: string }) {
   );
 }
 
+/** Foto bulat di samping bubble: logo untuk Ruby, foto profil (atau emoji/inisial) untuk pengguna. */
+function Avatar({ who, profile }: { who: "user" | "model"; profile: UserProfile | null }) {
+  const base = "h-8 w-8 shrink-0 rounded-full object-cover shadow-sm ring-1 ring-black/5 dark:ring-white/10";
+  if (who === "model") {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={ASSISTANT_AVATAR} alt={ASSISTANT_NAME} className={`${base} bg-white p-1`} draggable={false} />
+    );
+  }
+  if (profile?.avatarUrl) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={profile.avatarUrl} alt={profile.name || "Kamu"} className={base} draggable={false} />;
+  }
+  return (
+    <div
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white shadow-sm ring-1 ring-black/5"
+      style={{ backgroundColor: profile?.avatarBg || "#0d9488" }}
+      aria-label={profile?.name || "Kamu"}
+    >
+      {profile?.avatarEmoji || profile?.name?.charAt(0).toUpperCase() || "K"}
+    </div>
+  );
+}
+
+/** Satu bubble ala WhatsApp: nama pengirim (Ruby) di bubble pertama, foto di bubble terakhir, jam di pojok kanan bawah. */
+function Bubble({
+  msg,
+  first,
+  last,
+  profile,
+}: {
+  msg: Msg;
+  first: boolean;
+  last: boolean;
+  profile: UserProfile | null;
+}) {
+  const mine = msg.role === "user";
+  const shape = mine ? (last ? "rounded-2xl rounded-br-sm" : "rounded-2xl") : last ? "rounded-2xl rounded-bl-sm" : "rounded-2xl";
+  const color = mine
+    ? "bg-[#d9fdd3] text-zinc-900 dark:bg-[#005c4b] dark:text-zinc-50"
+    : "bg-white text-zinc-900 dark:bg-[#202c33] dark:text-zinc-50";
+  return (
+    <div className={`flex items-end gap-2 ${mine ? "flex-row-reverse" : ""} ${first ? "mt-2" : ""}`}>
+      {last ? <Avatar who={msg.role} profile={profile} /> : <span className="w-8 shrink-0" aria-hidden="true" />}
+      <div className={`max-w-[80%] px-3 pb-1.5 pt-2 text-xs leading-relaxed shadow-sm ${shape} ${color}`}>
+        {!mine && first && <p className="mb-0.5 text-[11px] font-bold text-teal-600 dark:text-teal-400">{ASSISTANT_NAME}</p>}
+        {mine ? <p className="whitespace-pre-wrap break-words">{msg.text}</p> : <RichText text={msg.text} />}
+        {msg.time && (
+          <span className="mt-0.5 flex items-center justify-end gap-0.5 text-[10px] tabular-nums text-zinc-500 dark:text-zinc-400">
+            {msg.time}
+            {mine && <CheckCheck className="h-3 w-3 text-sky-500" aria-label="Terkirim" />}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TypingBubble() {
+  return (
+    <div className="mt-2 flex items-end gap-2" role="status" aria-label={`${ASSISTANT_NAME} sedang mengetik`}>
+      <Avatar who="model" profile={null} />
+      <div className="rounded-2xl rounded-bl-sm bg-white px-3.5 py-3 shadow-sm dark:bg-[#202c33]">
+        <span className="flex items-center gap-1">
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-400"
+              style={{ animationDelay: `${i * 150}ms` }}
+            />
+          ))}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 interface AiChatProps {
   mode: "savings" | "advisor" | "plan";
+  /** Pesan pembuka kedua dari Ruby (panduan apa yang harus ditulis). Sapaan "Halo aku Ruby..." sudah otomatis. */
   intro: string;
   placeholder?: string;
   suggestions?: string[];
@@ -43,14 +132,27 @@ interface AiChatProps {
   renderProposal?: (proposal: SavingsProposal, reset: () => void) => React.ReactNode;
 }
 
-/** Layar chat AI yang dipakai bersama (pembuat tabungan dan konsultasi keuangan). */
+/** Layar chat AI yang dipakai bersama (pembuat tabungan, konsultasi keuangan, rencana keuangan). Tampilan ala WhatsApp. */
 export function AiChat({ mode, intro, placeholder, suggestions, renderProposal }: AiChatProps) {
   const [messages, setMessages] = React.useState<Msg[]>([]);
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [proposal, setProposal] = React.useState<SavingsProposal | null>(null);
+  const [profile, setProfile] = React.useState<UserProfile | null>(null);
+  const [openedAt, setOpenedAt] = React.useState<string>("");
   const endRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    setOpenedAt(nowLabel());
+    let alive = true;
+    getUserProfile()
+      .then((p) => alive && setProfile(p))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   React.useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -66,7 +168,7 @@ export function AiChat({ mode, intro, placeholder, suggestions, renderProposal }
   const send = async (raw: string) => {
     const text = raw.trim().slice(0, 1000);
     if (!text || loading) return;
-    const next: Msg[] = [...messages, { role: "user", text }];
+    const next: Msg[] = [...messages, { role: "user", text, time: nowLabel() }];
     setMessages(next);
     setInput("");
     setError(null);
@@ -76,14 +178,14 @@ export function AiChat({ mode, intro, placeholder, suggestions, renderProposal }
       const res = await fetch("/api/ai-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, messages: next.slice(-14) }),
+        body: JSON.stringify({ mode, messages: next.slice(-14).map(({ role, text: t }) => ({ role, text: t })) }),
       });
       const json = (await res.json()) as AIChatResponse | { success: false; error: string };
       if (!res.ok || !json.success) {
         setError("error" in json ? json.error : "Terjadi kendala. Coba lagi.");
         return;
       }
-      setMessages([...next, { role: "model", text: json.reply }]);
+      setMessages([...next, { role: "model", text: json.reply, time: nowLabel() }]);
       setProposal(json.proposal);
     } catch {
       setError("Tidak bisa terhubung. Cek internet lalu coba lagi.");
@@ -92,43 +194,42 @@ export function AiChat({ mode, intro, placeholder, suggestions, renderProposal }
     }
   };
 
+  // Pesan pembuka dari Ruby (tidak dikirim ke server, hanya tampilan) + percakapan.
+  const opening: Msg[] = [
+    { role: "model", text: ASSISTANT_GREETING, time: openedAt || undefined },
+    { role: "model", text: intro, time: openedAt || undefined },
+  ];
+  const all = [...opening, ...messages];
+
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex-1 space-y-2.5 overflow-y-auto px-4 py-3">
-        <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-muted px-3 py-2 text-xs text-foreground"><RichText text={intro} /></div>
+      <div className="flex-1 overflow-y-auto bg-[#efeae2] px-3 py-3 dark:bg-[#0b141a]">
+        {all.map((m, i) => (
+          <Bubble
+            key={i}
+            msg={m}
+            first={i === 0 || all[i - 1].role !== m.role}
+            last={i === all.length - 1 || all[i + 1].role !== m.role}
+            profile={profile}
+          />
+        ))}
         {messages.length === 0 && suggestions && (
-          <div className="flex flex-wrap gap-1.5 pt-1">
+          <div className="flex flex-wrap justify-end gap-1.5 pt-3">
             {suggestions.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => send(s)}
-                className="cursor-pointer rounded-full border border-border bg-card px-3 py-1.5 text-[11px] text-foreground hover:bg-muted"
+                className="cursor-pointer rounded-full border border-teal-600/30 bg-white px-3 py-1.5 text-[11px] font-medium text-teal-700 shadow-sm hover:bg-teal-50 dark:border-teal-400/30 dark:bg-[#202c33] dark:text-teal-300 dark:hover:bg-[#2a3942]"
               >
                 {s}
               </button>
             ))}
           </div>
         )}
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={
-              m.role === "user"
-                ? "ml-auto max-w-[85%] rounded-2xl rounded-tr-sm bg-teal-600 px-3 py-2 text-xs text-white"
-                : "max-w-[88%] rounded-2xl rounded-tl-sm bg-muted px-3 py-2 text-xs text-foreground"
-            }
-          >
-            {m.role === "user" ? m.text : <RichText text={m.text} />}
-          </div>
-        ))}
-        {loading && (
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Loader2 className="h-3 w-3 animate-spin" /> Mengetik...
-          </div>
-        )}
-        {proposal && renderProposal?.(proposal, reset)}
-        {error && <p className="rounded-xl bg-rose-500/10 px-3 py-2 text-[11px] text-rose-600 dark:text-rose-400">{error}</p>}
+        {loading && <TypingBubble />}
+        {proposal && <div className="mt-3">{renderProposal?.(proposal, reset)}</div>}
+        {error && <p className="mt-3 rounded-xl bg-rose-500/10 px-3 py-2 text-[11px] text-rose-600 dark:text-rose-400">{error}</p>}
         <div ref={endRef} />
       </div>
       <form
@@ -136,20 +237,20 @@ export function AiChat({ mode, intro, placeholder, suggestions, renderProposal }
           e.preventDefault();
           void send(input);
         }}
-        className="flex shrink-0 items-center gap-2 border-t border-border/60 bg-background p-3"
+        className="flex shrink-0 items-center gap-2 border-t border-border/60 bg-background px-3 py-2.5"
       >
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           maxLength={1000}
           placeholder={placeholder ?? "Ketik pesan..."}
-          className="h-10 flex-1 rounded-xl border border-border bg-background px-3 text-xs outline-none focus:ring-2 focus:ring-teal-500/40"
+          className="h-10 flex-1 rounded-full border border-border bg-muted/40 px-4 text-xs outline-none focus:ring-2 focus:ring-teal-500/40"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
           aria-label="Kirim"
-          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl bg-teal-600 text-white disabled:opacity-40"
+          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-teal-600 text-white shadow-sm disabled:opacity-40"
         >
           <Send className="h-4 w-4" />
         </button>

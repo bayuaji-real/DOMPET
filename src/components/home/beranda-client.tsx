@@ -192,6 +192,7 @@ export function BerandaClient({
         <AnalisisCard
           walletId={filterWalletId}
           walletName={wallets.find((w) => w.id === filterWalletId)?.name}
+          wallet={wallets.find((w) => w.id === filterWalletId) ?? null}
           monthTxs={monthTxs}
         />
 

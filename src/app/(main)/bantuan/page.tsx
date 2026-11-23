@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/image-compression";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
+import { RubyBubble, ASSISTANT_GREETING } from "@/components/ai/ruby";
 
 type Kind = "bug" | "usul";
 
@@ -88,6 +89,22 @@ export default function BantuanPage() {
     <div className="flex flex-1 flex-col">
       <TopHeader title="Hubungi Bantuan" subtitle="Lapor masalah atau usul fitur ke tim kami" />
       <div className="space-y-4 p-4">
+        <div className="space-y-2 rounded-3xl bg-[#efeae2] p-3 dark:bg-[#0b141a]">
+          <RubyBubble>
+            <p>{ASSISTANT_GREETING}</p>
+          </RubyBubble>
+          <RubyBubble showName={false}>
+            <p>
+              {done
+                ? "Terima kasih, laporanmu sudah kami terima dan akan dibaca tim."
+                : !kind
+                  ? "Ada yang mau kamu laporkan atau usulkan? Pilih salah satu di bawah ya."
+                  : kind === "bug"
+                    ? "Ceritakan apa yang error, dan lampirkan foto layarnya kalau ada."
+                    : "Ceritakan idemu, supaya Dompetku makin enak dipakai."}
+            </p>
+          </RubyBubble>
+        </div>
         {done ? (
           <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-5 text-center">
             <CheckCircle2 className="mx-auto h-9 w-9 text-teal-600" />

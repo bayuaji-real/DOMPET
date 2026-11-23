@@ -9,6 +9,8 @@ import type { AnalyticsData, CategoryExpense, DailyExpense, HealthStatus } from 
 import type { Transaction } from "@/lib/data/transactions";
 import { getCategories, type Category } from "@/lib/data/categories";
 import { todayJakarta } from "@/lib/data/sample-mode";
+import { SavingsWalletAnalysis } from "@/components/tabungan/savings-wallet-analysis";
+import type { WalletBalance } from "@/lib/data/wallets";
 
 const PALETTE = ["#0d9488", "#8b5cf6", "#f59e0b", "#f43f5e", "#0ea5e9", "#84cc16"];
 
@@ -49,6 +51,8 @@ interface AnalisisCardProps {
   /** Dompet terpilih di kartu Total Saldo. Kosong = semua dompet. */
   walletId?: string | null;
   walletName?: string;
+  /** Dompet terpilih (lengkap). Bila dompet tabungan, tampil analisis tabungan, bukan analisis pengeluaran. */
+  wallet?: WalletBalance | null;
   /** Transaksi bulan ini; dipakai untuk menghitung ringkasan satu dompet. */
   monthTxs?: Transaction[];
 }
@@ -101,7 +105,7 @@ function deriveForWallet(txs: Transaction[], walletId: string, cats: Category[])
   };
 }
 
-export function AnalisisCard({ walletId = null, walletName, monthTxs = [] }: AnalisisCardProps = {}) {
+export function AnalisisCard({ walletId = null, walletName, wallet = null, monthTxs = [] }: AnalisisCardProps = {}) {
   const [allCategories, setAllCategories] = React.useState<Category[]>([]);
   const [data, setData] = React.useState<AnalyticsData | null>(null);
   const [failed, setFailed] = React.useState(false);
@@ -152,6 +156,20 @@ export function AnalisisCard({ walletId = null, walletName, monthTxs = [] }: Ana
   const health = filtering ? undefined : data?.financialHealth;
   const top = categories[0];
   const hasData = !!s && (s.totalIncome > 0 || s.totalExpense > 0);
+
+  if (wallet && wallet.id && (wallet.type === "tabungan" || wallet.goal_id)) {
+    return (
+      <section className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-sm">
+        <SavingsWalletAnalysis wallet={{ id: wallet.id, name: wallet.name ?? "Tabungan", goal_id: wallet.goal_id, balance: wallet.balance }} hide={hide} />
+        <Link
+          href="/tabungan"
+          className="flex items-center justify-center gap-1 rounded-xl border border-border/70 py-2 text-xs font-bold text-foreground transition-colors hover:bg-muted/50"
+        >
+          Buka Tabungan <ChevronRight className="h-4 w-4" />
+        </Link>
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="ringkas-analisis" className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-sm">

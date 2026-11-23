@@ -4,25 +4,25 @@
   "description": "Catatan keuangan pribadi simpel dan cerdas untuk HP",
   "start_url": "/",
   "display": "fullscreen",
-  "background_color": "#0f172a",
+  "background_color": "#09090b",
   "theme_color": "#0d9488",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icons/icon-maskable-192.png",
-      "sizes": "192x192",
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icons/icon-192.png",
+      "src": "/icons/splash-logo-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
+      "src": "/icons/splash-logo-384.png",
+      "sizes": "384x384",
       "type": "image/png",
       "purpose": "any"
     }

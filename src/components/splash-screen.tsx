@@ -85,10 +85,10 @@ export function SplashScreen() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className="logo"
-        src="/icons/icon-512.png"
+        src="/icons/splash-logo-512.png"
         alt=""
-        width={128}
-        height={128}
+        width={176}
+        height={176}
         style={{ background: "transparent" }}
         draggable={false}
       />

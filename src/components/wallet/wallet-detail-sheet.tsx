@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WalletIcon } from "@/components/wallet/wallet-icon";
+import { SavingsWalletAnalysis } from "@/components/tabungan/savings-wallet-analysis";
 import { formatRupiah } from "@/lib/utils";
 import {
   updateWallet,
@@ -154,8 +155,9 @@ function WalletDetailSheetInner({
           <div className="space-y-2">
             {isSavings ? (
               <>
+                <SavingsWalletAnalysis wallet={wallet} />
                 <p className="text-xs text-muted-foreground">
-                  Ini dompet tabungan. Setor, tarik, ubah target, dan hapus dilakukan di menu Tabungan.
+                  Setor, tarik, ubah target, dan hapus dilakukan di menu Tabungan.
                 </p>
                 <Link
                   href="/tabungan"

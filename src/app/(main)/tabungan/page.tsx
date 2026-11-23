@@ -1282,7 +1282,7 @@ export default function TabunganPage() {
           {isChatOpen && (
             <AiChat
               mode="savings"
-              intro="Halo! Kamu mau menabung untuk apa, berapa targetnya, dan kapan mau tercapai?"
+              intro="Kamu mau menabung untuk apa, berapa targetnya, dan kapan mau tercapai?"
               placeholder="Misal: laptop 12 juta, akhir tahun depan"
               suggestions={["Dana darurat", "Beli laptop", "Liburan"]}
               renderProposal={renderProposal}

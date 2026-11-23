@@ -551,7 +551,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
   const isDarkMode = resolvedTheme === "dark";
 
   return (
-    <div className="flex flex-col flex-1 pb-28 pt-safe">
+    <div className="flex flex-col flex-1 pb-4 pt-safe">
       {toastMsg && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 rounded-2xl bg-teal-600 text-white px-4 py-2 text-xs font-bold shadow-xl animate-in fade-in slide-in-from-top-2">
           {toastMsg}
@@ -590,7 +590,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
         {/* VIEW 0: MENU SETTINGS UTAMA (DAFTAR KE BAWAH / GROUPED LIST)     */}
         {/* --------------------------------------------------------------- */}
         {activeSection === null && (
-          <div className="flex min-h-[calc(100dvh-7.5rem)] flex-col gap-4 animate-in fade-in duration-200">
+          <div className="flex flex-col gap-4 animate-in fade-in duration-200">
             {/* Kartu Profil Utama dengan Tombol Edit Profil */}
             <div className="relative overflow-hidden rounded-3xl border border-white/20 dark:border-white/10 bg-gradient-to-br from-teal-500/15 via-emerald-500/10 to-card p-4.5 shadow-sm space-y-3">
               <div className="flex items-center gap-3.5">
@@ -887,7 +887,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
             </div>
 
             {/* GROUP 4: LOGOUT (Tombol sederhana bertuliskan "Logout") */}
-            <div className="mt-auto pt-4">
+            <div className="pt-2">
               <button
                 type="button"
                 onClick={handleLogout}

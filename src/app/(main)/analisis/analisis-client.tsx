@@ -1,5 +1,6 @@
 "use client";
 
+import { RubyAvatar, RubyBubble } from "@/components/ai/ruby";
 import * as React from "react";
 import { TopHeader } from "@/components/layout/top-header";
 import { formatRupiah } from "@/lib/utils";
@@ -492,11 +493,9 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
         <div className="rounded-3xl border border-teal-500/30 bg-teal-500/5 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-xl bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center">
-                <Sparkles className="h-4.5 w-4.5" />
-              </div>
+              <RubyAvatar size={36} />
               <div>
-                <h3 className="text-xs font-extrabold text-foreground">Insight AI ✨</h3>
+                <h3 className="text-xs font-extrabold text-foreground">Insight dari Ruby</h3>
                 <p className="text-[10px] text-muted-foreground">Rangkuman santai & saran hemat</p>
               </div>
             </div>
@@ -520,7 +519,7 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
               ) : (
                 <>
                   <Sparkles className="h-3.5 w-3.5" />
-                  Insight AI
+                  Tanya Ruby
                 </>
               )}
             </button>
@@ -534,14 +533,16 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
 
           {insight ? (
             <div className="space-y-2.5 pt-1 animate-in fade-in">
-              <div className="space-y-1.5">
-                {insight.insights.map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-2 text-xs leading-relaxed text-foreground">
-                    <span className="h-1.5 w-1.5 rounded-full bg-teal-500 mt-1.5 shrink-0" />
-                    <p>{item}</p>
-                  </div>
-                ))}
-              </div>
+              <RubyBubble className="w-full">
+                <div className="space-y-1.5">
+                  {insight.insights.map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-xs leading-relaxed">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500" />
+                      <p>{item}</p>
+                    </div>
+                  ))}
+                </div>
+              </RubyBubble>
 
               {insight.actionableTip && (
                 <div className="rounded-2xl border border-teal-500/40 bg-teal-500/15 p-3 flex items-start gap-2.5 mt-2">
@@ -558,13 +559,13 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
           ) : !isInsightLoading ? (
             <div className="rounded-2xl border border-dashed border-teal-500/30 p-3.5 text-center">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Ketuk tombol <strong>&ldquo;Insight AI&rdquo;</strong> di atas untuk mendapatkan rangkuman kebiasaan belanjamu dan rekomendasi hemat!
+                Ketuk tombol <strong>&ldquo;Tanya Ruby&rdquo;</strong> di atas untuk mendapatkan rangkuman kebiasaan belanjamu dan rekomendasi hemat!
               </p>
             </div>
           ) : (
             <div className="py-4 flex flex-col items-center justify-center gap-2 text-center">
               <Loader2 className="h-6 w-6 text-teal-500 animate-spin" />
-              <p className="text-xs text-muted-foreground">Sedang membaca pola dan menghitung tren...</p>
+              <p className="text-xs text-muted-foreground">Ruby sedang membaca pola dan menghitung tren...</p>
             </div>
           )}
         </div>
