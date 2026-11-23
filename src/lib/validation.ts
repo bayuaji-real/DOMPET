@@ -71,4 +71,5 @@ export const helpReportSchema = z.object({
   title: z.string().trim().min(3).max(120),
   body: z.string().trim().min(5).max(2000),
   page: z.string().max(200).optional(),
+  imagePath: z.string().max(200).regex(/^[0-9a-f-]{36}\/[A-Za-z0-9_-]+\.jpg$/).optional(),
 });

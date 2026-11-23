@@ -4,7 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { HelpCenterButton, ThemeMenu } from "./header-actions";
+import { HelpCenterButton } from "./header-actions";
+import { ThemeSlider } from "@/components/theme-slider";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
 
 interface TopHeaderProps {
@@ -104,7 +105,7 @@ export function TopHeader({ title }: TopHeaderProps) {
       {/* Kanan: Pusat Bantuan & tema */}
       <div className="flex shrink-0 items-center gap-2">
         <HelpCenterButton />
-        <ThemeMenu />
+        <ThemeSlider />
       </div>
     </header>
   );

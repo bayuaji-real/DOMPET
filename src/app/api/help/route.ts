@@ -22,7 +22,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Laporan hari ini sudah banyak. Coba lagi besok ya." }, { status: 429 });
   }
 
+  // Foto hanya boleh berada di folder milik pengguna sendiri
+  if (parsed.data.imagePath && !parsed.data.imagePath.startsWith(`${auth.userId || "-"}/`)) {
+    return NextResponse.json({ success: false, error: "Foto tidak valid." }, { status: 400 });
+  }
+
   const { error } = await supabase.from("help_reports").insert({
+    image_path: parsed.data.imagePath ?? null,
     kind: parsed.data.kind,
     title: parsed.data.title,
     body: parsed.data.body,

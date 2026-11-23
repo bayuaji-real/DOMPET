@@ -71,6 +71,7 @@ ${summary}
 
 Jawab pertanyaan pengguna berdasarkan data itu. Kalau ditanya "aman nggak beli X", bandingkan dengan sisa uang dan tabungan, sebut angka dari data, dan beri satu saran praktis.
 Jangan membahas pembuatan tabungan baru (itu fitur lain di halaman Tabungan).
+FORMAT JAWABAN: buka dengan satu kalimat pendek, lalu rinci dengan poin-poin (setiap poin diawali "- ", maksimal 4 poin, tiap poin satu kalimat pendek). Tutup dengan satu saran singkat bila perlu. Jangan menulis paragraf panjang. Boleh **tebal** untuk angka penting.
 ${COMMON_RULES}`;
 }
 

@@ -1254,7 +1254,7 @@ export default function TabunganPage() {
         <SheetContent
           side="bottom"
           showCloseButton={false}
-          className="mx-auto flex h-[85vh] max-w-[430px] flex-col gap-0 rounded-t-3xl border-border/80 bg-background p-0 shadow-2xl"
+          className="mx-auto flex h-[100dvh] max-w-[430px] flex-col gap-0 rounded-none border-border/80 bg-background p-0 shadow-2xl"
         >
           <SheetHeader className="flex-row items-center justify-between border-b border-border/60 px-4 py-3">
             <div>
