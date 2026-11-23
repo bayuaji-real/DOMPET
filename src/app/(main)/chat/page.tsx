@@ -10,6 +10,7 @@ export default function ChatKeuanganPage() {
       <div className="min-h-0 flex-1">
         <AiChat
           mode="advisor"
+          showMenu
           intro="Tanya apa saja soal uangmu. Aku menjawab berdasarkan ringkasan pemasukan, pengeluaran, dompet, dan tabunganmu. Aku bukan penasihat keuangan berlisensi."
           placeholder="Misal: aman nggak beli HP 3 juta bulan ini?"
           suggestions={["Pengeluaran terbesarku apa?", "Aman nggak beli HP 3 juta?", "Bagaimana kondisi keuanganku?"]}

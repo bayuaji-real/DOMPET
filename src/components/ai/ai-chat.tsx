@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { CheckCheck, Send } from "lucide-react";
 import type { AIChatResponse, SavingsProposal } from "@/app/api/ai-chat/route";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
-import { ASSISTANT_AVATAR, ASSISTANT_GREETING, ASSISTANT_NAME } from "@/components/ai/ruby";
+import { ASSISTANT_AVATAR, ASSISTANT_GREETING, ASSISTANT_NAME, RUBY_MENU } from "@/components/ai/ruby";
 
 export type { SavingsProposal };
 
@@ -69,26 +70,24 @@ function Avatar({ who, profile }: { who: "user" | "model"; profile: UserProfile 
   );
 }
 
-/** Satu bubble ala WhatsApp: nama pengirim (Ruby) di bubble pertama, foto di bubble terakhir, jam di pojok kanan bawah. */
+/** Satu bubble ala WhatsApp: foto dan nama pengirim hanya di bubble paling atas dalam satu rangkaian, jam di pojok kanan bawah. */
 function Bubble({
   msg,
   first,
-  last,
   profile,
 }: {
   msg: Msg;
   first: boolean;
-  last: boolean;
   profile: UserProfile | null;
 }) {
   const mine = msg.role === "user";
-  const shape = mine ? (last ? "rounded-2xl rounded-br-sm" : "rounded-2xl") : last ? "rounded-2xl rounded-bl-sm" : "rounded-2xl";
+  const shape = mine ? (first ? "rounded-2xl rounded-tr-sm" : "rounded-2xl") : first ? "rounded-2xl rounded-tl-sm" : "rounded-2xl";
   const color = mine
     ? "bg-[#d9fdd3] text-zinc-900 dark:bg-[#005c4b] dark:text-zinc-50"
     : "bg-white text-zinc-900 dark:bg-[#202c33] dark:text-zinc-50";
   return (
-    <div className={`flex items-end gap-2 ${mine ? "flex-row-reverse" : ""} ${first ? "mt-2" : ""}`}>
-      {last ? <Avatar who={msg.role} profile={profile} /> : <span className="w-8 shrink-0" aria-hidden="true" />}
+    <div className={`flex items-start gap-2 ${mine ? "flex-row-reverse" : ""} ${first ? "mt-2" : "mt-0.5"}`}>
+      {first ? <Avatar who={msg.role} profile={profile} /> : <span className="w-8 shrink-0" aria-hidden="true" />}
       <div className={`max-w-[80%] px-3 pb-1.5 pt-2 text-xs leading-relaxed shadow-sm ${shape} ${color}`}>
         {!mine && first && <p className="mb-0.5 text-[11px] font-bold text-teal-600 dark:text-teal-400">{ASSISTANT_NAME}</p>}
         {mine ? <p className="whitespace-pre-wrap break-words">{msg.text}</p> : <RichText text={msg.text} />}
@@ -103,11 +102,43 @@ function Bubble({
   );
 }
 
+/** Bubble Ruby berisi daftar pilihan (dropdown) untuk membuka fitur lain. */
+function MenuBubble({ showAvatar }: { showAvatar: boolean }) {
+  const router = useRouter();
+  return (
+    <div className="mt-0.5 flex items-start gap-2">
+      {showAvatar ? <Avatar who="model" profile={null} /> : <span className="w-8 shrink-0" aria-hidden="true" />}
+      <div className="max-w-[80%] rounded-2xl bg-white px-3 pb-2.5 pt-2 text-xs leading-relaxed text-zinc-900 shadow-sm dark:bg-[#202c33] dark:text-zinc-50">
+        <p className="mb-1.5">Mau buka fitur lain? Pilih salah satu di bawah ya, nanti aku antar.</p>
+        <select
+          aria-label="Pilih fitur Dompetku"
+          defaultValue=""
+          onChange={(e) => {
+            const href = e.target.value;
+            e.target.value = "";
+            if (href) router.push(href);
+          }}
+          className="h-9 w-full cursor-pointer rounded-lg border border-teal-600/30 bg-teal-50 px-2 text-xs font-medium text-teal-800 outline-none focus:ring-2 focus:ring-teal-500/40 dark:border-teal-400/30 dark:bg-[#2a3942] dark:text-teal-200"
+        >
+          <option value="" disabled>
+            Pilih fitur...
+          </option>
+          {RUBY_MENU.map((m) => (
+            <option key={m.href} value={m.href}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 function TypingBubble() {
   return (
-    <div className="mt-2 flex items-end gap-2" role="status" aria-label={`${ASSISTANT_NAME} sedang mengetik`}>
+    <div className="mt-2 flex items-start gap-2" role="status" aria-label={`${ASSISTANT_NAME} sedang mengetik`}>
       <Avatar who="model" profile={null} />
-      <div className="rounded-2xl rounded-bl-sm bg-white px-3.5 py-3 shadow-sm dark:bg-[#202c33]">
+      <div className="rounded-2xl rounded-tl-sm bg-white px-3.5 py-3 shadow-sm dark:bg-[#202c33]">
         <span className="flex items-center gap-1">
           {[0, 1, 2].map((i) => (
             <span
@@ -128,12 +159,14 @@ interface AiChatProps {
   intro: string;
   placeholder?: string;
   suggestions?: string[];
+  /** Tampilkan bubble Ruby berisi dropdown untuk membuka fitur lain (dipakai di Tanya AI). */
+  showMenu?: boolean;
   /** Kartu hasil (mis. kelayakan tabungan) yang tampil di bawah percakapan. */
   renderProposal?: (proposal: SavingsProposal, reset: () => void) => React.ReactNode;
 }
 
 /** Layar chat AI yang dipakai bersama (pembuat tabungan, konsultasi keuangan, rencana keuangan). Tampilan ala WhatsApp. */
-export function AiChat({ mode, intro, placeholder, suggestions, renderProposal }: AiChatProps) {
+export function AiChat({ mode, intro, placeholder, suggestions, showMenu, renderProposal }: AiChatProps) {
   const [messages, setMessages] = React.useState<Msg[]>([]);
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -205,13 +238,10 @@ export function AiChat({ mode, intro, placeholder, suggestions, renderProposal }
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex-1 overflow-y-auto bg-[#efeae2] px-3 py-3 dark:bg-[#0b141a]">
         {all.map((m, i) => (
-          <Bubble
-            key={i}
-            msg={m}
-            first={i === 0 || all[i - 1].role !== m.role}
-            last={i === all.length - 1 || all[i + 1].role !== m.role}
-            profile={profile}
-          />
+          <React.Fragment key={i}>
+            <Bubble msg={m} first={i === 0 || all[i - 1].role !== m.role} profile={profile} />
+            {showMenu && i === opening.length - 1 && <MenuBubble showAvatar={false} />}
+          </React.Fragment>
         ))}
         {messages.length === 0 && suggestions && (
           <div className="flex flex-wrap justify-end gap-1.5 pt-3">
