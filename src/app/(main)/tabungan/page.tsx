@@ -644,7 +644,7 @@ export default function TabunganPage() {
 
                     {/* Tenggat & Hitung Mundur */}
                     {goal.deadline && (
-                      <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <p className="flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground [&>span]:whitespace-nowrap">
                         <Clock className="h-3 w-3 text-teal-600 dark:text-teal-400" />
                         <span>Tenggat {formatTanggalWIB(goal.deadline)}</span>
                         <span className="font-semibold text-foreground">

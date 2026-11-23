@@ -15,7 +15,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { TopHeader } from "@/components/layout/top-header";
-import { formatRupiah, cn } from "@/lib/utils";
+import { formatRupiah, formatTanggalWIB, cn } from "@/lib/utils";
 import { AnalisisCard } from "./analisis-card";
 import { TotalSaldoCarousel } from "./total-saldo-carousel";
 import { WalletDetailSheet } from "@/components/wallet/wallet-detail-sheet";
@@ -221,7 +221,7 @@ export function BerandaClient({
                       </p>
                       <p className="text-[10px] text-muted-foreground truncate">
                         {trx.merchant ? `${trx.merchant} • ` : ""}
-                        {trx.date.split("T")[0]}
+                        {formatTanggalWIB(trx.date.split("T")[0])}
                       </p>
                     </div>
 

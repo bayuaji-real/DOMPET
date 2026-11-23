@@ -54,7 +54,7 @@ import {
   createCategory,
   deleteCategory,
   DEFAULT_CATEGORY_EMOJIS,
-  getCategoryEmoji,
+  getCategoryEmoji, categoryEmoji,
   type Category,
 } from "@/lib/data/categories";
 import {
@@ -569,7 +569,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
         {/* VIEW 0: MENU SETTINGS UTAMA (DAFTAR KE BAWAH / GROUPED LIST)     */}
         {/* --------------------------------------------------------------- */}
         {activeSection === null && (
-          <div className="flex min-h-[calc(100dvh-9rem)] flex-col gap-4 animate-in fade-in duration-200">
+          <div className="flex min-h-[calc(100dvh-7.5rem)] flex-col gap-4 animate-in fade-in duration-200">
             {/* Kartu Profil Utama dengan Tombol Edit Profil */}
             <div className="relative overflow-hidden rounded-3xl border border-white/20 dark:border-white/10 bg-gradient-to-br from-teal-500/15 via-emerald-500/10 to-card p-4.5 shadow-sm space-y-3">
               <div className="flex items-center gap-3.5">
@@ -866,7 +866,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
             </div>
 
             {/* GROUP 4: LOGOUT (Tombol sederhana bertuliskan "Logout") */}
-            <div className="mt-auto pt-4 pb-2">
+            <div className="mt-auto pt-4">
               <button
                 type="button"
                 onClick={handleLogout}
@@ -1410,7 +1410,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
                       >
                         {c.icon && /\p{Extended_Pictographic}/u.test(c.icon)
                           ? c.icon
-                          : getCategoryEmoji(c.icon || c.name, c.type as any)}
+                          : categoryEmoji(c)}
                       </div>
                       <div className="min-w-0">
                         <p className="font-bold text-foreground truncate">{c.name}</p>

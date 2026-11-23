@@ -22,6 +22,8 @@ interface BudgetCardProps {
   monthLabel?: string;
 }
 
+const BUDGET_COLORS = ["#0d9488", "#8b5cf6", "#f59e0b", "#f43f5e", "#0ea5e9", "#84cc16", "#ec4899", "#f97316"];
+
 export function BudgetCard({
   categories,
   monthKey = "2026-11",
@@ -135,13 +137,13 @@ export function BudgetCard({
 
       {/* Daftar Progress Bar Anggaran per Kategori */}
       <div className="space-y-3">
-        {budgetStatuses.map((item) => (
+        {budgetStatuses.map((item, idx) => (
           <div key={item.id} className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2 min-w-0 pr-2">
                 <span
                   className="h-2.5 w-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: item.color }}
+                  style={{ backgroundColor: BUDGET_COLORS[idx % BUDGET_COLORS.length] }}
                 />
                 <span className="font-semibold text-foreground truncate">
                   {item.name}

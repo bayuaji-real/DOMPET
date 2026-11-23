@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateTransaction, type Transaction } from "@/lib/data/transactions";
-import { getCategoryEmoji, type Category } from "@/lib/data/categories";
+import { getCategoryEmoji, categoryEmoji, type Category } from "@/lib/data/categories";
 import type { WalletBalance } from "@/lib/data/wallets";
 import { triggerHapticFeedback } from "@/lib/utils";
 
@@ -159,7 +159,7 @@ export function EditTransactionSheet({ trx, wallets, categories, onClose, onSave
               <div className="flex flex-wrap gap-2">
                 {cats.map((c) => (
                   <button type="button" key={c.id} onClick={() => setCategoryId(c.id)} className={chip(categoryId === c.id)} aria-pressed={categoryId === c.id}>
-                    {getCategoryEmoji(c.icon || c.name, c.type as "expense" | "income")} {c.name}
+                    {categoryEmoji(c)} {c.name}
                   </button>
                 ))}
               </div>

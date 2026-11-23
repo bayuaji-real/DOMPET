@@ -28,6 +28,10 @@ export function getCategoryEmoji(iconOrName?: string | null, type?: "expense" | 
   if (n.includes("pendidikan") || n.includes("buku") || n.includes("kuliah")) return "📚";
   if (n.includes("rumah") || n.includes("kost")) return "🏠";
   if (n.includes("kopi") || n.includes("cafe")) return "☕";
+  if (n.includes("keluarga") || n.includes("ortu") || n.includes("anak")) return "👨‍👩‍👧";
+  if (n.includes("investasi") || n.includes("saham") || n.includes("reksa")) return "📈";
+  if (n.includes("hadiah") || n.includes("donasi") || n.includes("sedekah")) return "🎁";
+  if (n.includes("lain")) return "📦";
 
   return type === "income" ? "💰" : "🏷️";
 }
@@ -111,6 +115,12 @@ export const SAMPLE_CATEGORIES: Category[] = [
     created_at: "2026-11-01T00:00:00Z",
   },
 ];
+
+/** Emoji untuk tampilan: pakai emoji tersimpan, kalau bukan emoji tebak dari nama. */
+export function categoryEmoji(c: { icon?: string | null; name: string; type?: string | null }): string {
+  if (c.icon && /\p{Extended_Pictographic}/u.test(c.icon)) return c.icon;
+  return getCategoryEmoji(c.name, c.type === "income" ? "income" : "expense");
+}
 
 export async function getCategories(type?: CategoryType): Promise<Category[]> {
   if (!isSupabaseConfigured()) {

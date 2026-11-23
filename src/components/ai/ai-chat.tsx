@@ -95,7 +95,7 @@ export function AiChat({ mode, intro, placeholder, suggestions, renderProposal }
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex-1 space-y-2.5 overflow-y-auto px-4 py-3">
-        <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-muted px-3 py-2 text-xs text-foreground">{intro}</div>
+        <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-muted px-3 py-2 text-xs text-foreground"><RichText text={intro} /></div>
         {messages.length === 0 && suggestions && (
           <div className="flex flex-wrap gap-1.5 pt-1">
             {suggestions.map((s) => (

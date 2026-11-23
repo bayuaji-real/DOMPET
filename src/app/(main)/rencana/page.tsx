@@ -46,6 +46,7 @@ export default function RencanaPage() {
   // "hari ini" dibaca setelah halaman terbuka (bukan saat build)
   const [today, setToday] = React.useState("");
   React.useEffect(() => setToday(todayJakarta()), []);
+  const [view, setView] = React.useState<"chat" | "hitung">("chat");
   const [loading, setLoading] = React.useState(true);
   const [schedule, setSchedule] = React.useState<PlanPayday[]>([]);
   const [manual, setManual] = React.useState({ amount: 0, frequency: "biweekly" as "biweekly" | "monthly", next: "" });
@@ -208,6 +209,28 @@ export default function RencanaPage() {
 
   const walletExists = (name: string) => wallets.some((w) => w.name.trim().toLowerCase() === name.trim().toLowerCase());
 
+  if (view === "chat") {
+    return (
+      <div className="fixed inset-x-0 top-0 z-30 mx-auto flex max-w-[430px] flex-col bg-background" style={{ bottom: "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
+        <TopHeader title="Rencana Keuangan" subtitle="Ngobrol dengan Perencana AI" />
+        <div className="flex shrink-0 items-center justify-between border-b border-border/50 px-4 py-2">
+          <p className="text-[11px] text-muted-foreground">Jawab satu per satu, AI yang menanyakan.</p>
+          <button type="button" onClick={() => setView("hitung")} className="cursor-pointer rounded-lg border border-border px-2.5 py-1 text-[11px] font-bold text-foreground hover:bg-muted">
+            Hitung manual
+          </button>
+        </div>
+        <div className="min-h-0 flex-1">
+          <AiChat
+            mode="plan"
+            intro={"Halo! Aku Perencana AI. Supaya rencana uangmu akurat, siapkan info ini ya (aku tanyakan satu per satu):\n- Gaji per gajian, contoh: Rp5.000.000\n- Tanggal gajian, contoh: tanggal 25\n- Biaya hidup per gajian, contoh: Rp1.500.000\n- Cicilan atau tagihan rutin, contoh: kos Rp800.000 tanggal 1\n- Target uang, contoh: dana darurat Rp10.000.000 dalam 1 tahun\nMulai yang pertama: berapa gajimu setiap gajian, dan seberapa sering (bulanan atau dua mingguan)?"}
+            placeholder="Ketik jawabanmu di sini..."
+            suggestions={["Gajiku Rp5.000.000 tiap bulan", "Gajiku Rp2.500.000 dua minggu sekali", "Aku belum punya gaji tetap"]}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-1 flex-col">
       <TopHeader title="Rencana Keuangan" />
@@ -220,30 +243,9 @@ export default function RencanaPage() {
           </p>
         </div>
 
-        {/* Rencana lewat percakapan */}
-        <section className="space-y-3 rounded-3xl border border-fuchsia-500/30 bg-fuchsia-500/5 p-4">
-          <h2 className="flex items-center gap-1.5 text-sm font-extrabold">
-            <Sparkles className="h-4 w-4 text-fuchsia-600" /> Ngobrol dengan Perencana AI
-          </h2>
-          <div className="rounded-2xl bg-card p-3 text-[11px] text-muted-foreground">
-            <p className="mb-1 font-bold text-foreground">Yang perlu kamu tulis (satu per satu, AI akan menanyakan):</p>
-            <ul className="list-disc space-y-0.5 pl-4">
-              <li>Gaji per gajian, contoh: Rp5.000.000</li>
-              <li>Tanggal gajian, contoh: tanggal 25</li>
-              <li>Biaya hidup per gajian, contoh: Rp1.500.000</li>
-              <li>Cicilan atau tagihan rutin, contoh: kos Rp800.000 tanggal 1</li>
-              <li>Target uang, contoh: dana darurat Rp10.000.000 dalam 1 tahun</li>
-            </ul>
-          </div>
-          <div className="h-[30rem] overflow-hidden rounded-2xl border border-border/60 bg-background">
-            <AiChat
-              mode="plan"
-              intro="Halo! Aku bantu susun rencana uangmu. Mulai dari yang pertama ya: berapa gajimu setiap gajian, dan seberapa sering (bulanan atau dua mingguan)?"
-              placeholder="Ketik jawabanmu di sini..."
-              suggestions={["Gajiku Rp5.000.000 tiap bulan", "Gajiku Rp2.500.000 dua minggu sekali", "Aku belum punya gaji tetap"]}
-            />
-          </div>
-        </section>
+        <Button type="button" variant="outline" onClick={() => setView("chat")} className="w-full rounded-xl text-xs">
+          <Sparkles className="h-4 w-4 text-fuchsia-600" /> Kembali ke obrolan dengan Perencana AI
+        </Button>
 
         {loading ? (
           <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">

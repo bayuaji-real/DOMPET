@@ -9,7 +9,7 @@ export default function MainLayout({
 }) {
   return (
     <MobileFrame>
-      <div className="flex-1 pb-32 flex flex-col">{children}</div>
+      <div className="flex-1 flex flex-col pb-[5.25rem]">{children}</div>
       <BottomNav />
     </MobileFrame>
   );
