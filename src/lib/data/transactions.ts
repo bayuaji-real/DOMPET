@@ -106,10 +106,28 @@ async function withResolvedWallets(
   return out;
 }
 
+/**
+ * Pengaman: kategori harus sama jenisnya dengan transaksi (pengeluaran <-> kategori pengeluaran).
+ * Kalau tidak cocok (mis. kategori "Gaji" untuk pengeluaran), kategori dikosongkan supaya
+ * tidak mengotori Analisis. Berlaku untuk semua jalur: form, suara, struk, input cepat, AI.
+ */
+async function categoryMatchingType(
+  type: TransactionType,
+  categoryId: string | null | undefined,
+): Promise<string | null> {
+  if (!categoryId) return null;
+  if (type !== "income" && type !== "expense") return null;
+  if (!isSupabaseConfigured()) return categoryId;
+  const { data } = await createClient().from("categories").select("type").eq("id", categoryId).maybeSingle();
+  if (!data) return categoryId; // tidak bisa dicek (mis. kategori contoh): biarkan, RLS tetap menjaga
+  return data.type === type ? categoryId : null;
+}
+
 export async function createTransaction(
   rawInput: CreateTransactionInput
 ): Promise<Transaction | null> {
   const input = await withResolvedWallets(rawInput);
+  input.category_id = await categoryMatchingType(input.type, input.category_id);
   const supabase = createClient();
 
   // Validasi dan penegakan aturan integritas transaksi
@@ -181,7 +199,13 @@ export async function createTransaction(
 export async function createTransactions(
   rawInputs: CreateTransactionInput[]
 ): Promise<Transaction[]> {
-  const inputs = await Promise.all(rawInputs.map(withResolvedWallets));
+  const inputs = await Promise.all(
+    rawInputs.map(async (raw) => {
+      const resolved = await withResolvedWallets(raw);
+      resolved.category_id = await categoryMatchingType(resolved.type, resolved.category_id);
+      return resolved;
+    }),
+  );
   const supabase = createClient();
   const payloads: Database["public"]["Tables"]["transactions"]["Insert"][] = inputs.map((input) => {
     const payload: Database["public"]["Tables"]["transactions"]["Insert"] = {
@@ -274,7 +298,7 @@ export async function updateTransaction(
   if (input.merchant !== undefined) patch.merchant = input.merchant?.trim() || null;
   if (type === "transfer" && input.to_wallet_id) patch.to_wallet_id = input.to_wallet_id;
   if ((type === "income" || type === "expense") && input.category_id !== undefined) {
-    patch.category_id = input.category_id || null;
+    patch.category_id = await categoryMatchingType(type, input.category_id);
   }
 
   const supabase = createClient();

@@ -50,7 +50,7 @@ export interface VoiceConfirmationSheetProps {
   transcript: string;
   initialTransactions: ParsedVoiceTransaction[];
   userWallets?: { id: string; name: string; icon?: string | null; color?: string | null }[];
-  userCategories?: { id: string; name: string }[];
+  userCategories?: { id: string; name: string; type?: "expense" | "income" }[];
   onSuccess?: (savedCount: number) => void;
 }
 
@@ -172,6 +172,14 @@ export function VoiceConfirmationSheet({
   const [activeWalletPickerIndex, setActiveWalletPickerIndex] = React.useState<number | null>(null);
   const [activeCategoryPickerIndex, setActiveCategoryPickerIndex] = React.useState<number | null>(null);
 
+  // Kategori yang boleh dipakai untuk satu jenis transaksi (pemasukan vs pengeluaran tidak boleh tertukar).
+  const categoriesFor = (t?: string) => {
+    const want = t === "income" ? "income" : "expense";
+    return userCategories.filter(
+      (c) => (c.type ?? (/gaji|pemasukan/i.test(c.name) ? "income" : "expense")) === want,
+    );
+  };
+
   // Sinkronisasi saat data props masuk
   React.useEffect(() => {
     setTranscript(initialTranscript);
@@ -188,17 +196,18 @@ export function VoiceConfirmationSheet({
           userWallets.find((w) => /tunai/i.test(w.name)) ||
           userWallets[0];
 
-        // Cari kategori yang cocok
+        // Cari kategori yang cocok (hanya yang jenisnya sama dengan transaksi)
+        const pool = categoriesFor(tx.type);
         const matchedCat =
-          userCategories.find(
+          pool.find(
             (c) =>
               tx.category_guess &&
               c.name.toLowerCase().includes(tx.category_guess.toLowerCase())
           ) ||
           (tx.type === "income"
-            ? userCategories.find((c) => /gaji|masuk|pemasukan/i.test(c.name))
-            : userCategories.find((c) => /makan|belanja/i.test(c.name))) ||
-          userCategories[0];
+            ? pool.find((c) => /gaji|masuk|pemasukan/i.test(c.name))
+            : pool.find((c) => /makan|belanja/i.test(c.name))) ||
+          pool[0];
 
         return {
           id: `tx-${Date.now()}-${idx}`,
@@ -207,7 +216,7 @@ export function VoiceConfirmationSheet({
           amountFormatted:
             tx.amount > 0 ? Number(tx.amount).toLocaleString("id-ID") : "",
           walletId: matchedWallet?.id || userWallets[0]?.id || "",
-          categoryId: matchedCat?.id || userCategories[0]?.id || "",
+          categoryId: matchedCat?.id || "",
           note: tx.note || "",
           date: tx.date || todayJakarta(),
         };
@@ -216,6 +225,7 @@ export function VoiceConfirmationSheet({
     } else {
       setItems([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialTranscript, initialTransactions, userWallets, userCategories]);
 
   // Handler ubah nilai di kartu
@@ -236,6 +246,16 @@ export function VoiceConfirmationSheet({
               amountFormatted: num > 0 ? num.toLocaleString("id-ID") : "",
             };
           }
+          if (field === "type") {
+            // Ganti jenis: kategori lama (jenis lain) tidak boleh terbawa.
+            const next = value === "income" ? "income" : "expense";
+            const stillValid = categoriesFor(next).some((c) => c.id === item.categoryId);
+            return {
+              ...item,
+              type: next,
+              categoryId: stillValid ? item.categoryId : categoriesFor(next)[0]?.id || "",
+            };
+          }
           return { ...item, [field]: value };
         }
         return item;
@@ -251,7 +271,7 @@ export function VoiceConfirmationSheet({
       amount: 0,
       amountFormatted: "",
       walletId: userWallets[0]?.id || "",
-      categoryId: userCategories[0]?.id || "",
+      categoryId: categoriesFor("expense")[0]?.id || "",
       note: "Catatan baru",
       date: todayJakarta(),
     };
@@ -745,7 +765,7 @@ export function VoiceConfirmationSheet({
             </div>
 
             <div className="grid grid-cols-2 gap-2 max-h-[50vh] overflow-y-auto pr-0.5">
-              {userCategories.map((c) => {
+              {categoriesFor(items[activeCategoryPickerIndex]?.type).map((c) => {
                 const isSelected = c.id === items[activeCategoryPickerIndex]?.categoryId;
                 return (
                   <button

@@ -6,6 +6,7 @@
  *   GEMINI_API_KEY          kunci dari Google AI Studio (Free tier)
  *   GEMINI_MODEL            model utama  (default: gemini-3.5-flash-lite)
  *   GEMINI_FALLBACK_MODEL   dipakai kalau model utama sibuk/error 5xx (default: gemini-flash-latest)
+ *   GEMINI_FALLBACK_MODEL_2 cadangan kedua (default: gemini-flash-lite-latest)
  */
 
 if (typeof window !== "undefined") {
@@ -82,26 +83,56 @@ async function callModel(model: string, parts: GeminiPart[], opts: GenerateOptio
   return text;
 }
 
+
+// ---------------------------------------------------------------------------
+// Ulang otomatis + model cadangan (503 "model sedang ramai", 429, timeout)
+// ---------------------------------------------------------------------------
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function isRetriable(err: unknown): boolean {
+  if (err instanceof GeminiError) return err.status === 429 || err.status >= 500;
+  return err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+}
+
+/** Model yang dicoba berurutan: utama, cadangan, cadangan kedua (tanpa duplikat). */
+function modelChain(): string[] {
+  const list = [
+    process.env.GEMINI_MODEL || "gemini-3.5-flash-lite",
+    process.env.GEMINI_FALLBACK_MODEL || "gemini-flash-latest",
+    process.env.GEMINI_FALLBACK_MODEL_2 || "gemini-flash-lite-latest",
+  ];
+  return list.filter((m, i) => m && list.indexOf(m) === i);
+}
+
 /**
- * Kirim teks/gambar/audio ke Gemini. Kalau model utama sibuk (5xx/timeout),
- * otomatis mencoba model cadangan sekali.
+ * Tiap model dicoba maksimal 2 kali (jeda singkat), lalu pindah ke model berikutnya.
+ * Pindah model juga dilakukan bila model tidak ditemukan (404). Error lain (mis. 400) langsung dilempar.
  */
-export async function generateText(parts: GeminiPart[], opts: GenerateOptions = {}): Promise<string> {
-  const primary = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
-  const fallback = process.env.GEMINI_FALLBACK_MODEL || "gemini-flash-latest";
-  try {
-    return await callModel(primary, parts, opts);
-  } catch (err) {
-    const retriable =
-      (err instanceof GeminiError && err.status >= 500) ||
-      (err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError"));
-    if (!retriable || fallback === primary) throw normalize(err);
-    try {
-      return await callModel(fallback, parts, { ...opts, timeoutMs: opts.timeoutMs ?? 45_000 });
-    } catch (err2) {
-      throw normalize(err2);
+async function withFallback<T>(call: (model: string, attempt: number) => Promise<T>): Promise<T> {
+  let lastErr: unknown;
+  for (const model of modelChain()) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await call(model, attempt);
+      } catch (err) {
+        lastErr = err;
+        const missing = err instanceof GeminiError && err.status === 404;
+        if (missing) break; // model tidak ada: langsung ke cadangan
+        if (!isRetriable(err)) throw normalize(err);
+        if (attempt === 0) await sleep(700);
+      }
     }
   }
+  throw normalize(lastErr);
+}
+
+/**
+ * Kirim teks/gambar/audio ke Gemini. Kalau model sibuk (5xx/429/timeout), diulang sekali dengan jeda,
+ * lalu pindah ke model cadangan.
+ */
+export async function generateText(parts: GeminiPart[], opts: GenerateOptions = {}): Promise<string> {
+  return withFallback((model) => callModel(model, parts, { ...opts, timeoutMs: opts.timeoutMs ?? 20_000 }));
 }
 
 /** Sama seperti generateText, tapi langsung mengembalikan objek JSON hasil parse. */
@@ -192,21 +223,7 @@ async function callChatModel(model: string, turns: ChatTurn[], opts: ChatOptions
 
 /** Chat berbilang giliran. Mengembalikan teks dan jumlah token yang dipakai. Cadangan model seperti generateText. */
 export async function generateChat(turns: ChatTurn[], opts: ChatOptions = {}): Promise<{ text: string; usage: UsageInfo }> {
-  const primary = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
-  const fallback = process.env.GEMINI_FALLBACK_MODEL || "gemini-flash-latest";
-  try {
-    return await callChatModel(primary, turns, opts);
-  } catch (err) {
-    const retriable =
-      (err instanceof GeminiError && err.status >= 500) ||
-      (err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError"));
-    if (!retriable || fallback === primary) throw normalize(err);
-    try {
-      return await callChatModel(fallback, turns, { ...opts, timeoutMs: opts.timeoutMs ?? 45_000 });
-    } catch (err2) {
-      throw normalize(err2);
-    }
-  }
+  return withFallback((model) => callChatModel(model, turns, { ...opts, timeoutMs: opts.timeoutMs ?? 20_000 }));
 }
 
 /**

@@ -3,28 +3,56 @@
 import * as React from "react";
 
 /**
- * Layar pembuka di dalam aplikasi: koin Rp muncul dari dompet lalu naik.
- * Tampil sebentar saat aplikasi dibuka (maksimal ~1,8 detik) lalu memudar.
- * Tidak menahan apa pun: aplikasi di belakangnya tetap memuat seperti biasa.
+ * Layar pembuka di dalam aplikasi: logo asli (transparan, tanpa kotak) di atas warna latar aplikasi.
+ * Bertahan selama aplikasi masih menunggu server/halaman selesai dimuat (minimal 0,7 detik agar tidak
+ * berkedip, maksimal 6 detik supaya tidak pernah menahan pengguna), lalu memudar.
+ * Aplikasi di belakangnya tetap memuat seperti biasa.
  */
+const MIN_MS = 700;
+const MAX_MS = 6000;
+const FADE_MS = 350;
+
 export function SplashScreen() {
   const [phase, setPhase] = React.useState<"show" | "fade" | "gone">("show");
 
   React.useEffect(() => {
-    const t1 = setTimeout(() => setPhase("fade"), 1500);
-    const t2 = setTimeout(() => setPhase("gone"), 1900);
+    const started = Date.now();
+    let done = false;
+    let fadeTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const finish = () => {
+      if (done) return;
+      done = true;
+      const wait = Math.max(0, MIN_MS - (Date.now() - started));
+      fadeTimer = setTimeout(() => setPhase("fade"), wait);
+    };
+
+    // Siap = halaman selesai dimuat, atau halaman memberi tanda lewat event "dompet_ready".
+    if (document.readyState === "complete") finish();
+    else window.addEventListener("load", finish, { once: true });
+    window.addEventListener("dompet_ready", finish, { once: true });
+    const maxTimer = setTimeout(finish, MAX_MS);
+
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
+      window.removeEventListener("load", finish);
+      window.removeEventListener("dompet_ready", finish);
+      clearTimeout(maxTimer);
+      if (fadeTimer) clearTimeout(fadeTimer);
     };
   }, []);
+
+  React.useEffect(() => {
+    if (phase !== "fade") return;
+    const t = setTimeout(() => setPhase("gone"), FADE_MS + 50);
+    return () => clearTimeout(t);
+  }, [phase]);
 
   if (phase === "gone") return null;
 
   return (
     <div
       aria-hidden="true"
-      className="dompet-splash"
+      className="dompet-splash bg-slate-100 dark:bg-zinc-950"
       style={{
         position: "fixed",
         inset: 0,
@@ -32,52 +60,38 @@ export function SplashScreen() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#0f172a",
         opacity: phase === "fade" ? 0 : 1,
-        transition: "opacity 400ms ease",
+        transition: `opacity ${FADE_MS}ms ease`,
         pointerEvents: phase === "fade" ? "none" : "auto",
       }}
     >
       <style>{`
-        @keyframes dompet-coin-rise {
-          0% { transform: translateY(62px) scale(0.7); opacity: 0; }
-          25% { opacity: 1; }
-          70% { transform: translateY(-34px) scale(1); }
-          100% { transform: translateY(-26px) scale(1); opacity: 1; }
-        }
-        @keyframes dompet-wallet-pop {
-          0% { transform: scale(0.85); opacity: 0; }
+        @keyframes dompet-logo-in {
+          0% { transform: scale(0.88); opacity: 0; }
           100% { transform: scale(1); opacity: 1; }
         }
-        .dompet-splash .coin { animation: dompet-coin-rise 1000ms cubic-bezier(.2,.9,.3,1.2) 250ms both; }
-        .dompet-splash .wallet { animation: dompet-wallet-pop 350ms ease-out both; transform-origin: 50% 70%; }
+        @keyframes dompet-logo-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        .dompet-splash .logo {
+          animation: dompet-logo-in 350ms ease-out both, dompet-logo-pulse 1600ms ease-in-out 450ms infinite;
+        }
         @media (prefers-reduced-motion: reduce) {
-          .dompet-splash .coin, .dompet-splash .wallet { animation: none; }
-          .dompet-splash .coin { transform: translateY(-26px); }
+          .dompet-splash .logo { animation: none; }
         }
       `}</style>
-      <svg width="200" height="200" viewBox="0 0 200 200" role="img">
-        {/* Dompet (bagian belakang) */}
-        <g className="wallet">
-          <ellipse cx="100" cy="168" rx="52" ry="6" fill="#000" opacity="0.25" />
-          <rect x="40" y="92" width="120" height="72" rx="22" fill="#0b4a47" />
-        </g>
-        {/* Koin keluar dari dalam dompet */}
-        <g className="coin">
-          <circle cx="100" cy="96" r="28" fill="#f59e0b" />
-          <circle cx="100" cy="96" r="22" fill="#fbbf24" stroke="#d97706" strokeWidth="3" />
-          <text x="100" y="105" textAnchor="middle" fontSize="22" fontWeight="800" fill="#7c2d12" fontFamily="system-ui, sans-serif">
-            Rp
-          </text>
-        </g>
-        {/* Dompet (bagian depan, menutupi dasar koin) */}
-        <g className="wallet">
-          <rect x="40" y="108" width="120" height="56" rx="20" fill="#14b8a6" />
-          <rect x="52" y="118" width="60" height="6" rx="3" fill="#99f6e4" opacity="0.6" />
-          <rect x="116" y="126" width="48" height="26" rx="13" fill="#115e59" />
-          <circle cx="132" cy="139" r="6" fill="#fbbf24" />
-        </g>
-      </svg>
+      {/* Logo transparan: tidak ada kotak atau warna latar di belakangnya */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="logo"
+        src="/icons/icon-512.png"
+        alt=""
+        width={128}
+        height={128}
+        style={{ background: "transparent" }}
+        draggable={false}
+      />
     </div>
   );
 }

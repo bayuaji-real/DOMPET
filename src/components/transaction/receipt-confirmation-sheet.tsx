@@ -53,7 +53,7 @@ export interface ReceiptConfirmationSheetProps {
   imagePreviewUrl: string | null;
   receiptPath: string | null;
   userWallets?: { id: string; name: string; icon?: string | null; color?: string | null }[];
-  userCategories?: { id: string; name: string }[];
+  userCategories?: { id: string; name: string; type?: "expense" | "income" }[];
   onSuccess?: (savedData: { merchant: string; total: number }) => void;
 }
 
@@ -145,7 +145,7 @@ export function ReceiptConfirmationSheet({
     { id: "w-gopay", name: "GoPay" },
     { id: "w-mandiri", name: "Bank Mandiri" },
   ],
-  userCategories = [
+  userCategories: allCategories = [
     { id: "c-food", name: "Makanan & Minuman" },
     { id: "c-groceries", name: "Belanja Harian" },
     { id: "c-trans", name: "Transportasi" },
@@ -155,6 +155,11 @@ export function ReceiptConfirmationSheet({
   ],
   onSuccess,
 }: ReceiptConfirmationSheetProps) {
+  // Struk selalu pengeluaran: kategori pemasukan (Gaji dll.) tidak boleh dipilih.
+  const userCategories = React.useMemo(
+    () => allCategories.filter((c) => c.type !== "income"),
+    [allCategories],
+  );
   // Form state
   const [merchant, setMerchant] = React.useState("");
   const [date, setDate] = React.useState("");

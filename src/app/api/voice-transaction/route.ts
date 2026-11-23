@@ -73,7 +73,7 @@ export async function POST(req: Request) {
 
     if (audioBase64) {
       // Audio langsung
-      const validMime = mimeType || "audio/webm";
+      const validMime = String(mimeType || "audio/webm").split(";")[0] || "audio/webm";
       parts.push({
         inlineData: {
           mimeType: validMime,
@@ -196,6 +196,7 @@ PANDUAN & ATURAN EKSTRAKSI:
       system: systemPrompt,
       responseSchema,
       temperature: 0.1,
+      timeoutMs: audioBase64 ? 35_000 : 20_000,
     });
 
     return NextResponse.json({

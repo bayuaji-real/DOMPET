@@ -187,7 +187,7 @@ export function VoiceRecordingModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           audioBase64,
-          mimeType,
+          mimeType: (mimeType || "audio/webm").split(";")[0],
           userWallets: userWallets.map((w) => w.name),
           userCategories: userCategories.map((c) => c.name),
         }),

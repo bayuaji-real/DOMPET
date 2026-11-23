@@ -87,7 +87,7 @@ function badgeLabel(
   proj: { status: string; statusLabel: string; daysRemaining: number | null }
 ): string {
   if (proj.status === "telat" && !(planned > 0) && (proj.daysRemaining ?? 0) >= 0) {
-    return "Belum ada rencana";
+    return "Setoran belum diatur";
   }
   return proj.statusLabel;
 }
@@ -628,11 +628,21 @@ export default function TabunganPage() {
             return (
               <div
                 key={goal.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Buka detail tabungan ${goal.name}`}
                 onClick={() => {
                   setSelectedGoalId(goal.id);
                   setActiveDetailView("detail");
                 }}
-                className="group cursor-pointer rounded-2xl border border-border/70 bg-card p-4 shadow-sm transition-all hover:border-teal-500/50 hover:shadow-md active:scale-[0.99] space-y-3"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedGoalId(goal.id);
+                    setActiveDetailView("detail");
+                  }
+                }}
+                className="group cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 border border-border/70 bg-card p-4 shadow-sm transition-all hover:border-teal-500/50 hover:shadow-md active:scale-[0.99] space-y-3"
               >
                 {/* Header Kartu: Nama, Badge Tempat Simpan, Badge Status */}
                 <div className="flex items-start justify-between gap-2">
@@ -660,7 +670,9 @@ export default function TabunganPage() {
                     className={`rounded-lg px-2.5 py-0.5 text-[10px] font-bold shadow-none ${
                       proj.status === "tercapai"
                         ? "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30"
-                        : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                        : badgeLabel(goal.planned_per_payday, proj) === "Setoran belum diatur"
+                          ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                          : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
                     }`}
                   >
                     {badgeLabel(goal.planned_per_payday, proj)}

@@ -76,6 +76,8 @@ export function BerandaClient({
 
   // Dompet yang sedang dibuka detailnya
   const [detailWallet, setDetailWallet] = React.useState<WalletBalance | null>(null);
+  // Dompet yang dipilih di kartu Total Saldo (null = semua dompet); dipakai kartu Analisis.
+  const [filterWalletId, setFilterWalletId] = React.useState<string | null>(null);
 
   // State Simulasi Mode Gajian jika sedang di luar jadwal
   const [showSimulatePayday, setShowSimulatePayday] = React.useState(false);
@@ -163,6 +165,7 @@ export function BerandaClient({
           display={displayAmount}
           monthTxs={monthTxs}
           onSelectWallet={setDetailWallet}
+          onSelectedChange={setFilterWalletId}
         />
 
         {/* 2. Kartu Gajian Hari Ini (Part A: Mode Gajian) */}
@@ -186,7 +189,11 @@ export function BerandaClient({
         )}
 
         {/* Menu grid ala Livin' (FeatureMenu) disembunyikan dulu sampai fitur tambahan banyak */}
-        <AnalisisCard />
+        <AnalisisCard
+          walletId={filterWalletId}
+          walletName={wallets.find((w) => w.id === filterWalletId)?.name}
+          monthTxs={monthTxs}
+        />
 
         {/* 5. Transaksi Terbaru */}
         <div className="space-y-3 pt-1">

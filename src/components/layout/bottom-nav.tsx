@@ -59,6 +59,8 @@ export function BottomNav() {
 
   // Refs audio recorder & speech recognition di quick bar
   const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
+  // Format rekaman yang benar-benar dipakai perangkat (HP iPhone = audio/mp4, Android = audio/webm).
+  const recorderMimeRef = React.useRef<string>("");
   const recognitionRef = React.useRef<any>(null);
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
@@ -77,7 +79,7 @@ export function BottomNav() {
 
   // Data dompet & kategori
   const [wallets, setWallets] = React.useState<{ id: string; name: string; icon?: string | null; color?: string | null }[]>([]);
-  const [categories, setCategories] = React.useState<{ id: string; name: string }[]>([]);
+  const [categories, setCategories] = React.useState<{ id: string; name: string; type?: "expense" | "income" }[]>([]);
 
   // Refs input kamera & galeri
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
@@ -104,15 +106,15 @@ export function BottomNav() {
         }
 
         if (cData.status === "fulfilled" && cData.value.length > 0) {
-          setCategories(cData.value.map((c) => ({ id: c.id, name: c.name })));
+          setCategories(cData.value.map((c) => ({ id: c.id, name: c.name, type: c.type === "income" ? "income" as const : "expense" as const })));
         } else {
           setCategories([
-            { id: "c-food", name: "Makanan & Minuman" },
-            { id: "c-groceries", name: "Belanja Harian" },
-            { id: "c-trans", name: "Transportasi" },
-            { id: "c-bills", name: "Tagihan" },
-            { id: "c-ent", name: "Hiburan" },
-            { id: "c-other", name: "Lainnya" },
+            { id: "c-food", name: "Makanan & Minuman", type: "expense" },
+            { id: "c-groceries", name: "Belanja Harian", type: "expense" },
+            { id: "c-trans", name: "Transportasi", type: "expense" },
+            { id: "c-bills", name: "Tagihan", type: "expense" },
+            { id: "c-ent", name: "Hiburan", type: "expense" },
+            { id: "c-other", name: "Lainnya", type: "expense" },
           ]);
         }
       } catch {
@@ -198,7 +200,7 @@ export function BottomNav() {
         body: JSON.stringify({
           imageBase64: compressed.base64,
           mimeType: "image/jpeg",
-          userCategories: categories.map((c) => c.name),
+          userCategories: categories.filter((c) => c.type !== "income").map((c) => c.name),
           userWallets: wallets.map((w) => w.name),
         }),
       });
@@ -223,7 +225,7 @@ export function BottomNav() {
         date: todayJakarta(),
         total: 0,
         items: [],
-        suggested_category: categories[0]?.name || "Belanja Harian",
+        suggested_category: categories.find((c) => c.type !== "income")?.name || "Belanja Harian",
         suggested_wallet: wallets[0]?.name || "Uang Tunai",
         payment_hint: null,
         confidence: 0,
@@ -301,6 +303,7 @@ export function BottomNav() {
         const mimeType = candidates.find((t) => MediaRecorder.isTypeSupported(t)) || "";
         const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
         mediaRecorderRef.current = mr;
+        recorderMimeRef.current = mr.mimeType || mimeType || "";
         mr.ondataavailable = (e) => {
           if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
         };
@@ -409,6 +412,7 @@ export function BottomNav() {
       return;
     }
     setIsProcessing(true);
+    let serverMessage = "";
 
     try {
       const bodyPayload: Record<string, unknown> = {
@@ -419,12 +423,13 @@ export function BottomNav() {
       if (text) {
         bodyPayload.textPrompt = text;
       } else {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const realMime = (recorderMimeRef.current || audioChunksRef.current[0]?.type || "audio/webm").split(";")[0] || "audio/webm";
+        const audioBlob = new Blob(audioChunksRef.current, { type: realMime });
         const bytes = new Uint8Array(await audioBlob.arrayBuffer());
         let binary = "";
         for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
         bodyPayload.audioBase64 = btoa(binary);
-        bodyPayload.mimeType = audioBlob.type || "audio/webm";
+        bodyPayload.mimeType = realMime;
       }
 
       const res = await fetch("/api/voice-transaction", {
@@ -432,9 +437,10 @@ export function BottomNav() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyPayload),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Gagal memproses suara");
+        serverMessage = typeof data.error === "string" ? data.error : "";
+        throw new Error(serverMessage || "Gagal memproses suara");
       }
 
       setInputText("");
@@ -444,7 +450,7 @@ export function BottomNav() {
       setIsVoiceConfirmationOpen(true);
     } catch (err: unknown) {
       console.error("Gagal memproses transaksi suara:", err);
-      showNotification("Gagal memproses suara. Coba ulangi lagi ya.");
+      showNotification(serverMessage || "Gagal memproses suara. Coba ulangi lagi ya.");
     } finally {
       setIsProcessing(false);
     }

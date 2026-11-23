@@ -16,6 +16,8 @@ interface TotalSaldoCardProps {
   /** Transaksi bulan ini, dipakai untuk hitung masuk/keluar per dompet. */
   monthTxs: Transaction[];
   onSelectWallet: (wallet: WalletBalance) => void;
+  /** Dikabari saat pilihan berubah: id dompet, atau null untuk "Total Saldo" (semua dompet). */
+  onSelectedChange?: (walletId: string | null) => void;
 }
 
 const STORAGE_KEY = "dompet_saldo_pilihan";
@@ -32,6 +34,7 @@ export function TotalSaldoCarousel({
   display,
   monthTxs,
   onSelectWallet,
+  onSelectedChange,
 }: TotalSaldoCardProps) {
   const [selectedId, setSelectedId] = React.useState<string>("total");
   const [open, setOpen] = React.useState(false);
@@ -63,6 +66,12 @@ export function TotalSaldoCarousel({
   const normal = React.useMemo(() => wallets.filter((w) => !isSavings(w)), [wallets]);
   const savings = React.useMemo(() => wallets.filter(isSavings), [wallets]);
   const selected = wallets.find((w) => w.id === selectedId) ?? null;
+
+  const selectedWalletId = selected?.id ?? null;
+  React.useEffect(() => {
+    onSelectedChange?.(selectedWalletId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedWalletId]);
 
   const choose = (id: string) => {
     setSelectedId(id);
