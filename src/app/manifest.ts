@@ -11,9 +11,9 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#0d9488",
     orientation: "portrait",
     icons: [
-      // Ikon peluncur (HP memotong bentuknya sendiri): kotak penuh berwarna
+      // Ikon peluncur (HP memotong bentuknya sendiri): kotak penuh berwarna. Hanya ukuran kecil,
+      // supaya layar pembuka Android memakai ikon transparan di bawah, bukan kotak ini.
       { src: "/icons/icon-maskable-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
-      { src: "/icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
       // Layar pembuka (splash) memakai ikon "any": logo transparan tanpa kotak
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
