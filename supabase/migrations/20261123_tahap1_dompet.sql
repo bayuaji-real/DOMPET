@@ -1,3 +1,19 @@
+-- 0. Produksi punya aturan tipe dompet (bank, ewallet, cash, investasi). Tambahkan 'tabungan'.
+do $$
+declare c record;
+begin
+  for c in
+    select conname from pg_constraint
+    where conrelid = 'public.wallets'::regclass and contype = 'c'
+      and pg_get_constraintdef(oid) ilike '%type%' and pg_get_constraintdef(oid) ilike '%investasi%'
+  loop
+    execute format('alter table public.wallets drop constraint %I', c.conname);
+  end loop;
+  alter table public.wallets
+    add constraint wallets_type_check
+    check (type = any (array['bank','ewallet','cash','investasi','tabungan']));
+end $$;
+
 -- Tahap 1 (Dompet, Uang Tunai, Tabungan = dompet). Dicoba di STAGING dulu.
 -- Pak Slamet (Database). Keputusan Owner: A (Uang Tunai tak bisa dihapus), B (tanpa dompet -> Uang Tunai),
 -- C (hapus dompet: transaksi dipindah ke dompet pilihan), D (Total Saldo hitung semua termasuk tabungan).
