@@ -38,6 +38,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import { AiChat, type SavingsProposal } from "@/components/ai/ai-chat";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -187,6 +188,7 @@ export default function TabunganPage() {
   const [selectedGoalId, setSelectedGoalId] = React.useState<string | null>(null);
   const [activeDetailView, setActiveDetailView] = React.useState<"detail" | "deposit" | "withdraw">("detail");
   const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const [isChatOpen, setIsChatOpen] = React.useState(false);
   const [editingGoal, setEditingGoal] = React.useState<GoalItem | null>(null);
 
   // State form Setor & Tarik
@@ -230,6 +232,78 @@ export default function TabunganPage() {
   const totalTerkumpul = goals.reduce((acc, g) => acc + g.current_amount, 0);
   const totalTarget = goals.reduce((acc, g) => acc + g.target_amount, 0);
   const totalKekurangan = Math.max(0, totalTarget - totalTerkumpul);
+
+  // Buat tabungan dari hasil chat AI (angka kelayakan dihitung server, bukan AI)
+  const createFromProposal = async (pr: SavingsProposal): Promise<boolean> => {
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const payload: Database["public"]["Tables"]["savings_goals"]["Insert"] = {
+        name: pr.name,
+        target_amount: pr.target_amount,
+        initial_amount: pr.initial_amount,
+        deadline: pr.deadline,
+        storage_place: "Dompet Tabungan",
+        planned_per_payday: pr.feasibility.monthlyNeeded ?? 0,
+        priority: goals.length + 1,
+        status: "aktif",
+        is_emergency_fund: false,
+        notes: null,
+        ...(user?.id ? { user_id: user.id } : {}),
+      };
+      const { error } = await supabase.from("savings_goals").insert(payload);
+      if (error) throw error;
+      showToast(`Target "${pr.name}" berhasil dibuat!`);
+      setIsChatOpen(false);
+      await loadData();
+      return true;
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menyimpan ke database. Coba lagi.");
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const renderProposal = (pr: SavingsProposal, reset: () => void) => {
+    const f = pr.feasibility;
+    const blocked = !f.feasible && f.reason !== "tanpa_tenggat";
+    const msg: Record<string, string> = {
+      ok: "Realistis dengan pemasukan dan pengeluaranmu.",
+      tanpa_tenggat: "Tanpa tenggat, kamu bisa menabung sebisanya.",
+      sudah_tercapai: "Uang awalmu sudah cukup untuk target ini.",
+      tidak_ada_sisa: "Saat ini pemasukan belum menyisakan uang bulanan, jadi target ini belum realistis.",
+      kurang_per_bulan: `Kurang ${formatRupiah(f.shortfallMonthly)} per bulan dari sisa uangmu.`,
+      tenggat_lewat: "Tenggat sudah lewat. Pilih tanggal yang akan datang.",
+    };
+    return (
+      <div className="space-y-2 rounded-2xl border border-border bg-card p-3 text-xs">
+        <p className="font-bold text-foreground">{pr.name}</p>
+        <div className="grid grid-cols-2 gap-2 text-[11px]">
+          <div><span className="text-muted-foreground">Target</span><p className="font-semibold">{formatRupiah(pr.target_amount)}</p></div>
+          <div><span className="text-muted-foreground">Tenggat</span><p className="font-semibold">{pr.deadline ? formatTanggalWIB(pr.deadline) : "Tanpa tenggat"}</p></div>
+          {f.monthlyNeeded != null && (
+            <div><span className="text-muted-foreground">Sisihkan per bulan</span><p className="font-semibold">{formatRupiah(f.monthlyNeeded)}</p></div>
+          )}
+          <div><span className="text-muted-foreground">Sisa uang per bulan</span><p className="font-semibold">{formatRupiah(f.freeMonthly)}</p></div>
+        </div>
+        <p className={blocked ? "font-semibold text-rose-600 dark:text-rose-400" : "font-semibold text-emerald-600 dark:text-emerald-400"}>{msg[f.reason]}</p>
+        {blocked && f.earliestRealisticDate && (
+          <p className="text-[11px] text-muted-foreground">Tanggal paling cepat yang realistis: {formatTanggalWIB(f.earliestRealisticDate)}. Ketik di chat kalau mau pakai tanggal itu.</p>
+        )}
+        <div className="flex gap-2 pt-1">
+          <Button type="button" size="sm" disabled={blocked || saving} onClick={() => createFromProposal(pr)} className="h-8 flex-1 cursor-pointer rounded-xl bg-teal-600 text-xs font-bold text-white hover:bg-teal-500">
+            {saving ? "Menyimpan..." : "Buat Tabungan"}
+          </Button>
+          <Button type="button" size="sm" variant="outline" onClick={reset} className="h-8 cursor-pointer rounded-xl text-xs">Ulang</Button>
+        </div>
+      </div>
+    );
+  };
 
   // Buka form tambah
   const handleOpenAdd = () => {
@@ -446,7 +520,7 @@ export default function TabunganPage() {
               </h2>
             </div>
             <Button
-              onClick={handleOpenAdd}
+              onClick={() => setIsChatOpen(true)}
               size="sm"
               className="h-8 rounded-xl bg-teal-500 text-zinc-950 hover:bg-teal-400 font-bold text-xs gap-1 shadow-sm cursor-pointer"
             >
@@ -1090,6 +1164,35 @@ export default function TabunganPage() {
                 </>
               )}
             </>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Chat AI pembuat tabungan */}
+      <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          className="mx-auto flex h-[85vh] max-w-[430px] flex-col gap-0 rounded-t-3xl border-border/80 bg-background p-0 shadow-2xl"
+        >
+          <SheetHeader className="flex-row items-center justify-between border-b border-border/60 px-4 py-3">
+            <div>
+              <SheetTitle className="flex items-center gap-1.5 text-sm font-bold"><Sparkles className="h-4 w-4 text-teal-600" /> Buat Tabungan dengan AI</SheetTitle>
+              <SheetDescription className="text-[11px]">Ceritakan tujuanmu, aku bantu cek apakah realistis.</SheetDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => { setIsChatOpen(false); handleOpenAdd(); }} className="cursor-pointer text-[11px] font-semibold text-teal-700 underline dark:text-teal-400">Isi manual</button>
+              <button type="button" onClick={() => setIsChatOpen(false)} aria-label="Tutup" className="cursor-pointer text-muted-foreground"><X className="h-4 w-4" /></button>
+            </div>
+          </SheetHeader>
+          {isChatOpen && (
+            <AiChat
+              mode="savings"
+              intro="Halo! Kamu mau menabung untuk apa, berapa targetnya, dan kapan mau tercapai?"
+              placeholder="Misal: laptop 12 juta, akhir tahun depan"
+              suggestions={["Dana darurat", "Beli laptop", "Liburan"]}
+              renderProposal={renderProposal}
+            />
           )}
         </SheetContent>
       </Sheet>

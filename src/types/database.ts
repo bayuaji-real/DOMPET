@@ -347,6 +347,30 @@ export interface Database {
         };
         Relationships: [];
       };
+      ai_usage_logs: {
+        Row: {
+          id: string;
+          user_id: string;
+          feature: "tabungan" | "konsultasi";
+          model: string;
+          input_tokens: number;
+          output_tokens: number;
+          cost_idr: number;
+          created_at?: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          feature: "tabungan" | "konsultasi";
+          model: string;
+          input_tokens?: number;
+          output_tokens?: number;
+          cost_idr?: number;
+          created_at?: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       ai_insights: {
         Row: {
           id: string;

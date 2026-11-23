@@ -1,0 +1,125 @@
+/**
+ * Ringkasan keuangan pengguna untuk konteks AI. Dihitung di SERVER dari database (bukan dari browser),
+ * dan hanya berisi angka ringkas, bukan daftar transaksi mentah (hemat token dan lebih aman).
+ */
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
+import { addMonths } from "@/lib/savings-feasibility";
+
+export interface FinanceSummary {
+  today: string;
+  /** Rata-rata 3 bulan penuh terakhir (atau yang tersedia). */
+  avgMonthlyIncome: number;
+  avgMonthlyExpense: number;
+  monthsOfData: number;
+  thisMonthIncome: number;
+  thisMonthExpense: number;
+  totalBalance: number;
+  savingsBalance: number;
+  topCategories: { name: string; amount: number }[];
+  goals: { name: string; target: number; saved: number; deadline: string | null; monthly: number }[];
+  /** Total setoran bulanan semua tabungan aktif (asumsi 1 gajian per bulan). */
+  otherMonthlyCommitments: number;
+  nextPayday: string | null;
+}
+
+export async function buildFinanceSummary(
+  supabase: SupabaseClient<Database>,
+  today: string
+): Promise<FinanceSummary> {
+  const monthStart = `${today.slice(0, 7)}-01`;
+  const threeAgo = addMonths(monthStart, -3);
+
+  const [txRes, walletRes, goalRes, catRes, payRes] = await Promise.all([
+    supabase
+      .from("transactions")
+      .select("type, amount, date, category_id")
+      .in("type", ["income", "expense"])
+      .gte("date", threeAgo)
+      .lte("date", today)
+      .limit(5000),
+    supabase.from("wallet_balances").select("balance, type, is_archived"),
+    supabase.from("goal_progress").select("name, target_amount, saved, deadline, planned_per_payday, status"),
+    supabase.from("categories").select("id, name"),
+    supabase.from("payday_schedule").select("date").gte("date", today).order("date", { ascending: true }).limit(1),
+  ]);
+
+  const catName = new Map((catRes.data ?? []).map((c) => [c.id, c.name]));
+  const monthly = new Map<string, { income: number; expense: number }>();
+  const thisCat = new Map<string, number>();
+  let thisIncome = 0;
+  let thisExpense = 0;
+
+  for (const t of txRes.data ?? []) {
+    const ym = String(t.date).slice(0, 7);
+    const m = monthly.get(ym) ?? { income: 0, expense: 0 };
+    const amt = Number(t.amount) || 0;
+    if (t.type === "income") m.income += amt;
+    else m.expense += amt;
+    monthly.set(ym, m);
+    if (String(t.date) >= monthStart) {
+      if (t.type === "income") thisIncome += amt;
+      else {
+        thisExpense += amt;
+        const n = t.category_id ? catName.get(t.category_id) ?? "Lainnya" : "Lainnya";
+        thisCat.set(n, (thisCat.get(n) ?? 0) + amt);
+      }
+    }
+  }
+
+  // Rata-rata dari bulan penuh sebelumnya; kalau belum ada, pakai bulan berjalan
+  const currentYm = today.slice(0, 7);
+  const full = [...monthly.entries()].filter(([ym]) => ym < currentYm);
+  const source = full.length > 0 ? full.map(([, v]) => v) : [{ income: thisIncome, expense: thisExpense }];
+  const avgIncome = Math.round(source.reduce((a, v) => a + v.income, 0) / source.length);
+  const avgExpense = Math.round(source.reduce((a, v) => a + v.expense, 0) / source.length);
+
+  const wallets = walletRes.data ?? [];
+  const totalBalance = wallets.filter((w) => !w.is_archived).reduce((a, w) => a + Number(w.balance || 0), 0);
+  const savingsBalance = wallets
+    .filter((w) => !w.is_archived && w.type === "tabungan")
+    .reduce((a, w) => a + Number(w.balance || 0), 0);
+
+  const goals = (goalRes.data ?? [])
+    .filter((g) => g.status === "aktif")
+    .map((g) => ({
+      name: String(g.name),
+      target: Number(g.target_amount) || 0,
+      saved: Number(g.saved) || 0,
+      deadline: g.deadline ?? null,
+      monthly: Number(g.planned_per_payday) || 0,
+    }));
+
+  return {
+    today,
+    avgMonthlyIncome: avgIncome,
+    avgMonthlyExpense: avgExpense,
+    monthsOfData: full.length,
+    thisMonthIncome: thisIncome,
+    thisMonthExpense: thisExpense,
+    totalBalance,
+    savingsBalance,
+    topCategories: [...thisCat.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, amount]) => ({ name, amount })),
+    goals,
+    otherMonthlyCommitments: goals.reduce((a, g) => a + g.monthly, 0),
+    nextPayday: payRes.data?.[0]?.date ?? null,
+  };
+}
+
+const rp = (n: number) => `Rp${Math.round(n).toLocaleString("id-ID")}`;
+
+/** Teks ringkas untuk dimasukkan ke prompt. */
+export function summaryToText(s: FinanceSummary): string {
+  return [
+    `Hari ini: ${s.today}`,
+    `Rata-rata per bulan (${s.monthsOfData || "bulan ini"} bulan data): pemasukan ${rp(s.avgMonthlyIncome)}, pengeluaran ${rp(s.avgMonthlyExpense)}`,
+    `Bulan ini sejauh ini: pemasukan ${rp(s.thisMonthIncome)}, pengeluaran ${rp(s.thisMonthExpense)}`,
+    `Total saldo semua dompet: ${rp(s.totalBalance)} (di antaranya tabungan ${rp(s.savingsBalance)})`,
+    `Pengeluaran terbesar bulan ini: ${s.topCategories.map((c) => `${c.name} ${rp(c.amount)}`).join(", ") || "belum ada"}`,
+    `Tabungan aktif: ${s.goals.map((g) => `${g.name} (terkumpul ${rp(g.saved)} dari ${rp(g.target)}${g.deadline ? `, tenggat ${g.deadline}` : ""}, setoran ${rp(g.monthly)}/bulan)`).join("; ") || "belum ada"}`,
+    `Gajian berikutnya: ${s.nextPayday ?? "belum diatur"}`,
+  ].join("\n");
+}

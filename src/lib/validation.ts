@@ -56,3 +56,12 @@ export const analyticsQuerySchema = z.object({
   startDate: z.string().max(40).optional(),
   endDate: z.string().max(40).optional(),
 });
+
+export const aiChatSchema = z.object({
+  mode: z.enum(["savings", "advisor"]),
+  // Riwayat dibatasi supaya biaya token terkendali
+  messages: z
+    .array(z.object({ role: z.enum(["user", "model"]), text: z.string().min(1).max(1000) }))
+    .min(1)
+    .max(14),
+});
