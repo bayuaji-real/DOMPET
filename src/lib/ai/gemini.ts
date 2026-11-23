@@ -162,7 +162,6 @@ async function callChatModel(model: string, turns: ChatTurn[], opts: ChatOptions
     generationConfig: {
       temperature: opts.temperature ?? 0.4,
       maxOutputTokens: opts.maxOutputTokens ?? 500,
-      thinkingConfig: { thinkingBudget: 0 },
       ...(opts.responseSchema ? { responseMimeType: "application/json", responseSchema: opts.responseSchema } : {}),
     },
   };

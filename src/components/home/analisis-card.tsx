@@ -93,7 +93,7 @@ export function AnalisisCard() {
                         <PieChart>
                           <Pie data={data.categories} dataKey="nominal" nameKey="name" innerRadius={32} outerRadius={52} paddingAngle={3} stroke="none">
                             {data.categories.map((c, i) => (
-                              <Cell key={c.id ?? i} fill={c.color || PALETTE[i % PALETTE.length]} />
+                              <Cell key={c.id ?? i} fill={PALETTE[i % PALETTE.length]} />
                             ))}
                           </Pie>
                         </PieChart>
@@ -103,7 +103,7 @@ export function AnalisisCard() {
                   <ul className="min-w-0 flex-1 space-y-1.5">
                     {data.categories.slice(0, 4).map((c, i) => (
                       <li key={c.id ?? i} className="flex items-center gap-2 text-[11px]">
-                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: c.color || PALETTE[i % PALETTE.length] }} />
+                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: PALETTE[i % PALETTE.length] }} />
                         <span className="min-w-0 flex-1 truncate font-semibold text-foreground">{c.name}</span>
                         <span className="shrink-0 font-bold tabular-nums text-muted-foreground">{Math.round(c.percentage)}%</span>
                       </li>

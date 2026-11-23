@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { HelpCenterButton } from "./header-actions";
 import { ThemeSlider } from "@/components/theme-slider";
@@ -16,6 +16,7 @@ interface TopHeaderProps {
 
 export function TopHeader({ title }: TopHeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [profile, setProfile] = React.useState<UserProfile>({
     name: "Bayu Aji",
     email: "bayuaji@dompetku.id",
@@ -48,7 +49,7 @@ export function TopHeader({ title }: TopHeaderProps) {
   }, []);
 
   const displayName = profile.name || "Sobat Dompet";
-  const isSub = Boolean(title);
+  const isSub = Boolean(title) && pathname !== "/";
 
   return (
     <header
