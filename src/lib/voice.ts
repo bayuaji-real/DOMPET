@@ -175,14 +175,14 @@ export function matchWallet(
     }
   }
 
-  // Jika tidak ditemukan, pakai default atau dompet pertama (Uang Tunai)
+  // Dompet tidak disebut -> Uang Tunai (keputusan Owner). Pengaturan dompet utama hanya cadangan.
+  const tunaiWallet = userWallets.find((w) => /tunai/i.test(w.name));
+  if (tunaiWallet) return tunaiWallet;
   if (defaultWalletId) {
     const found = userWallets.find((w) => w.id === defaultWalletId);
     if (found) return found;
   }
-
-  const tunaiWallet = userWallets.find((w) => /tunai/i.test(w.name));
-  return tunaiWallet || userWallets[0];
+  return userWallets[0];
 }
 
 /**

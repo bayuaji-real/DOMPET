@@ -116,3 +116,20 @@ export async function updateSavingsGoal(
 
   return data;
 }
+
+/** Hapus tabungan. Sisa uangnya masuk ke dompet tujuan; setoran lama menjadi transfer biasa. */
+export async function deleteSavingsGoal(
+  id: string,
+  moveToId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = createClient();
+  const { error } = await supabase.rpc("delete_savings_goal", {
+    p_goal_id: id,
+    p_move_to: moveToId,
+  });
+  if (error) {
+    console.error(`Gagal menghapus tabungan ID ${id}:`, error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}

@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatRupiah, parseRupiahInput, triggerHapticFeedback } from "@/lib/utils";
 import { createTransaction } from "@/lib/data/transactions";
-import { getWallets, type WalletBalance } from "@/lib/data/wallets";
+import { getSpendableWallets, type WalletBalance } from "@/lib/data/wallets";
 import { getCategories, getCategoryEmoji, type Category } from "@/lib/data/categories";
 
 export default function TambahTransaksiPage() {
@@ -43,7 +43,7 @@ export default function TambahTransaksiPage() {
   React.useEffect(() => {
     async function loadData() {
       try {
-        const [wList, cList] = await Promise.all([getWallets(), getCategories()]);
+        const [wList, cList] = await Promise.all([getSpendableWallets(), getCategories()]);
         setWallets(wList);
         setCategories(cList);
 

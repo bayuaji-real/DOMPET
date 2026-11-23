@@ -38,16 +38,18 @@ import {
   type WalletType,
 } from "@/lib/wallet-presets";
 import { WalletIcon } from "@/components/wallet/wallet-icon";
+import { WalletDetailSheet } from "@/components/wallet/wallet-detail-sheet";
 import { createTransaction } from "@/lib/data/transactions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function DompetPage() {
+  const [detailWallet, setDetailWallet] = React.useState<WalletBalance | null>(null);
   const [wallets, setWallets] = React.useState<WalletBalance[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [selectedFilter, setSelectedFilter] = React.useState<
-    "all" | "bank" | "ewallet" | "cash" | "investasi"
+    "all" | "bank" | "ewallet" | "cash" | "investasi" | "tabungan"
   >("all");
   const [hideBalance, setHideBalance] = React.useState(false);
 
@@ -261,6 +263,8 @@ export default function DompetPage() {
         return "Uang Tunai";
       case "investasi":
         return "Investasi";
+      case "tabungan":
+        return "Tabungan";
       default:
         return "Dompet";
     }
@@ -344,6 +348,7 @@ export default function DompetPage() {
             { id: "bank", label: "Bank" },
             { id: "ewallet", label: "E-Wallet" },
             { id: "cash", label: "Tunai" },
+            { id: "tabungan", label: "Tabungan" },
             { id: "investasi", label: "Investasi" },
           ].map((tab) => (
             <button
@@ -400,7 +405,19 @@ export default function DompetPage() {
                 key={w.id}
                 className="group relative rounded-3xl border border-border/70 bg-card p-4 shadow-xs hover:border-teal-500/40 transition-all space-y-3"
               >
-                <div className="flex items-center justify-between">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setDetailWallet(w)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setDetailWallet(w);
+                    }
+                  }}
+                  aria-label={`Detail dompet ${w.name}`}
+                  className="flex cursor-pointer items-center justify-between"
+                >
                   <div className="flex items-center gap-3 min-w-0">
                     <WalletIcon
                       icon={w.icon}
@@ -413,9 +430,9 @@ export default function DompetPage() {
                         <h3 className="text-sm font-extrabold text-foreground truncate">
                           {w.name}
                         </h3>
-                        {w.sort_order === 1 && (
+                        {w.is_default && (
                           <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-teal-500/15 text-teal-600 dark:text-teal-400">
-                            Utama
+                            Bawaan
                           </span>
                         )}
                       </div>
@@ -746,6 +763,20 @@ export default function DompetPage() {
           </div>
         </div>
       )}
+      <WalletDetailSheet
+        wallet={detailWallet}
+        allWallets={wallets}
+        hideBalance={hideBalance}
+        onClose={() => setDetailWallet(null)}
+        onChanged={loadWalletsData}
+        onTransfer={(w) => {
+          setDetailWallet(null);
+          setTransferFromId(w.id);
+          const other = wallets.find((o) => o.id !== w.id && o.type !== "tabungan");
+          if (other) setTransferToId(other.id);
+          setShowTransferModal(true);
+        }}
+      />
     </div>
   );
 }

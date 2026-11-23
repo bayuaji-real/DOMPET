@@ -173,7 +173,7 @@ export default function TabunganPage() {
   }, []);
 
   React.useEffect(() => {
-    if (!selectedWallet && wallets.length > 0) setSelectedWallet(wallets[0].id);
+    if (!selectedWallet && wallets.length > 0) setSelectedWallet((wallets.find((w) => w.type !== "tabungan") ?? wallets[0]).id);
   }, [wallets, selectedWallet]);
 
   React.useEffect(() => {
@@ -341,7 +341,8 @@ export default function TabunganPage() {
         note: actionNote || defaultNote,
         source: "manual",
         category_id: null,
-        to_wallet_id: null,
+        // Tabungan adalah dompet: uang masuk/keluar lewat dompet tabungan miliknya
+        to_wallet_id: wallets.find((w) => w.goal_id === selectedGoal.id)?.id ?? null,
       });
       if (error) throw error;
       await loadData();
@@ -644,7 +645,7 @@ export default function TabunganPage() {
                         className="w-full h-10 rounded-xl border border-border/60 bg-muted/40 px-3 text-xs text-foreground focus:outline-none"
                       >
                         <option value="" disabled>Pilih dompet</option>
-                        {wallets.map((w) => (
+                        {wallets.filter((w) => w.type !== "tabungan").map((w) => (
                           <option key={w.id} value={w.id}>{w.name}</option>
                         ))}
                       </select>
@@ -743,7 +744,7 @@ export default function TabunganPage() {
                         className="w-full h-10 rounded-xl border border-border/60 bg-muted/40 px-3 text-xs text-foreground focus:outline-none"
                       >
                         <option value="" disabled>Pilih dompet</option>
-                        {wallets.map((w) => (
+                        {wallets.filter((w) => w.type !== "tabungan").map((w) => (
                           <option key={w.id} value={w.id}>{w.name}</option>
                         ))}
                       </select>

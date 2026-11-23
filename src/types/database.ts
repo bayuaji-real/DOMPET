@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type WalletType = "bank" | "ewallet" | "cash" | "investasi";
+export type WalletType = "bank" | "ewallet" | "cash" | "investasi" | "tabungan";
 export type CategoryType = "income" | "expense";
 export type TransactionType =
   | "income"
@@ -36,6 +36,8 @@ export interface Database {
           color: string | null;
           icon: string | null;
           is_archived: boolean;
+          is_default: boolean;
+          goal_id: string | null;
           sort_order: number;
           created_at?: string;
           updated_at?: string;
@@ -49,6 +51,8 @@ export interface Database {
           color?: string | null;
           icon?: string | null;
           is_archived?: boolean;
+          is_default?: boolean;
+          goal_id?: string | null;
           sort_order?: number;
           created_at?: string;
           updated_at?: string;
@@ -62,6 +66,8 @@ export interface Database {
           color?: string | null;
           icon?: string | null;
           is_archived?: boolean;
+          is_default?: boolean;
+          goal_id?: string | null;
           sort_order?: number;
           created_at?: string;
           updated_at?: string;
@@ -382,6 +388,8 @@ export interface Database {
           is_archived: boolean;
           sort_order: number;
           balance: number;
+          is_default: boolean;
+          goal_id: string | null;
         };
         Relationships: [];
       };
@@ -407,7 +415,17 @@ export interface Database {
         Relationships: [];
       };
     };
-    Functions: Record<string, never>;
+    Functions: {
+      ensure_default_wallet: { Args: Record<string, never>; Returns: string };
+      delete_wallet: {
+        Args: { p_wallet_id: string; p_move_to: string };
+        Returns: Json;
+      };
+      delete_savings_goal: {
+        Args: { p_goal_id: string; p_move_to: string };
+        Returns: Json;
+      };
+    };
     Enums: Record<string, never>;
   };
 }

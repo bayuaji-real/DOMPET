@@ -26,7 +26,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { compressImage } from "@/lib/image-compression";
 import { uploadReceipt } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/client";
-import { getWallets } from "@/lib/data/wallets";
+import { getSpendableWallets } from "@/lib/data/wallets";
 import { getCategories } from "@/lib/data/categories";
 import {
   ReceiptConfirmationSheet,
@@ -77,7 +77,7 @@ export function BottomNav() {
     async function loadMetadata() {
       try {
         const [wData, cData] = await Promise.allSettled([
-          getWallets(),
+          getSpendableWallets(),
           getCategories(),
         ]);
 

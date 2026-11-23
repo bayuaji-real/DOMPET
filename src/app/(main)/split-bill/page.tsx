@@ -13,7 +13,7 @@ import {
   type SplitItem,
   type SplitPerson,
 } from "@/lib/split-bill";
-import { getWallets, type WalletBalance } from "@/lib/data/wallets";
+import { getSpendableWallets, type WalletBalance } from "@/lib/data/wallets";
 import { createTransaction } from "@/lib/data/transactions";
 import { formatRupiah, triggerHapticFeedback } from "@/lib/utils";
 
@@ -59,7 +59,7 @@ export default function SplitBillPage() {
       if (raw) setDraft({ ...emptyDraft(), ...JSON.parse(raw) });
     } catch {}
     setLoaded(true);
-    getWallets()
+    getSpendableWallets()
       .then((list) => {
         const active = list.filter((w) => !w.is_archived);
         setWallets(active);
