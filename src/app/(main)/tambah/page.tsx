@@ -24,6 +24,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatRupiah, parseRupiahInput, triggerHapticFeedback } from "@/lib/utils";
 import { createTransaction } from "@/lib/data/transactions";
 import { getSpendableWallets, type WalletBalance } from "@/lib/data/wallets";
+import { NewCategoryInline } from "@/components/category/new-category-inline";
 import { getCategories, getCategoryEmoji, type Category } from "@/lib/data/categories";
 
 export default function TambahTransaksiPage() {
@@ -338,6 +339,13 @@ export default function TambahTransaksiPage() {
                         <span className="truncate">{kat.name}</span>
                       </button>
                     ))}
+                    <NewCategoryInline
+                      type={tipe === "PENGELUARAN" ? "expense" : "income"}
+                      onCreated={(c) => {
+                        setCategories((prev) => [...prev, c]);
+                        setSelectedCategoryId(c.id);
+                      }}
+                    />
                   </div>
                 </div>
               )}

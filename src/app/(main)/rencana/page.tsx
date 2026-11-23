@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, Loader2, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";
+import { AiChat } from "@/components/ai/ai-chat";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -218,6 +219,31 @@ export default function RencanaPage() {
             Gaji dikurangi biaya hidup & tagihan, sisanya diisi ke kebutuhan dengan tenggat paling dekat dulu (kelipatan Rp50.000).
           </p>
         </div>
+
+        {/* Rencana lewat percakapan */}
+        <section className="space-y-3 rounded-3xl border border-fuchsia-500/30 bg-fuchsia-500/5 p-4">
+          <h2 className="flex items-center gap-1.5 text-sm font-extrabold">
+            <Sparkles className="h-4 w-4 text-fuchsia-600" /> Ngobrol dengan Perencana AI
+          </h2>
+          <div className="rounded-2xl bg-card p-3 text-[11px] text-muted-foreground">
+            <p className="mb-1 font-bold text-foreground">Yang perlu kamu tulis (satu per satu, AI akan menanyakan):</p>
+            <ul className="list-disc space-y-0.5 pl-4">
+              <li>Gaji per gajian, contoh: Rp5.000.000</li>
+              <li>Tanggal gajian, contoh: tanggal 25</li>
+              <li>Biaya hidup per gajian, contoh: Rp1.500.000</li>
+              <li>Cicilan atau tagihan rutin, contoh: kos Rp800.000 tanggal 1</li>
+              <li>Target uang, contoh: dana darurat Rp10.000.000 dalam 1 tahun</li>
+            </ul>
+          </div>
+          <div className="h-[30rem] overflow-hidden rounded-2xl border border-border/60 bg-background">
+            <AiChat
+              mode="plan"
+              intro="Halo! Aku bantu susun rencana uangmu. Mulai dari yang pertama ya: berapa gajimu setiap gajian, dan seberapa sering (bulanan atau dua mingguan)?"
+              placeholder="Ketik jawabanmu di sini..."
+              suggestions={["Gajiku Rp5.000.000 tiap bulan", "Gajiku Rp2.500.000 dua minggu sekali", "Aku belum punya gaji tetap"]}
+            />
+          </div>
+        </section>
 
         {loading ? (
           <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">

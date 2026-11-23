@@ -40,6 +40,7 @@ import {
   Crop,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { ThemeSlider } from "@/components/theme-slider";
 import { createClient } from "@/lib/supabase/client";
 import {
   getUserProfile,
@@ -568,7 +569,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
         {/* VIEW 0: MENU SETTINGS UTAMA (DAFTAR KE BAWAH / GROUPED LIST)     */}
         {/* --------------------------------------------------------------- */}
         {activeSection === null && (
-          <div className="space-y-4 animate-in fade-in duration-200">
+          <div className="flex min-h-[calc(100dvh-9rem)] flex-col gap-4 animate-in fade-in duration-200">
             {/* Kartu Profil Utama dengan Tombol Edit Profil */}
             <div className="relative overflow-hidden rounded-3xl border border-white/20 dark:border-white/10 bg-gradient-to-br from-teal-500/15 via-emerald-500/10 to-card p-4.5 shadow-sm space-y-3">
               <div className="flex items-center gap-3.5">
@@ -716,40 +717,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
                     </div>
                   </div>
 
-                  <div className="flex items-center p-0.5 rounded-xl bg-muted/60 border border-border/50 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        triggerHapticFeedback();
-                        setTheme("light");
-                      }}
-                      className={cn(
-                        "flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer",
-                        !isDarkMode
-                          ? "bg-background text-foreground shadow-xs"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <Sun className="h-3 w-3 text-amber-500" />
-                      Terang
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        triggerHapticFeedback();
-                        setTheme("dark");
-                      }}
-                      className={cn(
-                        "flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer",
-                        isDarkMode
-                          ? "bg-background text-foreground shadow-xs"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <Moon className="h-3 w-3 text-teal-400" />
-                      Gelap
-                    </button>
-                  </div>
+                  <ThemeSlider />
                 </div>
 
                 {/* Opsi Fullscreen: Mode Layar Penuh (Sembunyikan Notifikasi & Navigasi HP) */}
@@ -898,7 +866,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
             </div>
 
             {/* GROUP 4: LOGOUT (Tombol sederhana bertuliskan "Logout") */}
-            <div className="pt-2">
+            <div className="mt-auto pt-4 pb-2">
               <button
                 type="button"
                 onClick={handleLogout}

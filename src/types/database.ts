@@ -379,6 +379,7 @@ export interface Database {
           title: string;
           body: string;
           page: string | null;
+          image_path: string | null;
           status: "baru" | "dibaca" | "dikerjakan" | "selesai";
           created_at: string;
         };
@@ -389,6 +390,7 @@ export interface Database {
           title: string;
           body: string;
           page?: string | null;
+          image_path?: string | null;
           status?: "baru";
           created_at?: string;
         };

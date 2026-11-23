@@ -39,4 +39,4 @@ export const MORE_GROUPS: MoreGroup[] = [
 ];
 
 /** Path yang membuat tombol More di navbar tampil aktif. */
-export const MORE_ACTIVE_PREFIXES = ["/more", "/pengaturan", "/profil", "/settings", "/transaksi", "/analisis", "/tambah", "/split-bill", "/rencana", "/chat", "/bantuan"];
+export const MORE_ACTIVE_PREFIXES = ["/more", "/pengaturan", "/profil", "/settings", "/transaksi", "/analisis", "/tambah", "/split-bill", "/rencana", "/bantuan"];

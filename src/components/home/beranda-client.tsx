@@ -139,16 +139,6 @@ export function BerandaClient({
     };
   }, [loadDashboardData]);
 
-  // Perhitungan Saldo Total & Cashflow Bulan Ini
-  const fallbackTxs = monthTxs;
-  const pemasukanBulanIni = fallbackTxs
-    .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + BigInt(Math.round(t.amount || 0)), 0n);
-
-  const pengeluaranBulanIni = fallbackTxs
-    .filter((t) => t.type === "expense")
-    .reduce((sum, t) => sum + BigInt(Math.round(t.amount || 0)), 0n);
-
   // Masking Saldo jika hideBalance aktif
   const displayAmount = (amt: bigint | number, isNegative = false) => {
     if (hideBalance) {
@@ -165,14 +155,13 @@ export function BerandaClient({
       />
 
       <div className="space-y-5 px-4 pb-4 pt-5">
-        {/* 1. Total Saldo (bisa digeser: Total Saldo, lalu tiap dompet) */}
+        {/* 1. Saldo: pilih Total Saldo atau dompet tertentu lewat menu di kartu */}
         <TotalSaldoCarousel
           wallets={wallets}
           hideBalance={hideBalance}
           onToggleHide={toggleHideBalance}
           display={displayAmount}
-          pemasukanBulanIni={pemasukanBulanIni}
-          pengeluaranBulanIni={pengeluaranBulanIni}
+          monthTxs={monthTxs}
           onSelectWallet={setDetailWallet}
         />
 
@@ -226,7 +215,7 @@ export function BerandaClient({
                     aria-label={`Lihat detail transaksi ${trx.note || "Transaksi"}`}
                     className="flex cursor-pointer items-center justify-between gap-3 py-2.5 text-xs transition-colors first:pt-1 last:pb-1 hover:bg-muted/40 active:scale-[0.99]"
                   >
-                    <div className="min-w-0 pr-2">
+                    <div className="min-w-0 flex-1">
                       <p className="font-bold text-foreground truncate">
                         {trx.note || "Transaksi"}
                       </p>
@@ -236,7 +225,7 @@ export function BerandaClient({
                       </p>
                     </div>
 
-                    <div className="text-right shrink-0">
+                    <div className="w-28 shrink-0 text-right tabular-nums">
                       <p
                         className={cn(
                           "font-extrabold tracking-tight",
@@ -247,6 +236,7 @@ export function BerandaClient({
                               : "text-foreground"
                         )}
                       >
+                        {isExpense ? "-" : isIncome ? "+" : ""}
                         {displayAmount(trx.amount, isExpense)}
                       </p>
                       <span className="text-[9px] font-semibold text-muted-foreground block capitalize">

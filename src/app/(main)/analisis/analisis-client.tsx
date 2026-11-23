@@ -27,6 +27,9 @@ import {
   CheckCircle2,
   X,
   Info,
+  PieChart as PieIcon,
+  BarChart3,
+  LineChart as LineIcon,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -37,6 +40,8 @@ import {
   Bar,
   AreaChart,
   Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   Tooltip as RechartsTooltip,
@@ -46,6 +51,8 @@ import type {
   AnalyticsData,
   AIInsightResult,
 } from "@/types/analytics";
+
+const PALETTE = ["#0d9488", "#8b5cf6", "#f59e0b", "#f43f5e", "#0ea5e9", "#84cc16", "#ec4899", "#f97316"];
 
 interface AnalisisClientProps {
   initialData: AnalyticsData;
@@ -65,7 +72,8 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
   const [customEnd, setCustomEnd] = React.useState(initialData.period.endDate);
 
   // Top list tab switcher
-  const [catView, setCatView] = React.useState<"donat" | "batang">("donat");
+  const [catView, setCatView] = React.useState<"donat" | "batang" | "garis">("donat");
+  const [flowView, setFlowView] = React.useState<"batang" | "garis">("batang");
   const [topTab, setTopTab] = React.useState<"transactions" | "merchants">("transactions");
 
   // AI Insight State ("Insight AI")
@@ -80,7 +88,17 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
   // Fetch Analytics Data saat ganti periode
   const fetchData = React.useCallback(
     async (p: AnalyticsPeriod, sDate?: string, eDate?: string) => {
-      setIsLoading(true);
+      try {
+        const cached = sessionStorage.getItem(`dompet_analisis_${p}_${sDate ?? ""}_${eDate ?? ""}`);
+        if (cached) {
+          setData(JSON.parse(cached));
+          setIsLoading(false);
+        } else {
+          setIsLoading(true);
+        }
+      } catch {
+        setIsLoading(true);
+      }
       try {
         let url = `/api/analytics?period=${p}`;
         if (p === "custom" && sDate && eDate) {
@@ -90,6 +108,9 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
         const json = await res.json();
         if (json.success && json.data) {
           setData(json.data);
+          try {
+            sessionStorage.setItem(`dompet_analisis_${p}_${sDate ?? ""}_${eDate ?? ""}`, JSON.stringify(json.data));
+          } catch {}
         }
       } catch (err) {
         console.error("Gagal memuat data analisis:", err);
@@ -149,7 +170,7 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
       setInsight(json.data);
     } catch (err: any) {
       console.error("Gagal mendapatkan wawasan:", err);
-      setInsightError(err.message || "Layanan sedang sibuk. Coba sebentar lagi ya.");
+      setInsightError(err.message || "Mohon maaf, jaringan kami sedang padat. Coba sebentar lagi ya.");
     } finally {
       setIsInsightLoading(false);
     }
@@ -560,22 +581,21 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted/50 p-1" role="group" aria-label="Bentuk grafik kategori">
-            {([["donat", "Donat (porsi)"], ["batang", "Batang (urutan)"]] as const).map(([id, lbl]) => (
+          <div className="inline-flex gap-1 rounded-xl bg-muted/50 p-1" role="group" aria-label="Bentuk grafik kategori">
+            {([["donat", PieIcon, "Grafik donat"], ["batang", BarChart3, "Grafik batang"], ["garis", LineIcon, "Grafik garis"]] as const).map(([id, Icon, lbl]) => (
               <button
                 key={id}
                 type="button"
                 aria-pressed={catView === id}
+                aria-label={lbl}
+                title={lbl}
                 onClick={() => setCatView(id)}
-                className={`cursor-pointer rounded-lg py-1.5 text-[11px] font-bold transition-colors ${catView === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+                className={`flex h-8 w-10 cursor-pointer items-center justify-center rounded-lg transition-colors ${catView === id ? "bg-card text-teal-600 shadow-sm" : "text-muted-foreground"}`}
               >
-                {lbl}
+                <Icon className="h-4 w-4" />
               </button>
             ))}
           </div>
-          <p className="text-[10px] text-muted-foreground">
-            {catView === "donat" ? "Donat: enak untuk melihat porsi tiap kategori dari total." : "Batang: enak untuk membandingkan mana yang paling besar."}
-          </p>
 
           {isMounted && data.categories.length > 0 ? (
             <div className="space-y-4">
@@ -608,12 +628,23 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                       paddingAngle={3}
                     >
                       {data.categories.map((entry, idx) => (
-                        <Cell key={`cell-${idx}`} fill={entry.color} />
+                        <Cell key={`cell-${idx}`} fill={PALETTE[idx % PALETTE.length]} />
                       ))}
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
               </div>
+              ) : catView === "garis" ? (
+                <div className="h-48 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={data.categories.slice(0, 8)} margin={{ top: 10, right: 8, left: -20, bottom: 0 }}>
+                      <XAxis dataKey="name" tick={{ fontSize: 9 }} stroke="#71717a" tickLine={false} axisLine={false} interval={0} tickFormatter={(v: string) => (v.length > 6 ? v.slice(0, 6) + "…" : v)} />
+                      <YAxis tick={{ fontSize: 9 }} stroke="#71717a" tickLine={false} axisLine={false} tickFormatter={(v: number) => (v >= 1000000 ? `${(v / 1000000).toFixed(1)}jt` : `${Math.round(v / 1000)}rb`)} />
+                      <RechartsTooltip formatter={(value: any) => [formatRupiah(Number(value), { absolute: true }), "Pengeluaran"]} contentStyle={{ backgroundColor: "rgba(24,24,27,0.95)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", fontSize: "11px", color: "#fff" }} />
+                      <Line type="monotone" dataKey="nominal" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, fill: "#f59e0b", strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               ) : (
                 <div className="space-y-2.5">
                   {data.categories.map((cat) => (
@@ -623,7 +654,7 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                         <span>{formatRupiah(cat.nominal, { absolute: true })}</span>
                       </div>
                       <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                        <div className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, cat.percentage))}%`, backgroundColor: cat.color }} />
+                        <div className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, cat.percentage))}%`, backgroundColor: PALETTE[data.categories.indexOf(cat) % PALETTE.length] }} />
                       </div>
                     </div>
                   ))}
@@ -631,13 +662,13 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
               )}
 
               {/* Daftar Kategori Terurut */}
-              <div className={`space-y-2 divide-y divide-border/30 ${catView === "batang" ? "hidden" : ""}`}>
+              <div className="space-y-2 divide-y divide-border/30">
                 {data.categories.map((cat) => (
                   <div key={cat.id} className="flex items-center justify-between pt-2 text-xs">
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span
                         className="h-3 w-3 rounded-full shrink-0 shadow-xs"
-                        style={{ backgroundColor: cat.color }}
+                        style={{ backgroundColor: PALETTE[data.categories.indexOf(cat) % PALETTE.length] }}
                       />
                       <span className="font-semibold text-foreground truncate">{cat.name}</span>
                     </div>
@@ -674,6 +705,14 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
               <p className="text-[10px] text-muted-foreground">Pemasukan vs Pengeluaran per bulan</p>
             </div>
             <div className="flex items-center gap-2.5 text-[10px]">
+              <div className="inline-flex gap-0.5 rounded-lg bg-muted/50 p-0.5" role="group" aria-label="Bentuk grafik arus kas">
+                {([["batang", BarChart3, "Grafik batang"], ["garis", LineIcon, "Grafik garis"]] as const).map(([id, Icon, lbl]) => (
+                  <button key={id} type="button" aria-pressed={flowView === id} aria-label={lbl} title={lbl} onClick={() => setFlowView(id)}
+                    className={`flex h-7 w-8 cursor-pointer items-center justify-center rounded-md ${flowView === id ? "bg-card text-teal-600 shadow-sm" : "text-muted-foreground"}`}>
+                    <Icon className="h-3.5 w-3.5" />
+                  </button>
+                ))}
+              </div>
               <span className="flex items-center gap-1 font-semibold text-teal-600 dark:text-teal-400">
                 <span className="h-2 w-2 rounded-full bg-teal-500" /> Masuk
               </span>
@@ -686,7 +725,8 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
           {isMounted && data.monthlyCashflow.length > 0 ? (
             <div className="h-52 w-full pt-2">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.monthlyCashflow} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
+                {flowView === "garis" ? (
+                <LineChart data={data.monthlyCashflow} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
                   <XAxis
                     dataKey="label"
                     stroke="#71717a"
@@ -714,9 +754,42 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                       color: "#fff",
                     }}
                   />
-                  <Bar dataKey="income" fill="#0d9488" radius={[4, 4, 0, 0]} maxBarSize={16} />
-                  <Bar dataKey="expense" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={16} />
+                  <Line type="monotone" dataKey="income" stroke="#0d9488" strokeWidth={3} dot={{ r: 4, fill: "#0d9488", strokeWidth: 0 }} />
+                  <Line type="monotone" dataKey="expense" stroke="#f43f5e" strokeWidth={3} dot={{ r: 4, fill: "#f43f5e", strokeWidth: 0 }} />
+                </LineChart>
+                ) : (
+                                <BarChart data={data.monthlyCashflow} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
+                  <XAxis
+                    dataKey="label"
+                    stroke="#71717a"
+                    fontSize={10}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke="#71717a"
+                    fontSize={9}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => `${val >= 1000000 ? (val / 1000000).toFixed(0) + "jt" : val}`}
+                  />
+                  <RechartsTooltip
+                    formatter={(value: any, name: any) => [
+                      formatRupiah(Number(value), { absolute: true }),
+                      name === "income" ? "Pemasukan" : "Pengeluaran",
+                    ]}
+                    contentStyle={{
+                      backgroundColor: "rgba(24, 24, 27, 0.95)",
+                      borderRadius: "12px",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      fontSize: "11px",
+                      color: "#fff",
+                    }}
+                  />
+                  <Bar dataKey="income" fill="#14b8a6" radius={[6, 6, 0, 0]} maxBarSize={18} />
+                  <Bar dataKey="expense" fill="#fb7185" radius={[6, 6, 0, 0]} maxBarSize={18} />
                 </BarChart>
+                )}
               </ResponsiveContainer>
             </div>
           ) : (

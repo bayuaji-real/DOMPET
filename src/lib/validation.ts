@@ -58,7 +58,7 @@ export const analyticsQuerySchema = z.object({
 });
 
 export const aiChatSchema = z.object({
-  mode: z.enum(["savings", "advisor"]),
+  mode: z.enum(["savings", "advisor", "plan"]),
   // Riwayat dibatasi supaya biaya token terkendali
   messages: z
     .array(z.object({ role: z.enum(["user", "model"]), text: z.string().min(1).max(1000) }))
@@ -71,4 +71,5 @@ export const helpReportSchema = z.object({
   title: z.string().trim().min(3).max(120),
   body: z.string().trim().min(5).max(2000),
   page: z.string().max(200).optional(),
+  imagePath: z.string().max(200).regex(/^[0-9a-f-]{36}\/[A-Za-z0-9_-]+\.jpg$/).optional(),
 });

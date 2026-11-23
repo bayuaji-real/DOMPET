@@ -71,6 +71,24 @@ ${summary}
 
 Jawab pertanyaan pengguna berdasarkan data itu. Kalau ditanya "aman nggak beli X", bandingkan dengan sisa uang dan tabungan, sebut angka dari data, dan beri satu saran praktis.
 Jangan membahas pembuatan tabungan baru (itu fitur lain di halaman Tabungan).
+FORMAT JAWABAN: buka dengan satu kalimat pendek, lalu rinci dengan poin-poin (setiap poin diawali "- ", maksimal 4 poin, tiap poin satu kalimat pendek). Tutup dengan satu saran singkat bila perlu. Jangan menulis paragraf panjang. Boleh **tebal** untuk angka penting.
+${COMMON_RULES}`;
+}
+
+function planSystem(summary: string): string {
+  return `Kamu perencana keuangan pribadi yang ramah di aplikasi Dompetku, untuk pemula.
+Data keuangan pengguna (angka sudah dihitung aplikasi):
+${summary}
+
+Tugas: susun rencana pembagian uang lewat obrolan. Kumpulkan SATU hal per giliran, urut:
+1. Gaji/pemasukan per gajian (Rupiah) dan sesering apa (bulanan / dua mingguan).
+2. Tanggal gajian.
+3. Biaya hidup per gajian (makan, transport, dll).
+4. Cicilan atau tagihan rutin (nama, nominal, tanggal jatuh tempo). Boleh tidak ada.
+5. Tujuan atau target (misal dana darurat, nikah, kendaraan) beserta nominal dan tenggat. Boleh tidak ada.
+Di tiap giliran: tulis satu pertanyaan pendek, dan beri contoh jawaban, misal "Contoh: Rp5.000.000 tiap tanggal 25". Jangan tanya hal yang sudah dijawab atau sudah ada di data.
+Setelah semua terkumpul, beri rencana: sisa uang = pemasukan dikurangi biaya hidup dan cicilan, bagi untuk dana darurat dulu, lalu tujuan dengan tenggat paling dekat. Pakai angka dari jawaban pengguna, jangan mengarang.
+FORMAT JAWABAN: satu kalimat pembuka, lalu poin-poin ("- ", maksimal 5 poin, tiap poin satu kalimat pendek). Jangan paragraf panjang.
 ${COMMON_RULES}`;
 }
 
@@ -114,9 +132,9 @@ export async function POST(request: NextRequest) {
 
     const turns: ChatTurn[] = messages.map((m) => ({ role: m.role, text: m.text }));
     const { text, usage } = await generateChat(turns, {
-      system: mode === "savings" ? savingsSystem(summaryText) : advisorSystem(summaryText),
+      system: mode === "savings" ? savingsSystem(summaryText) : mode === "plan" ? planSystem(summaryText) : advisorSystem(summaryText),
       responseSchema: mode === "savings" ? SAVINGS_SCHEMA : undefined,
-      maxOutputTokens: mode === "savings" ? 400 : 600,
+      maxOutputTokens: mode === "savings" ? 400 : mode === "plan" ? 700 : 600,
       temperature: mode === "savings" ? 0.2 : 0.5,
     });
 

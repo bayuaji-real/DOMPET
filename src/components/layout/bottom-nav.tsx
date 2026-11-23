@@ -486,6 +486,7 @@ export function BottomNav() {
   const navItems = [
     { label: "Beranda", href: "/", icon: Home, isActive: pathname === "/" },
     { label: "Tabungan", href: "/tabungan", icon: PiggyBank, isActive: pathname.startsWith("/tabungan") },
+    { label: "Tanya AI", href: "/chat", icon: Sparkles, isActive: pathname.startsWith("/chat"), center: true },
     { label: "Dompet", href: "/dompet", icon: Wallet, isActive: pathname.startsWith("/dompet") },
     {
       label: "More",
@@ -631,6 +632,28 @@ export function BottomNav() {
 
             // Item Navigasi Biasa (Link)
             const isActive = item.isActive;
+            if ("center" in item && item.center) {
+              return (
+                <Link
+                  key={idx}
+                  href={item.href || "/chat"}
+                  aria-label="Tanya AI"
+                  className="flex flex-1 flex-col items-center justify-center gap-0.5 min-w-0 cursor-pointer"
+                >
+                  <span
+                    className={cn(
+                      "-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-lg shadow-teal-600/40 ring-4 ring-background transition-transform active:scale-95",
+                      isActive && "scale-105"
+                    )}
+                  >
+                    <Icon className="h-6 w-6" />
+                  </span>
+                  <span className={cn("text-[9.5px] font-bold leading-tight", isActive ? "text-teal-600 dark:text-teal-400" : "text-muted-foreground")}>
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            }
             return (
               <Link
                 key={idx}

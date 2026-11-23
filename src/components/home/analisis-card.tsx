@@ -2,9 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronRight, PieChart } from "lucide-react";
+import { ChevronRight, PieChart as PieIcon } from "lucide-react";
+import { ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import { formatRupiah } from "@/lib/utils";
 import type { AnalyticsData, HealthStatus } from "@/types/analytics";
+
+const PALETTE = ["#0d9488", "#8b5cf6", "#f59e0b", "#f43f5e", "#0ea5e9", "#84cc16"];
 
 const STATUS: Record<HealthStatus, { label: string; cls: string }> = {
   sehat: { label: "Sehat", cls: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
@@ -18,9 +21,11 @@ export function AnalisisCard() {
   const [data, setData] = React.useState<AnalyticsData | null>(null);
   const [failed, setFailed] = React.useState(false);
   const [hide, setHide] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
+    setMounted(true);
     try {
       setHide(localStorage.getItem("dompet_hide_balance") === "true");
     } catch {}
@@ -50,15 +55,13 @@ export function AnalisisCard() {
   const health = data?.financialHealth;
   const top = data?.categories?.[0];
   const hasData = !!s && (s.totalIncome > 0 || s.totalExpense > 0);
-  const total = s ? s.totalIncome + s.totalExpense : 0;
-  const incomePct = total > 0 && s ? (s.totalIncome / total) * 100 : 0;
 
   return (
     <section aria-labelledby="ringkas-analisis" className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-400">
-            <PieChart className="h-4 w-4" />
+            <PieIcon className="h-4 w-4" />
           </span>
           <div>
             <h3 id="ringkas-analisis" className="text-sm font-extrabold leading-tight text-foreground">
@@ -81,9 +84,60 @@ export function AnalisisCard() {
         <>
           {hasData ? (
             <>
-              <div className="h-2 overflow-hidden rounded-full bg-rose-500/30" role="img" aria-label="Perbandingan pemasukan dan pengeluaran">
-                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${incomePct}%` }} />
-              </div>
+              {/* Donat kategori + daftar */}
+              {data.categories.length > 0 && (
+                <div className="flex items-center gap-3">
+                  <div className="h-28 w-28 shrink-0">
+                    {mounted && (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={data.categories} dataKey="nominal" nameKey="name" innerRadius={32} outerRadius={52} paddingAngle={3} stroke="none">
+                            {data.categories.map((c, i) => (
+                              <Cell key={c.id ?? i} fill={c.color || PALETTE[i % PALETTE.length]} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                  <ul className="min-w-0 flex-1 space-y-1.5">
+                    {data.categories.slice(0, 4).map((c, i) => (
+                      <li key={c.id ?? i} className="flex items-center gap-2 text-[11px]">
+                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: c.color || PALETTE[i % PALETTE.length] }} />
+                        <span className="min-w-0 flex-1 truncate font-semibold text-foreground">{c.name}</span>
+                        <span className="shrink-0 font-bold tabular-nums text-muted-foreground">{Math.round(c.percentage)}%</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {/* Tren pengeluaran harian */}
+              {data.dailyExpenses.length > 1 && (
+                <div>
+                  <p className="mb-1 text-[10px] font-semibold text-muted-foreground">Pengeluaran harian</p>
+                  <div className="h-20 w-full">
+                    {mounted && (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={data.dailyExpenses} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="homeDaily" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.55} />
+                              <stop offset="100%" stopColor="#f43f5e" stopOpacity={0.02} />
+                            </linearGradient>
+                          </defs>
+                          <XAxis dataKey="day" hide />
+                          <Tooltip
+                            formatter={(v) => [money(Number(v)), "Keluar"]}
+                            labelFormatter={(l) => `Tgl ${l}`}
+                            contentStyle={{ borderRadius: 12, fontSize: 11, border: "none", background: "rgba(24,24,27,0.95)", color: "#fff" }}
+                          />
+                          <Area type="monotone" dataKey="amount" stroke="#f43f5e" strokeWidth={2} fill="url(#homeDaily)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
                   <p className="text-[10px] text-muted-foreground">Masuk</p>

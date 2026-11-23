@@ -11,8 +11,31 @@ interface Msg {
   text: string;
 }
 
+/** Tampilkan teks AI: baris "- " jadi poin, **tebal** dirapikan. */
+function RichText({ text }: { text: string }) {
+  const bold = (t: string) =>
+    t.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+      part.startsWith("**") && part.endsWith("**") ? <strong key={i}>{part.slice(2, -2)}</strong> : <React.Fragment key={i}>{part}</React.Fragment>
+    );
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  return (
+    <div className="space-y-1.5">
+      {lines.map((l, i) =>
+        /^[-*•]\s+/.test(l) ? (
+          <div key={i} className="flex gap-2">
+            <span className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500" />
+            <span className="min-w-0 flex-1">{bold(l.replace(/^[-*•]\s+/, ""))}</span>
+          </div>
+        ) : (
+          <p key={i}>{bold(l)}</p>
+        )
+      )}
+    </div>
+  );
+}
+
 interface AiChatProps {
-  mode: "savings" | "advisor";
+  mode: "savings" | "advisor" | "plan";
   intro: string;
   placeholder?: string;
   suggestions?: string[];
@@ -93,15 +116,15 @@ export function AiChat({ mode, intro, placeholder, suggestions, renderProposal }
             className={
               m.role === "user"
                 ? "ml-auto max-w-[85%] rounded-2xl rounded-tr-sm bg-teal-600 px-3 py-2 text-xs text-white"
-                : "max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-tl-sm bg-muted px-3 py-2 text-xs text-foreground"
+                : "max-w-[88%] rounded-2xl rounded-tl-sm bg-muted px-3 py-2 text-xs text-foreground"
             }
           >
-            {m.text}
+            {m.role === "user" ? m.text : <RichText text={m.text} />}
           </div>
         ))}
         {loading && (
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Loader2 className="h-3 w-3 animate-spin" /> Sedang berpikir...
+            <Loader2 className="h-3 w-3 animate-spin" /> Mengetik...
           </div>
         )}
         {proposal && renderProposal?.(proposal, reset)}
@@ -113,7 +136,7 @@ export function AiChat({ mode, intro, placeholder, suggestions, renderProposal }
           e.preventDefault();
           void send(input);
         }}
-        className="flex items-center gap-2 border-t border-border/60 p-3"
+        className="flex shrink-0 items-center gap-2 border-t border-border/60 bg-background p-3"
       >
         <input
           value={input}

@@ -643,7 +643,7 @@ export default function TransaksiPage() {
                       </div>
 
                       <span
-                        className={`text-xs font-bold ${
+                        className={`w-28 shrink-0 text-right tabular-nums whitespace-nowrap text-xs font-bold ${
                           isNeutral
                             ? "text-sky-600 dark:text-sky-400"
                             : isIncome
