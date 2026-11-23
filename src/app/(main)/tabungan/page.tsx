@@ -191,6 +191,7 @@ export default function TabunganPage() {
   const [activeDetailView, setActiveDetailView] = React.useState<"detail" | "deposit" | "withdraw">("detail");
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [isChatOpen, setIsChatOpen] = React.useState(false);
+  const [showInsight, setShowInsight] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<GoalItem | null>(null);
   const [deleteMoveTo, setDeleteMoveTo] = React.useState("");
   const [editingGoal, setEditingGoal] = React.useState<GoalItem | null>(null);
@@ -253,7 +254,7 @@ export default function TabunganPage() {
   };
 
   // Buat tabungan dari hasil chat AI (angka kelayakan dihitung server, bukan AI)
-  const createFromProposal = async (pr: SavingsProposal): Promise<boolean> => {
+  const createFromProposal = async (pr: SavingsProposal, opts?: { deadline: string | null; planned: number }): Promise<boolean> => {
     setSaving(true);
     try {
       const supabase = createClient();
@@ -264,9 +265,9 @@ export default function TabunganPage() {
         name: pr.name,
         target_amount: pr.target_amount,
         initial_amount: pr.initial_amount,
-        deadline: pr.deadline,
+        deadline: opts ? opts.deadline : pr.deadline,
         storage_place: "Dompet Tabungan",
-        planned_per_payday: pr.feasibility.monthlyNeeded ?? 0,
+        planned_per_payday: opts ? opts.planned : pr.feasibility.monthlyNeeded ?? 0,
         priority: goals.length + 1,
         status: "aktif",
         is_emergency_fund: false,
@@ -311,14 +312,45 @@ export default function TabunganPage() {
           <div><span className="text-muted-foreground">Sisa uang per bulan</span><p className="font-semibold">{formatRupiah(f.freeMonthly)}</p></div>
         </div>
         <p className={blocked ? "font-semibold text-rose-600 dark:text-rose-400" : "font-semibold text-emerald-600 dark:text-emerald-400"}>{msg[f.reason]}</p>
-        {blocked && f.earliestRealisticDate && (
-          <p className="text-[11px] text-muted-foreground">Tanggal paling cepat yang realistis: {formatTanggalWIB(f.earliestRealisticDate)}. Ketik di chat kalau mau pakai tanggal itu.</p>
+        {blocked && (
+          <div className="space-y-1 rounded-xl bg-amber-500/10 p-2.5 text-[11px] text-foreground">
+            <p className="font-bold">Realistisnya:</p>
+            {f.freeMonthly > 0 && f.earliestRealisticDate ? (
+              <p>
+                Sisihkan sekitar {formatRupiah(Math.floor(f.freeMonthly / 10000) * 10000)} per bulan, target tercapai sekitar{" "}
+                {formatTanggalWIB(f.earliestRealisticDate)}.
+              </p>
+            ) : (
+              <p>Pemasukanmu belum menyisakan uang bulanan, jadi tabungan ini baru jalan kalau pengeluaran turun atau pemasukan naik.</p>
+            )}
+            <p className="text-muted-foreground">Kamu tetap boleh membuatnya sesuai rencanamu.</p>
+          </div>
         )}
-        <div className="flex gap-2 pt-1">
-          <Button type="button" size="sm" disabled={blocked || saving} onClick={() => createFromProposal(pr)} className="h-8 flex-1 cursor-pointer rounded-xl bg-teal-600 text-xs font-bold text-white hover:bg-teal-500">
-            {saving ? "Menyimpan..." : "Buat Tabungan"}
-          </Button>
-          <Button type="button" size="sm" variant="outline" onClick={reset} className="h-8 cursor-pointer rounded-xl text-xs">Ulang</Button>
+        <div className="flex flex-col gap-2 pt-1">
+          {blocked && f.freeMonthly > 0 && f.earliestRealisticDate && (
+            <Button
+              type="button"
+              size="sm"
+              disabled={saving}
+              onClick={() => createFromProposal(pr, { deadline: f.earliestRealisticDate, planned: Math.floor(f.freeMonthly / 10000) * 10000 })}
+              className="h-8 cursor-pointer rounded-xl bg-teal-600 text-xs font-bold text-white hover:bg-teal-500"
+            >
+              Buat dengan tanggal realistis
+            </Button>
+          )}
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={blocked ? "outline" : "default"}
+              disabled={saving}
+              onClick={() => createFromProposal(pr)}
+              className={`h-8 flex-1 cursor-pointer rounded-xl text-xs font-bold ${blocked ? "" : "bg-teal-600 text-white hover:bg-teal-500"}`}
+            >
+              {saving ? "Menyimpan..." : blocked ? "Tetap buat sesuai rencanaku" : "Buat Tabungan"}
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={reset} className="h-8 cursor-pointer rounded-xl text-xs">Ulang</Button>
+          </div>
         </div>
       </div>
     );
@@ -569,9 +601,6 @@ export default function TabunganPage() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Daftar Impian ({goals.length})
             </h3>
-            <span className="text-[10px] text-muted-foreground">
-              Ketuk untuk detail & aksi
-            </span>
           </div>
 
           {loading && (
@@ -611,14 +640,6 @@ export default function TabunganPage() {
                       <h4 className="text-sm font-bold text-foreground leading-tight">
                         {goal.name}
                       </h4>
-                      {/* Badge Tempat Simpan */}
-                      <Badge
-                        variant="secondary"
-                        className="rounded-lg text-[10px] px-2 py-0.5 bg-muted font-medium text-muted-foreground flex items-center gap-1"
-                      >
-                        <Building2 className="h-2.5 w-2.5" />
-                        {goal.storage_place}
-                      </Badge>
                     </div>
 
                     {/* Tenggat & Hitung Mundur */}
@@ -668,16 +689,6 @@ export default function TabunganPage() {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-0.5">
-                    <span>
-                      {proj.remaining > 0
-                        ? `Kurang ${formatRupiah(proj.remaining)}`
-                        : "Target sudah terpenuhi!"}
-                    </span>
-                    <span className="flex items-center text-teal-600 dark:text-teal-400 group-hover:translate-x-0.5 transition-transform font-medium">
-                      Detail <ChevronRight className="h-3 w-3" />
-                    </span>
-                  </div>
                 </div>
               </div>
             );
@@ -1003,6 +1014,16 @@ export default function TabunganPage() {
                     </div>
                   </div>
 
+                  <button
+                    type="button"
+                    onClick={() => setShowInsight((v) => !v)}
+                    className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-border/60 px-3 py-2 text-xs font-semibold text-foreground"
+                  >
+                    <span>{showInsight ? "Sembunyikan proyeksi & grafik" : "Lihat proyeksi & grafik"}</span>
+                    <ChevronRight className={`h-4 w-4 transition-transform ${showInsight ? "rotate-90" : ""}`} />
+                  </button>
+                  {showInsight && (
+                  <div className="space-y-4">
                   {/* Panel Proyeksi Cerdas & Rekomendasi Jika Telat */}
                   <div className="space-y-2">
                     <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
@@ -1107,6 +1128,9 @@ export default function TabunganPage() {
                       </ResponsiveContainer>
                     </div>
                   </div>
+
+                  </div>
+                  )}
 
                   {/* Tombol Aksi: Setor & Tarik (In-Sheet Switcher) */}
                   <div className="grid grid-cols-2 gap-2.5 pt-1">

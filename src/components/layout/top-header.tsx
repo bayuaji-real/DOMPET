@@ -68,7 +68,7 @@ export function TopHeader({ title }: TopHeaderProps) {
         ) : null}
 
         <Link
-          href="/pengaturan"
+          href="/more"
           className="group flex min-w-0 items-center gap-3 transition-transform active:scale-[0.98]"
           title="Buka Pengaturan Akun"
         >

@@ -4,8 +4,7 @@ import {
   ReceiptText,
   Sparkles,
   MessagesSquare,
-    Settings,
-  type LucideIcon,
+    type LucideIcon,
 } from "lucide-react";
 
 export interface MoreItem {
@@ -35,12 +34,6 @@ export const MORE_GROUPS: MoreGroup[] = [
       { label: "Rencana Keuangan AI", description: "Bagi gaji ke kebutuhan, tenggat & saran dompet", href: "/rencana", icon: Sparkles, tone: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400" },
       { label: "Tanya Keuangan (AI)", description: "Konsultasi bebas soal uangmu, berdasarkan datamu", href: "/chat", icon: MessagesSquare, tone: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },
       { label: "Split Bill", description: "Bagi tagihan adil, termasuk ongkir & pajak", href: "/split-bill", icon: ReceiptText, tone: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
-    ],
-  },
-  {
-    title: "Akun",
-    items: [
-      { label: "Pengaturan", description: "Profil, jadwal gajian, kategori, keamanan & data", href: "/pengaturan", icon: Settings, tone: "bg-slate-500/15 text-slate-600 dark:text-slate-300" },
     ],
   },
 ];
