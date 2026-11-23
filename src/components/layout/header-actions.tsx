@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { Bell, Monitor, Moon, Palette, Sun } from "lucide-react";
+import { Bell, LifeBuoy, Monitor, Moon, Palette, Sun } from "lucide-react";
 import { formatRupiah } from "@/lib/utils";
 import { todayJakarta } from "@/lib/data/sample-mode";
 import { getTodayPaydaySchedule } from "@/lib/data/payday";
@@ -233,5 +233,19 @@ export function ThemeMenu() {
         </div>
       )}
     </div>
+  );
+}
+
+/** Tombol Pusat Bantuan (pengganti tombol notifikasi di header). */
+export function HelpCenterButton() {
+  return (
+    <Link
+      href="/bantuan"
+      aria-label="Pusat Bantuan"
+      title="Pusat Bantuan"
+      className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+    >
+      <LifeBuoy className="h-[18px] w-[18px]" />
+    </Link>
   );
 }

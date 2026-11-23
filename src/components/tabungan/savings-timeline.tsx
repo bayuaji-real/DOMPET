@@ -54,7 +54,6 @@ export function SavingsTimeline({ goals, todayStr }: Props) {
   const [selected, setSelected] = React.useState<string | null>(null);
   const [showAll, setShowAll] = React.useState(false);
   const [mode, setMode] = React.useState<"goal" | "month">("goal");
-  const chipsRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -135,12 +134,6 @@ export function SavingsTimeline({ goals, todayStr }: Props) {
   const nextMonth = months.find((m) => !m.done)?.key ?? months[months.length - 1]?.key ?? null;
   const activeKey = selected && months.some((m) => m.key === selected) ? selected : nextMonth;
 
-  React.useEffect(() => {
-    const box = chipsRef.current;
-    const on = box?.querySelector<HTMLElement>('[aria-pressed="true"]');
-    if (box && on) box.scrollLeft = on.offsetLeft - (box.clientWidth - on.offsetWidth) / 2;
-  }, [activeKey, showAll, result]);
-
   if (!loaded || !todayStr) {
     return (
       <div className="rounded-2xl border border-border/70 bg-card p-4 text-xs text-muted-foreground">
@@ -210,33 +203,33 @@ export function SavingsTimeline({ goals, todayStr }: Props) {
         <GoalTimeline goals={timelineGoals} result={result} todayStr={todayStr} colorOf={colorOf} />
       ) : (
         <>
-      {/* Pilih bulan */}
-      <div ref={chipsRef} className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Pilih bulan">
-        {months.map((m) => {
-          const [y, mo] = m.key.split("-").map(Number);
-          const active = !showAll && m.key === activeKey;
-          return (
-            <button
-              key={m.key}
-              type="button"
-              aria-pressed={active}
-              onClick={() => {
-                setSelected(m.key);
-                setShowAll(false);
-              }}
-              className={`shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${
-                active
-                  ? "border-teal-600 bg-teal-600 text-white"
-                  : m.key === nextMonth
-                    ? "border-teal-500/50 text-teal-600 dark:text-teal-400"
-                    : `border-border/70 bg-card text-foreground ${m.done ? "opacity-55" : ""}`
-              }`}
-            >
-              {BULAN[mo - 1]} &apos;{String(y).slice(2)}
-              {m.done ? " ✓" : ""}
-            </button>
-          );
-        })}
+      {/* Pilih bulan: dropdown (tanpa geser samping) */}
+      <div className="flex items-center gap-2">
+        <label htmlFor="tl-bulan" className="text-xs font-semibold text-muted-foreground">Bulan</label>
+        <select
+          id="tl-bulan"
+          value={showAll ? "all" : activeKey ?? ""}
+          onChange={(e) => {
+            if (e.target.value === "all") {
+              setShowAll(true);
+            } else {
+              setShowAll(false);
+              setSelected(e.target.value);
+            }
+          }}
+          className="h-9 flex-1 cursor-pointer rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground"
+        >
+          {months.map((m) => {
+            const [y, mo] = m.key.split("-").map(Number);
+            return (
+              <option key={m.key} value={m.key}>
+                {BULAN[mo - 1]} {y}
+                {m.done ? " ✓" : m.key === nextMonth ? " (berikutnya)" : ""}
+              </option>
+            );
+          })}
+          <option value="all">Semua bulan</option>
+        </select>
       </div>
 
       {/* Panel bulan */}

@@ -57,7 +57,8 @@ export async function POST(req: Request) {
       }).format(new Date());
 
     // Format daftar dompet & kategori untuk prompt
-    const defaultWallet = userWallets[0] || "Uang Tunai";
+    // Keputusan Owner: kalau dompet tidak disebut, pakai Uang Tunai
+    const defaultWallet = userWallets.find((n: string) => /tunai/i.test(n)) || "Uang Tunai";
     const walletsListStr =
       userWallets.length > 0
         ? userWallets.join(", ")

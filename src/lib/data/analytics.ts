@@ -427,6 +427,34 @@ export function resolveDateRange(
 }
 
 /**
+ * Kerangka data kosong untuk membuka halaman Analisis seketika.
+ * Data asli diambil layar lewat /api/analytics (supaya tidak dihitung dua kali).
+ */
+export function emptyAnalyticsData(period: AnalyticsPeriod = "month"): AnalyticsData {
+  const { startDate, endDate, label, daysCount } = resolveDateRange(period);
+  return applyNoDataStatus({
+    period: { type: period, label, startDate, endDate, daysCount },
+    summary: { totalIncome: 0, totalExpense: 0, cashflow: 0, savingsAmount: 0, savingsRate: 0, incomeChangePct: 0, expenseChangePct: 0 },
+    categories: [],
+    monthlyCashflow: [],
+    dailyExpenses: [],
+    dailyAverage: 0,
+    wallets: [],
+    topTransactions: [],
+    topMerchants: [],
+    financialHealth: {
+      overallStatus: "belum",
+      savingsRate: 0,
+      savingsRateStatus: "belum",
+      emergencyFundBalance: 0,
+      emergencyFundMonths: 0,
+      emergencyStatus: "belum",
+      goalsOnTrack: true,
+    },
+  });
+}
+
+/**
  * Mengambil data analisis agregasi finansial.
  * Mengutamakan SQL function RPC `get_financial_analytics` di database Supabase.
  * Menyediakan fallback agregasi server-side jika RPC belum dijalankan di Supabase Dashboard.

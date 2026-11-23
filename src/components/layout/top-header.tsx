@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { NotificationBell, ThemeMenu } from "./header-actions";
+import { HelpCenterButton, ThemeMenu } from "./header-actions";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
 
 interface TopHeaderProps {
@@ -68,7 +68,7 @@ export function TopHeader({ title }: TopHeaderProps) {
         ) : null}
 
         <Link
-          href="/pengaturan"
+          href="/more"
           className="group flex min-w-0 items-center gap-3 transition-transform active:scale-[0.98]"
           title="Buka Pengaturan Akun"
         >
@@ -101,9 +101,9 @@ export function TopHeader({ title }: TopHeaderProps) {
         </Link>
       </div>
 
-      {/* Kanan: notifikasi & tema */}
+      {/* Kanan: Pusat Bantuan & tema */}
       <div className="flex shrink-0 items-center gap-2">
-        <NotificationBell />
+        <HelpCenterButton />
         <ThemeMenu />
       </div>
     </header>

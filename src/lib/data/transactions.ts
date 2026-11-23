@@ -1,6 +1,7 @@
 import { createClient, isSupabaseConfigured } from "../supabase/client";
 import type { Database, TransactionType, TransactionSource } from "@/types/database";
 import { todayJakarta } from "./sample-mode";
+import { ensureDefaultWallet } from "./wallets";
 
 export type Transaction = Database["public"]["Tables"]["transactions"]["Row"];
 
@@ -21,7 +22,8 @@ export async function getTransactions(
   let query = supabase
     .from("transactions")
     .select("*")
-    .order("date", { ascending: false });
+    .order("date", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (options.walletId) {
     query = query.or(`wallet_id.eq.${options.walletId},to_wallet_id.eq.${options.walletId}`);
@@ -75,9 +77,39 @@ export type CreateTransactionInput = {
   receipt_path?: string | null;
 };
 
-export async function createTransaction(
+/**
+ * Lengkapi dompet yang kosong: transaksi tanpa dompet masuk ke Uang Tunai (keputusan Owner B);
+ * setoran/penarikan tabungan tujuannya dompet tabungan miliknya.
+ */
+async function withResolvedWallets(
   input: CreateTransactionInput
+): Promise<CreateTransactionInput> {
+  const out = { ...input };
+  if (!out.wallet_id && isSupabaseConfigured()) {
+    const cashId = await ensureDefaultWallet();
+    if (!cashId) throw new Error("Dompet Uang Tunai belum siap. Coba lagi.");
+    out.wallet_id = cashId;
+  }
+  if (
+    (out.type === "goal_deposit" || out.type === "goal_withdraw") &&
+    out.goal_id &&
+    !out.to_wallet_id &&
+    isSupabaseConfigured()
+  ) {
+    const { data } = await createClient()
+      .from("wallets")
+      .select("id")
+      .eq("goal_id", out.goal_id)
+      .maybeSingle();
+    if (data?.id) out.to_wallet_id = data.id;
+  }
+  return out;
+}
+
+export async function createTransaction(
+  rawInput: CreateTransactionInput
 ): Promise<Transaction | null> {
+  const input = await withResolvedWallets(rawInput);
   const supabase = createClient();
 
   // Validasi dan penegakan aturan integritas transaksi
@@ -147,8 +179,9 @@ export async function createTransaction(
 }
 
 export async function createTransactions(
-  inputs: CreateTransactionInput[]
+  rawInputs: CreateTransactionInput[]
 ): Promise<Transaction[]> {
+  const inputs = await Promise.all(rawInputs.map(withResolvedWallets));
   const supabase = createClient();
   const payloads: Database["public"]["Tables"]["transactions"]["Insert"][] = inputs.map((input) => {
     const payload: Database["public"]["Tables"]["transactions"]["Insert"] = {

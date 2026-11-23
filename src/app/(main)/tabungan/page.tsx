@@ -7,7 +7,8 @@ import { formatRupiah, formatTanggalWIB } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { todayJakarta } from "@/lib/data/sample-mode";
 import type { Database } from "@/types/database";
-import type { WalletBalance } from "@/lib/data/wallets";
+import { isSpendableWallet, type WalletBalance } from "@/lib/data/wallets";
+import { deleteSavingsGoal } from "@/lib/data/goals";
 import {
   calculateSavingsProjection,
   type SavingsProjectionResult,
@@ -25,6 +26,7 @@ import {
   CheckCircle2,
   Clock,
   Pencil,
+  Trash2,
   X,
   ChevronRight,
   Loader2,
@@ -38,6 +40,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import { AiChat, type SavingsProposal } from "@/components/ai/ai-chat";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -173,7 +176,7 @@ export default function TabunganPage() {
   }, []);
 
   React.useEffect(() => {
-    if (!selectedWallet && wallets.length > 0) setSelectedWallet(wallets[0].id);
+    if (!selectedWallet && wallets.length > 0) setSelectedWallet((wallets.find((w) => w.type !== "tabungan") ?? wallets[0]).id);
   }, [wallets, selectedWallet]);
 
   React.useEffect(() => {
@@ -187,6 +190,10 @@ export default function TabunganPage() {
   const [selectedGoalId, setSelectedGoalId] = React.useState<string | null>(null);
   const [activeDetailView, setActiveDetailView] = React.useState<"detail" | "deposit" | "withdraw">("detail");
   const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const [isChatOpen, setIsChatOpen] = React.useState(false);
+  const [showInsight, setShowInsight] = React.useState(false);
+  const [deleteTarget, setDeleteTarget] = React.useState<GoalItem | null>(null);
+  const [deleteMoveTo, setDeleteMoveTo] = React.useState("");
   const [editingGoal, setEditingGoal] = React.useState<GoalItem | null>(null);
 
   // State form Setor & Tarik
@@ -230,6 +237,124 @@ export default function TabunganPage() {
   const totalTerkumpul = goals.reduce((acc, g) => acc + g.current_amount, 0);
   const totalTarget = goals.reduce((acc, g) => acc + g.target_amount, 0);
   const totalKekurangan = Math.max(0, totalTarget - totalTerkumpul);
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || !deleteMoveTo) return;
+    setSaving(true);
+    const res = await deleteSavingsGoal(deleteTarget.id, deleteMoveTo);
+    setSaving(false);
+    if (!res.ok) {
+      alert("Gagal menghapus tabungan. Coba lagi.");
+      return;
+    }
+    showToast(`Tabungan "${deleteTarget.name}" dihapus, uangnya dipindah.`);
+    setDeleteTarget(null);
+    setSelectedGoalId(null);
+    await loadData();
+  };
+
+  // Buat tabungan dari hasil chat AI (angka kelayakan dihitung server, bukan AI)
+  const createFromProposal = async (pr: SavingsProposal, opts?: { deadline: string | null; planned: number }): Promise<boolean> => {
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const payload: Database["public"]["Tables"]["savings_goals"]["Insert"] = {
+        name: pr.name,
+        target_amount: pr.target_amount,
+        initial_amount: pr.initial_amount,
+        deadline: opts ? opts.deadline : pr.deadline,
+        storage_place: "Dompet Tabungan",
+        planned_per_payday: opts ? opts.planned : pr.feasibility.monthlyNeeded ?? 0,
+        priority: goals.length + 1,
+        status: "aktif",
+        is_emergency_fund: false,
+        notes: null,
+        ...(user?.id ? { user_id: user.id } : {}),
+      };
+      const { error } = await supabase.from("savings_goals").insert(payload);
+      if (error) throw error;
+      showToast(`Target "${pr.name}" berhasil dibuat!`);
+      setIsChatOpen(false);
+      await loadData();
+      return true;
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menyimpan ke database. Coba lagi.");
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const renderProposal = (pr: SavingsProposal, reset: () => void) => {
+    const f = pr.feasibility;
+    const blocked = !f.feasible && f.reason !== "tanpa_tenggat";
+    const msg: Record<string, string> = {
+      ok: "Realistis dengan pemasukan dan pengeluaranmu.",
+      tanpa_tenggat: "Tanpa tenggat, kamu bisa menabung sebisanya.",
+      sudah_tercapai: "Uang awalmu sudah cukup untuk target ini.",
+      tidak_ada_sisa: "Saat ini pemasukan belum menyisakan uang bulanan, jadi target ini belum realistis.",
+      kurang_per_bulan: `Kurang ${formatRupiah(f.shortfallMonthly)} per bulan dari sisa uangmu.`,
+      tenggat_lewat: "Tenggat sudah lewat. Pilih tanggal yang akan datang.",
+    };
+    return (
+      <div className="space-y-2 rounded-2xl border border-border bg-card p-3 text-xs">
+        <p className="font-bold text-foreground">{pr.name}</p>
+        <div className="grid grid-cols-2 gap-2 text-[11px]">
+          <div><span className="text-muted-foreground">Target</span><p className="font-semibold">{formatRupiah(pr.target_amount)}</p></div>
+          <div><span className="text-muted-foreground">Tenggat</span><p className="font-semibold">{pr.deadline ? formatTanggalWIB(pr.deadline) : "Tanpa tenggat"}</p></div>
+          {f.monthlyNeeded != null && (
+            <div><span className="text-muted-foreground">Sisihkan per bulan</span><p className="font-semibold">{formatRupiah(f.monthlyNeeded)}</p></div>
+          )}
+          <div><span className="text-muted-foreground">Sisa uang per bulan</span><p className="font-semibold">{formatRupiah(f.freeMonthly)}</p></div>
+        </div>
+        <p className={blocked ? "font-semibold text-rose-600 dark:text-rose-400" : "font-semibold text-emerald-600 dark:text-emerald-400"}>{msg[f.reason]}</p>
+        {blocked && (
+          <div className="space-y-1 rounded-xl bg-amber-500/10 p-2.5 text-[11px] text-foreground">
+            <p className="font-bold">Realistisnya:</p>
+            {f.freeMonthly > 0 && f.earliestRealisticDate ? (
+              <p>
+                Sisihkan sekitar {formatRupiah(Math.floor(f.freeMonthly / 10000) * 10000)} per bulan, target tercapai sekitar{" "}
+                {formatTanggalWIB(f.earliestRealisticDate)}.
+              </p>
+            ) : (
+              <p>Pemasukanmu belum menyisakan uang bulanan, jadi tabungan ini baru jalan kalau pengeluaran turun atau pemasukan naik.</p>
+            )}
+            <p className="text-muted-foreground">Kamu tetap boleh membuatnya sesuai rencanamu.</p>
+          </div>
+        )}
+        <div className="flex flex-col gap-2 pt-1">
+          {blocked && f.freeMonthly > 0 && f.earliestRealisticDate && (
+            <Button
+              type="button"
+              size="sm"
+              disabled={saving}
+              onClick={() => createFromProposal(pr, { deadline: f.earliestRealisticDate, planned: Math.floor(f.freeMonthly / 10000) * 10000 })}
+              className="h-8 cursor-pointer rounded-xl bg-teal-600 text-xs font-bold text-white hover:bg-teal-500"
+            >
+              Buat dengan tanggal realistis
+            </Button>
+          )}
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant={blocked ? "outline" : "default"}
+              disabled={saving}
+              onClick={() => createFromProposal(pr)}
+              className={`h-8 flex-1 cursor-pointer rounded-xl text-xs font-bold ${blocked ? "" : "bg-teal-600 text-white hover:bg-teal-500"}`}
+            >
+              {saving ? "Menyimpan..." : blocked ? "Tetap buat sesuai rencanaku" : "Buat Tabungan"}
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={reset} className="h-8 cursor-pointer rounded-xl text-xs">Ulang</Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Buka form tambah
   const handleOpenAdd = () => {
@@ -341,7 +466,8 @@ export default function TabunganPage() {
         note: actionNote || defaultNote,
         source: "manual",
         category_id: null,
-        to_wallet_id: null,
+        // Tabungan adalah dompet: uang masuk/keluar lewat dompet tabungan miliknya
+        to_wallet_id: wallets.find((w) => w.goal_id === selectedGoal.id)?.id ?? null,
       });
       if (error) throw error;
       await loadData();
@@ -445,7 +571,7 @@ export default function TabunganPage() {
               </h2>
             </div>
             <Button
-              onClick={handleOpenAdd}
+              onClick={() => setIsChatOpen(true)}
               size="sm"
               className="h-8 rounded-xl bg-teal-500 text-zinc-950 hover:bg-teal-400 font-bold text-xs gap-1 shadow-sm cursor-pointer"
             >
@@ -475,9 +601,6 @@ export default function TabunganPage() {
             <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Daftar Impian ({goals.length})
             </h3>
-            <span className="text-[10px] text-muted-foreground">
-              Ketuk untuk detail & aksi
-            </span>
           </div>
 
           {loading && (
@@ -517,14 +640,6 @@ export default function TabunganPage() {
                       <h4 className="text-sm font-bold text-foreground leading-tight">
                         {goal.name}
                       </h4>
-                      {/* Badge Tempat Simpan */}
-                      <Badge
-                        variant="secondary"
-                        className="rounded-lg text-[10px] px-2 py-0.5 bg-muted font-medium text-muted-foreground flex items-center gap-1"
-                      >
-                        <Building2 className="h-2.5 w-2.5" />
-                        {goal.storage_place}
-                      </Badge>
                     </div>
 
                     {/* Tenggat & Hitung Mundur */}
@@ -574,16 +689,6 @@ export default function TabunganPage() {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-0.5">
-                    <span>
-                      {proj.remaining > 0
-                        ? `Kurang ${formatRupiah(proj.remaining)}`
-                        : "Target sudah terpenuhi!"}
-                    </span>
-                    <span className="flex items-center text-teal-600 dark:text-teal-400 group-hover:translate-x-0.5 transition-transform font-medium">
-                      Detail <ChevronRight className="h-3 w-3" />
-                    </span>
-                  </div>
                 </div>
               </div>
             );
@@ -644,7 +749,7 @@ export default function TabunganPage() {
                         className="w-full h-10 rounded-xl border border-border/60 bg-muted/40 px-3 text-xs text-foreground focus:outline-none"
                       >
                         <option value="" disabled>Pilih dompet</option>
-                        {wallets.map((w) => (
+                        {wallets.filter((w) => w.type !== "tabungan").map((w) => (
                           <option key={w.id} value={w.id}>{w.name}</option>
                         ))}
                       </select>
@@ -743,7 +848,7 @@ export default function TabunganPage() {
                         className="w-full h-10 rounded-xl border border-border/60 bg-muted/40 px-3 text-xs text-foreground focus:outline-none"
                       >
                         <option value="" disabled>Pilih dompet</option>
-                        {wallets.map((w) => (
+                        {wallets.filter((w) => w.type !== "tabungan").map((w) => (
                           <option key={w.id} value={w.id}>{w.name}</option>
                         ))}
                       </select>
@@ -851,6 +956,18 @@ export default function TabunganPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => {
+                          setDeleteTarget(selectedGoal);
+                          setDeleteMoveTo(wallets.find(isSpendableWallet)?.id ?? "");
+                        }}
+                        className="h-8 w-8 rounded-lg text-muted-foreground hover:text-rose-500 cursor-pointer"
+                        title="Hapus Tabungan"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => setSelectedGoalId(null)}
                         className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
                       >
@@ -897,6 +1014,16 @@ export default function TabunganPage() {
                     </div>
                   </div>
 
+                  <button
+                    type="button"
+                    onClick={() => setShowInsight((v) => !v)}
+                    className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-border/60 px-3 py-2 text-xs font-semibold text-foreground"
+                  >
+                    <span>{showInsight ? "Sembunyikan proyeksi & grafik" : "Lihat proyeksi & grafik"}</span>
+                    <ChevronRight className={`h-4 w-4 transition-transform ${showInsight ? "rotate-90" : ""}`} />
+                  </button>
+                  {showInsight && (
+                  <div className="space-y-4">
                   {/* Panel Proyeksi Cerdas & Rekomendasi Jika Telat */}
                   <div className="space-y-2">
                     <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
@@ -1002,6 +1129,9 @@ export default function TabunganPage() {
                     </div>
                   </div>
 
+                  </div>
+                  )}
+
                   {/* Tombol Aksi: Setor & Tarik (In-Sheet Switcher) */}
                   <div className="grid grid-cols-2 gap-2.5 pt-1">
                     <Button
@@ -1089,6 +1219,61 @@ export default function TabunganPage() {
                 </>
               )}
             </>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-[360px] space-y-3 rounded-2xl border border-border bg-card p-5 shadow-2xl">
+            <h3 className="text-sm font-bold text-foreground">Hapus tabungan &quot;{deleteTarget.name}&quot;?</h3>
+            <p className="text-xs text-muted-foreground">
+              Uang terkumpul {formatRupiah(deleteTarget.current_amount)} tidak hilang. Pilih dompet tujuan untuk memindahkannya.
+            </p>
+            <select
+              value={deleteMoveTo}
+              onChange={(e) => setDeleteMoveTo(e.target.value)}
+              className="h-10 w-full cursor-pointer rounded-xl border border-border bg-background px-3 text-xs"
+            >
+              {wallets.filter(isSpendableWallet).map((w) => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
+            </select>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => setDeleteTarget(null)} className="h-9 flex-1 cursor-pointer rounded-xl text-xs">Batal</Button>
+              <Button type="button" disabled={saving || !deleteMoveTo} onClick={handleConfirmDelete} className="h-9 flex-1 cursor-pointer rounded-xl bg-rose-600 text-xs font-bold text-white hover:bg-rose-500">
+                {saving ? "Menghapus..." : "Hapus"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat AI pembuat tabungan */}
+      <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          className="mx-auto flex h-[85vh] max-w-[430px] flex-col gap-0 rounded-t-3xl border-border/80 bg-background p-0 shadow-2xl"
+        >
+          <SheetHeader className="flex-row items-center justify-between border-b border-border/60 px-4 py-3">
+            <div>
+              <SheetTitle className="flex items-center gap-1.5 text-sm font-bold"><Sparkles className="h-4 w-4 text-teal-600" /> Buat Tabungan dengan AI</SheetTitle>
+              <SheetDescription className="text-[11px]">Ceritakan tujuanmu, aku bantu cek apakah realistis.</SheetDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => { setIsChatOpen(false); handleOpenAdd(); }} className="cursor-pointer text-[11px] font-semibold text-teal-700 underline dark:text-teal-400">Isi manual</button>
+              <button type="button" onClick={() => setIsChatOpen(false)} aria-label="Tutup" className="cursor-pointer text-muted-foreground"><X className="h-4 w-4" /></button>
+            </div>
+          </SheetHeader>
+          {isChatOpen && (
+            <AiChat
+              mode="savings"
+              intro="Halo! Kamu mau menabung untuk apa, berapa targetnya, dan kapan mau tercapai?"
+              placeholder="Misal: laptop 12 juta, akhir tahun depan"
+              suggestions={["Dana darurat", "Beli laptop", "Liburan"]}
+              renderProposal={renderProposal}
+            />
           )}
         </SheetContent>
       </Sheet>

@@ -16,6 +16,8 @@ export const SAMPLE_WALLETS: WalletBalance[] = [
     sort_order: 1,
     initial_balance: 5000000,
     is_archived: false,
+    is_default: false,
+    goal_id: null,
     balance: 8250000,
   },
   {
@@ -28,6 +30,8 @@ export const SAMPLE_WALLETS: WalletBalance[] = [
     sort_order: 2,
     initial_balance: 200000,
     is_archived: false,
+    is_default: false,
+    goal_id: null,
     balance: 450000,
   },
   {
@@ -40,6 +44,8 @@ export const SAMPLE_WALLETS: WalletBalance[] = [
     sort_order: 3,
     initial_balance: 100000,
     is_archived: false,
+    is_default: true,
+    goal_id: null,
     balance: 150000,
   },
   {
@@ -52,6 +58,8 @@ export const SAMPLE_WALLETS: WalletBalance[] = [
     sort_order: 4,
     initial_balance: 1000000,
     is_archived: false,
+    is_default: false,
+    goal_id: null,
     balance: 1200000,
   },
 ];
@@ -104,6 +112,8 @@ export async function createWallet(
     sort_order: wallet.sort_order || SAMPLE_WALLETS.length + 1,
     initial_balance: wallet.initial_balance || 0,
     is_archived: false,
+    is_default: false,
+    goal_id: null,
     balance: wallet.initial_balance || 0,
   };
 
@@ -173,4 +183,55 @@ export async function archiveWallet(id: string): Promise<boolean> {
   }
 
   return true;
+}
+
+/**
+ * Pastikan dompet "Uang Tunai" bawaan ada, lalu kembalikan ID-nya.
+ * Dipakai sebagai tujuan transaksi yang tidak menyebut dompet (keputusan Owner B).
+ */
+export async function ensureDefaultWallet(): Promise<string | null> {
+  if (!isSupabaseConfigured()) return null;
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("ensure_default_wallet");
+  if (error) {
+    console.error("Gagal menyiapkan dompet Uang Tunai:", error);
+    return null;
+  }
+  return (data as string | null) ?? null;
+}
+
+/** Dompet yang boleh dipakai mencatat transaksi (dompet tabungan hanya lewat menu Tabungan). */
+export function isSpendableWallet(w: { type: string; is_archived?: boolean }): boolean {
+  return w.type !== "tabungan" && !w.is_archived;
+}
+
+export async function getSpendableWallets(): Promise<WalletBalance[]> {
+  return (await getWallets()).filter(isSpendableWallet);
+}
+
+/** Pilih dompet bawaan dari daftar: Uang Tunai dulu, kalau tidak ada dompet pertama. */
+export function pickDefaultWallet<T extends { id: string; is_default?: boolean }>(
+  list: T[]
+): T | undefined {
+  return list.find((w) => w.is_default) ?? list.find((w) => (w as { type?: string }).type !== "tabungan") ?? list[0];
+}
+
+/** Hapus dompet. Semua transaksinya dipindah ke dompet tujuan (keputusan Owner C). */
+export async function deleteWallet(
+  id: string,
+  moveToId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = createClient();
+  const { error } = await supabase.rpc("delete_wallet", {
+    p_wallet_id: id,
+    p_move_to: moveToId,
+  });
+  if (error) {
+    console.error(`Gagal menghapus dompet ID ${id}:`, error);
+    return { ok: false, error: error.message };
+  }
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("wallet_created"));
+  }
+  return { ok: true };
 }

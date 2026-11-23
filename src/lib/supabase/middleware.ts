@@ -56,9 +56,25 @@ export async function updateSession(request: NextRequest) {
   });
 
   // Ambil user auth saat ini
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Batas waktu 4 detik. Kalau server Supabase lambat/tak terjangkau, jangan biarkan layar
+  // pembuka HP menunggu tanpa akhir (penyebab utama "splash nyangkut"). Saat terlambat, pakai
+  // sesi dari cookie (tanpa jaringan). Data tetap aman karena RLS di database yang memutuskan.
+  let user: { id: string } | null = null;
+  try {
+    const result = await Promise.race([
+      supabase.auth.getUser().then((r) => ({ ok: true as const, user: r.data.user })),
+      new Promise<{ ok: false }>((resolve) => setTimeout(() => resolve({ ok: false }), 4000)),
+    ]);
+    if (result.ok) {
+      user = result.user;
+    } else {
+      const { data } = await supabase.auth.getSession();
+      user = data.session?.user ?? null;
+    }
+  } catch {
+    const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+    user = data.session?.user ?? null;
+  }
 
   const isAuthPath = pathname.startsWith("/login");
   // #5 Mode demo HANYA di development lokal. Di production selalu mati (celah ditutup).
