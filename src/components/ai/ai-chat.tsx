@@ -35,7 +35,7 @@ function RichText({ text }: { text: string }) {
 }
 
 interface AiChatProps {
-  mode: "savings" | "advisor";
+  mode: "savings" | "advisor" | "plan";
   intro: string;
   placeholder?: string;
   suggestions?: string[];

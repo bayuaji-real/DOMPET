@@ -7,8 +7,11 @@ import { useTheme } from "next-themes";
 /** Saklar geser terang/gelap. */
 export function ThemeSlider({ className = "" }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
+  const mounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const dark = mounted && resolvedTheme === "dark";
   return (
     <button

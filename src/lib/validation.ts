@@ -58,7 +58,7 @@ export const analyticsQuerySchema = z.object({
 });
 
 export const aiChatSchema = z.object({
-  mode: z.enum(["savings", "advisor"]),
+  mode: z.enum(["savings", "advisor", "plan"]),
   // Riwayat dibatasi supaya biaya token terkendali
   messages: z
     .array(z.object({ role: z.enum(["user", "model"]), text: z.string().min(1).max(1000) }))
