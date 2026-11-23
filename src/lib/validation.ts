@@ -65,3 +65,10 @@ export const aiChatSchema = z.object({
     .min(1)
     .max(14),
 });
+
+export const helpReportSchema = z.object({
+  kind: z.enum(["bug", "usul"]),
+  title: z.string().trim().min(3).max(120),
+  body: z.string().trim().min(5).max(2000),
+  page: z.string().max(200).optional(),
+});

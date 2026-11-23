@@ -371,6 +371,30 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      help_reports: {
+        Row: {
+          id: string;
+          user_id: string;
+          kind: "bug" | "usul";
+          title: string;
+          body: string;
+          page: string | null;
+          status: "baru" | "dibaca" | "dikerjakan" | "selesai";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          kind: "bug" | "usul";
+          title: string;
+          body: string;
+          page?: string | null;
+          status?: "baru";
+          created_at?: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
       ai_insights: {
         Row: {
           id: string;
