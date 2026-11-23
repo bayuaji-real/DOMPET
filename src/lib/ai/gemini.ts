@@ -41,10 +41,10 @@ interface GenerateOptions {
 }
 
 function friendly(status: number): string {
-  if (status === 429) return "Layanan kami lagi padat. Coba lagi sebentar lagi, atau isi manual dulu ya.";
+  if (status === 429) return "Mohon maaf, jaringan kami sedang padat. Coba lagi sebentar lagi, atau isi manual dulu ya.";
   if (status === 400) return "Kami belum bisa membaca data ini. Coba ulangi, atau isi manual.";
   if (status === 401 || status === 403) return "Kunci layanan bermasalah. Cek konfigurasi di .env.local.";
-  return "Kami lagi sibuk. Coba lagi sebentar lagi, atau isi manual dulu ya.";
+  return "Mohon maaf, jaringan kami sedang padat. Coba lagi sebentar lagi, atau isi manual dulu ya.";
 }
 
 async function callModel(model: string, parts: GeminiPart[], opts: GenerateOptions) {
@@ -162,6 +162,7 @@ async function callChatModel(model: string, turns: ChatTurn[], opts: ChatOptions
     generationConfig: {
       temperature: opts.temperature ?? 0.4,
       maxOutputTokens: opts.maxOutputTokens ?? 500,
+      thinkingConfig: { thinkingBudget: 0 },
       ...(opts.responseSchema ? { responseMimeType: "application/json", responseSchema: opts.responseSchema } : {}),
     },
   };
