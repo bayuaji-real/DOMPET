@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateTransaction, type Transaction } from "@/lib/data/transactions";
-import { getCategoryEmoji, categoryEmoji, type Category } from "@/lib/data/categories";
+import { NewCategoryInline } from "@/components/category/new-category-inline";
+import { categoryEmoji, type Category } from "@/lib/data/categories";
 import type { WalletBalance } from "@/lib/data/wallets";
 import { triggerHapticFeedback } from "@/lib/utils";
 
@@ -47,7 +48,8 @@ export function EditTransactionSheet({ trx, wallets, categories, onClose, onSave
   if (!trx) return null;
   const isFlow = trx.type === "income" || trx.type === "expense";
   const isTransfer = trx.type === "transfer";
-  const cats = categories.filter((c) => c.type === trx.type);
+  const [extraCats, setExtraCats] = React.useState<Category[]>([]);
+  const cats = [...categories, ...extraCats].filter((c) => c.type === trx.type);
   const activeWallets = wallets.filter((w) => !w.is_archived);
 
   const save = async (e: React.FormEvent) => {
@@ -162,6 +164,13 @@ export function EditTransactionSheet({ trx, wallets, categories, onClose, onSave
                     {categoryEmoji(c)} {c.name}
                   </button>
                 ))}
+                <NewCategoryInline
+                  type={trx.type === "income" ? "income" : "expense"}
+                  onCreated={(c) => {
+                    setExtraCats((p) => [...p, c]);
+                    setCategoryId(c.id);
+                  }}
+                />
               </div>
             </fieldset>
           )}

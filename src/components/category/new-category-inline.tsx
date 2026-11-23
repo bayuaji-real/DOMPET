@@ -55,7 +55,7 @@ export function NewCategoryInline({
     );
   }
   return (
-    <div className="col-span-3 space-y-1.5 rounded-xl border border-teal-500/40 bg-teal-500/5 p-2">
+    <div className="col-span-3 w-full space-y-1.5 rounded-xl border border-teal-500/40 bg-teal-500/5 p-2">
       <div className="flex gap-1.5">
         <input
           autoFocus

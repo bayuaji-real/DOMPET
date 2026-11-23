@@ -396,9 +396,18 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
     }
   };
 
+  // Dialog konfirmasi di dalam aplikasi (pengganti confirm bawaan browser)
+  const [confirmState, setConfirmState] = React.useState<{ text: string; yes: string; resolve: (v: boolean) => void } | null>(null);
+  const askConfirm = (text: string, yes = "Ya, hapus") =>
+    new Promise<boolean>((resolve) => setConfirmState({ text, yes, resolve }));
+  const answerConfirm = (v: boolean) => {
+    confirmState?.resolve(v);
+    setConfirmState(null);
+  };
+
   // Handler Hapus Kategori
   const handleDeleteCategory = async (id: string, name: string) => {
-    if (!confirm(`Hapus kategori "${name}"?`)) return;
+    if (!(await askConfirm(`Hapus kategori "${name}"?`))) return;
     triggerHapticFeedback();
 
     try {
@@ -454,7 +463,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
   // Handler Hapus Tagihan Berulang
   const handleDeleteRecurring = async (id: string, note?: string | null) => {
     const label = note || "Tagihan ini";
-    if (!confirm(`Hapus tagihan "${label}"?`)) return;
+    if (!(await askConfirm(`Hapus tagihan "${label}"?`))) return;
     triggerHapticFeedback();
 
     try {
@@ -528,7 +537,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
 
   // Handler Logout
   const handleLogout = async () => {
-    if (!confirm("Apakah Anda yakin ingin keluar dari akun?")) return;
+    if (!(await askConfirm("Yakin ingin keluar dari akun?", "Ya, keluar"))) return;
     try {
       const supabase = createClient();
       await supabase.auth.signOut();
@@ -546,6 +555,18 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
       {toastMsg && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 rounded-2xl bg-teal-600 text-white px-4 py-2 text-xs font-bold shadow-xl animate-in fade-in slide-in-from-top-2">
           {toastMsg}
+        </div>
+      )}
+
+      {confirmState && (
+        <div role="alertdialog" aria-modal="true" className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-4 sm:items-center">
+          <div className="w-full max-w-sm space-y-4 rounded-3xl border border-border bg-card p-5 shadow-2xl">
+            <p className="text-sm font-bold text-foreground">{confirmState.text}</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => answerConfirm(false)} className="h-10 flex-1 cursor-pointer rounded-xl border border-border text-xs font-bold text-foreground hover:bg-muted">Batal</button>
+              <button type="button" onClick={() => answerConfirm(true)} className="h-10 flex-1 cursor-pointer rounded-xl bg-rose-600 text-xs font-bold text-white hover:bg-rose-700">{confirmState.yes}</button>
+            </div>
+          </div>
         </div>
       )}
 
