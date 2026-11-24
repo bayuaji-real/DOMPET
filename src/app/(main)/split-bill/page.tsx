@@ -216,7 +216,7 @@ export default function SplitBillPage() {
       <TopHeader title="Split Bill" />
 
       <div className="space-y-4 px-4 pb-6 pt-4">
-        <PageHero emoji="🧾" title="Split Bill" desc="Bagi tagihan adil, sesuai pesanan masing-masing." tone="violet" />
+        <PageHero title="Split Bill" desc="Bagi tagihan adil, sesuai pesanan masing-masing." />
         {mode === "pilih" ? (
           <div className="space-y-4">
             <FormCard title="Mau isi tagihan dari mana?" desc="Pilih satu dulu. Nama teman dan pembagian diisi sesudahnya.">

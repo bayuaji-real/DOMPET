@@ -18,7 +18,7 @@ export default function ThrZakatPage() {
     <div className="pb-24">
       <TopHeader title="THR & Zakat" />
       <div className="space-y-6 px-4 pt-2">
-        <PageHero emoji="🕌" title="THR & Zakat" desc="Hitung zakat dan bagi THR dengan rapi." tone="emerald" />
+        <PageHero title="THR & Zakat" desc="Hitung zakat dan bagi THR dengan rapi." />
         <section aria-label="Kalkulator zakat" className="space-y-3">
           <h2 className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Kalkulator zakat</h2>
           <p className="text-sm text-muted-foreground">Isi harga emas per gram hari ini (cek di sumber resmi, misal BAZNAS atau toko emas). Aplikasi tidak menebak harga emas.</p>

@@ -3,7 +3,7 @@ import {
   PieChart,
   ReceiptText,
   Sparkles,
-    Gauge, ShoppingBag, TrendingUp, FileUp, CalendarDays, Moon, Crown, HeartPulse, LineChart, Repeat, Users, BellRing, ShieldCheck, Heart, Wallet, LifeBuoy, Landmark, PiggyBank, Flame,
+    Gauge, Scale, ShoppingBag, TrendingUp, FileUp, CalendarDays, Moon, Crown, HeartPulse, LineChart, Repeat, Users, BellRing, ShieldCheck, Heart, Wallet, LifeBuoy, Landmark, PiggyBank, Flame,
     type LucideIcon,
 } from "lucide-react";
 
@@ -43,13 +43,13 @@ export const MORE_GROUPS: MoreGroup[] = [
       { label: "Kesehatan Finansial", description: "Skor 0-100 dan cara menaikkannya", href: "/kesehatan-finansial", icon: HeartPulse, tone: "bg-pink-500/15 text-pink-600 dark:text-pink-400" },
       { label: "Prediksi Cashflow", description: "Perkiraan saldo 3 bulan ke depan", href: "/prediksi-cashflow", icon: LineChart, tone: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400" },
       { label: "Laporan Mingguan", description: "Ringkasan 7 hari terakhir", href: "/laporan-mingguan", icon: CalendarDays, tone: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
-      { label: "Konsultan Keuangan", description: "Skor kesehatan, peringatan dini, cicilan, proyeksi, utang", href: "/konsultan", icon: Gauge, tone: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
     ],
   },
   {
     title: "Rencana & dana",
     items: [
       { label: "Rencana Keuangan AI", description: "Bagi gaji ke kebutuhan, tenggat & saran dompet", href: "/rencana", icon: Sparkles, tone: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400" },
+      { label: "Cicilan & Utang", description: "Bandingkan cicilan dan atur urutan melunasi utang", href: "/cicilan-utang", icon: Scale, tone: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
       { label: "Target Beli", description: "Hitung mampu atau belum membeli sesuatu", href: "/target-beli", icon: ShoppingBag, tone: "bg-purple-500/15 text-purple-600 dark:text-purple-400" },
       { label: "Money planner", description: "Bagi pemasukan jadi pos-pos", href: "/money-planner", icon: Wallet, tone: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },
       { label: "Dana daruratku", description: "Berapa cadangan yang cukup", href: "/dana-daruratku", icon: LifeBuoy, tone: "bg-red-500/15 text-red-600 dark:text-red-400" },
@@ -78,4 +78,4 @@ export const MORE_GROUPS: MoreGroup[] = [
 ];
 
 /** Path yang membuat tombol More di navbar tampil aktif. */
-export const MORE_ACTIVE_PREFIXES = ["/more", "/pengaturan", "/profil", "/settings", "/transaksi", "/analisis", "/tambah", "/split-bill", "/rencana", "/bantuan", "/konsultan", "/investasi", "/impor", "/laporan-mingguan", "/thr-zakat", "/paket", "/kesehatan-finansial", "/prediksi-cashflow", "/berulang", "/pengingat", "/bersama", "/keamanan", "/planner", "/admin", "/ilmu-keuangan", "/money-planner", "/dana-daruratku", "/dana-pensiunku", "/dana-lain", "/financial-freedom", "/batas-pengeluaran", "/target-beli"];
+export const MORE_ACTIVE_PREFIXES = ["/more", "/pengaturan", "/profil", "/settings", "/transaksi", "/analisis", "/tambah", "/split-bill", "/rencana", "/bantuan", "/konsultan", "/cicilan-utang", "/investasi", "/impor", "/laporan-mingguan", "/thr-zakat", "/paket", "/kesehatan-finansial", "/prediksi-cashflow", "/berulang", "/pengingat", "/bersama", "/keamanan", "/planner", "/admin", "/ilmu-keuangan", "/money-planner", "/dana-daruratku", "/dana-pensiunku", "/dana-lain", "/financial-freedom", "/batas-pengeluaran", "/target-beli"];

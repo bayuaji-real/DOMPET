@@ -16,7 +16,7 @@ export default function Page() {
     <div className="pb-24">
       <TopHeader title="Prediksi Cashflow" />
       <div className="space-y-4 px-4 pt-2">
-        <PageHero emoji="🔮" title="Prediksi Cashflow" desc="Perkiraan saldo 3 bulan ke depan." tone="violet" />
+        <PageHero title="Prediksi Cashflow" desc="Perkiraan saldo 3 bulan ke depan." />
         <Disclaimer />
         {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
         <Gate feature="proyeksi_arus_kas">

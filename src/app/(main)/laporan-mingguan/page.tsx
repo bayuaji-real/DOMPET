@@ -16,7 +16,7 @@ export default function LaporanMingguanPage() {
     <div className="pb-24">
       <TopHeader title="Laporan Mingguan" />
       <div className="space-y-3 px-4 pt-2">
-        <PageHero emoji="📊" title="Laporan Mingguan" desc="Ringkasan uangmu 7 hari terakhir." tone="teal" />
+        <PageHero title="Laporan Mingguan" desc="Ringkasan uangmu 7 hari terakhir." />
         {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
         {!s && !err && <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
         {r && s && (r.count === 0 ? <p className="rounded-3xl border border-dashed border-border/70 p-5 text-center text-xs text-muted-foreground">Belum ada transaksi dalam 7 hari terakhir.</p> : (

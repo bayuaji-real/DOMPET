@@ -32,7 +32,9 @@ vi.mock("@/lib/data/categories", () => ({ getCategories: async () => [] }));
 
 import InvestasiPage from "./(main)/investasi/page";
 import PaketPage from "./(main)/paket/page";
-import KonsultanPage from "./(main)/konsultan/page";
+import KesehatanPage from "./(main)/kesehatan-finansial/page";
+import PrediksiPage from "./(main)/prediksi-cashflow/page";
+import CicilanUtangPage from "./(main)/cicilan-utang/page";
 import ImporPage from "./(main)/impor/page";
 import ThrZakatPage from "./(main)/thr-zakat/page";
 
@@ -112,43 +114,38 @@ describe("Paket", () => {
   });
 });
 
-describe("Konsultan", () => {
+describe("Kesehatan Finansial dan Prediksi", () => {
   it("skor kesehatan tampil di rentang 0-100 dengan 4 bagian", async () => {
-    render(<KonsultanPage />);
+    render(<KesehatanPage />);
     const n = Number((await screen.findByTestId("skor-total")).textContent); expect(n).toBeGreaterThanOrEqual(0); expect(n).toBeLessThanOrEqual(100);
     expect(screen.getAllByRole("progressbar").length).toBe(4);
   });
-  it("peringatan dini: anggaran terlewati", async () => {
-    const u = userEvent.setup(); render(<KonsultanPage />);
-    await u.click(screen.getByRole("tab", { name: "Peringatan" }));
-    expect(await screen.findByText(/Anggaran Makan sudah terlewati/)).toBeTruthy();
+  it("proyeksi 3 bulan", async () => {
+    render(<PrediksiPage />);
+    expect(await screen.findByText(/tetap positif/)).toBeTruthy();
+    expect(screen.getAllByText(/Bulan ke-/).length).toBe(3);
   });
+});
+
+describe("Cicilan & Utang", () => {
   it("simulator cicilan menghitung dan membandingkan", async () => {
-    const u = userEvent.setup(); render(<KonsultanPage />);
-    await u.click(screen.getByRole("tab", { name: "Cicilan" }));
+    render(<CicilanUtangPage />);
     expect(await screen.findByText("Cicilan bunga flat")).toBeTruthy();
     expect(screen.getByText("Paylater")).toBeTruthy();
     expect(screen.getAllByText(/Setara bunga sekitar/).length).toBe(2);
   });
-  it("proyeksi 3 bulan", async () => {
-    const u = userEvent.setup(); render(<KonsultanPage />);
-    await u.click(screen.getByRole("tab", { name: "Proyeksi" }));
-    expect(await screen.findByText(/tetap positif/)).toBeTruthy();
-    expect(screen.getAllByText(/Bulan ke-/).length).toBe(3);
-  });
-  it("Premium: tab Proyeksi dan Utang terkunci, tab lain terbuka", async () => {
-    entRaw = { plan: "premium", source: "paid", ai_limit: 100, ai_used: 0 }; const u = userEvent.setup(); render(<KonsultanPage />);
-    expect(await screen.findByTestId("skor-total")).toBeTruthy();
-    await u.click(screen.getByRole("tab", { name: "Proyeksi" })); expect(screen.getByText(/paket Pro/)).toBeTruthy();
+  it("Premium: tab Utang terkunci, Cicilan terbuka", async () => {
+    entRaw = { plan: "premium", source: "paid", ai_limit: 100, ai_used: 0 }; const u = userEvent.setup(); render(<CicilanUtangPage />);
+    expect(await screen.findByText("Cicilan bunga flat")).toBeTruthy();
     await u.click(screen.getByRole("tab", { name: "Utang" })); expect(screen.getByText(/paket Pro/)).toBeTruthy();
   });
   it("Utang kosong: ada pesan dan form", async () => {
-    const u = userEvent.setup(); render(<KonsultanPage />);
+    const u = userEvent.setup(); render(<CicilanUtangPage />);
     await u.click(screen.getByRole("tab", { name: "Utang" }));
     expect(await screen.findByText(/Belum ada utang tercatat/)).toBeTruthy();
     expect((screen.getByRole("button", { name: "Tambah utang" }) as HTMLButtonElement).disabled).toBe(true);
   });
-  it("selalu ada peringatan Ruby", async () => { render(<KonsultanPage />); expect(screen.getByRole("note").textContent).toMatch(/cek ulang sendiri/); });
+  it("selalu ada peringatan Ruby", async () => { render(<CicilanUtangPage />); expect(screen.getByRole("note").textContent).toMatch(/cek ulang sendiri/); });
 });
 
 describe("Impor mutasi", () => {

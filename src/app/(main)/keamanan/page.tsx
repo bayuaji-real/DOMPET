@@ -46,7 +46,7 @@ export default function KeamananPage() {
     <div className="pb-24">
       <TopHeader title="Keamanan" />
       <div className="space-y-4 px-4 pt-2">
-        <PageHero emoji="🔐" title="Keamanan" desc="PIN, verifikasi, dan cadangan datamu." tone="rose" />
+        <PageHero title="Keamanan" desc="PIN, verifikasi, dan cadangan datamu." />
         <section aria-label="PIN aplikasi" className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
           <h2 className="flex items-center gap-2.5 text-sm font-semibold"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-teal-500/15 text-teal-600"><ShieldCheck className="size-[18px]" aria-hidden /></span> PIN aplikasi</h2>
           <p className="text-xs text-muted-foreground">Kunci layar di perangkat ini. Tidak menggantikan login.</p>

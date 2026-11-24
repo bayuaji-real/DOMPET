@@ -2,6 +2,8 @@
 
 import { RubyAvatar, RubyBubble } from "@/components/ai/ruby";
 import * as React from "react";
+import { PageHero } from "@/components/ui/form-kit";
+import { useUnifiedHealth } from "@/lib/data/unified-health";
 import { TopHeader } from "@/components/layout/top-header";
 import { formatRupiah, formatTanggal } from "@/lib/utils";
 import { WalletIcon } from "@/components/wallet/wallet-icon";
@@ -64,7 +66,9 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
   const [period, setPeriod] = React.useState<AnalyticsPeriod>(
     initialData.period.type || "month"
   );
-  const [data, setData] = React.useState<AnalyticsData>(initialData);
+  const [rawData, setData] = React.useState<AnalyticsData>(initialData);
+  const unifiedHealth = useUnifiedHealth(rawData.financialHealth);
+  const data = React.useMemo(() => (unifiedHealth ? { ...rawData, financialHealth: unifiedHealth } : rawData), [rawData, unifiedHealth]);
   const [isLoading, setIsLoading] = React.useState(true);
 
   // Custom Date Range State
@@ -215,6 +219,7 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
       />
 
       <div className="space-y-4 p-4">
+        <PageHero title="Analisis Keuangan" desc="Arus kas, kategori, anggaran, dan insight dari Ruby." />
         {/* 1. Pemilih Periode Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {periodOptions.map((opt) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { PageHero } from "@/components/ui/form-kit";
 import Image from "next/image";
 import Link from "next/link";
 import { TopHeader } from "@/components/layout/top-header";
@@ -411,6 +412,7 @@ export default function TransaksiPage() {
       />
 
       <div className="space-y-4 p-4">
+        <PageHero title="Riwayat Transaksi" desc="Semua arus masuk dan keluar uangmu." />
         {/* Kolom Pencarian & Filter */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
@@ -713,7 +715,13 @@ export default function TransaksiPage() {
                     <SheetDescription className="text-[11px] text-muted-foreground">
                       {selectedTrx.source === "receipt"
                         ? "Dicatat otomatis dari foto struk belanja"
-                        : "Dicatat secara manual"}
+                        : selectedTrx.source === "voice"
+                          ? "Dicatat lewat suara"
+                          : selectedTrx.source === "recurring"
+                            ? "Dicatat otomatis dari tagihan rutin"
+                            : selectedTrx.source === "payday"
+                              ? "Dicatat otomatis dari gajian"
+                              : "Dicatat secara manual"}
                     </SheetDescription>
                   </div>
                 </div>

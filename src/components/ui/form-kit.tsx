@@ -97,26 +97,12 @@ export function Cta({ className, ...props }: React.ComponentProps<typeof Button>
   return <Button {...props} className={cn("h-10 w-full cursor-pointer rounded-2xl bg-teal-600 text-xs font-bold text-white hover:bg-teal-700", className)} />;
 }
 
-const HERO: Record<string, string> = {
-  teal: "from-teal-700 via-teal-900 to-slate-950",
-  indigo: "from-indigo-600 via-indigo-900 to-slate-950",
-  rose: "from-rose-600 via-rose-900 to-slate-950",
-  amber: "from-amber-600 via-amber-800 to-slate-950",
-  violet: "from-violet-600 via-violet-900 to-slate-950",
-  sky: "from-sky-600 via-sky-900 to-slate-950",
-  emerald: "from-emerald-600 via-emerald-900 to-slate-950",
-};
-
-/** Kartu judul halaman: gradien berwarna, emoji besar, satu kalimat keterangan. */
-export function PageHero({ emoji, title, desc, tone = "teal", className }: { emoji: string; title: string; desc?: string; tone?: keyof typeof HERO; className?: string }) {
+/** Kartu judul halaman: gradien hijau bersih seperti kartu atas tab Dompet dan Tabungan. Tanpa ikon atau ilustrasi. */
+export function PageHero({ title, desc, className }: { title: string; desc?: string; className?: string }) {
   return (
-    <div className={cn("relative flex items-center gap-3.5 overflow-hidden rounded-3xl bg-gradient-to-br p-4 text-white shadow-lg", HERO[tone], className)}>
-      <span aria-hidden className="pointer-events-none absolute -right-3 -top-4 text-7xl opacity-15">{emoji}</span>
-      <span aria-hidden className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-2xl backdrop-blur-sm">{emoji}</span>
-      <div className="relative min-w-0">
-        <h1 className="text-base font-extrabold leading-tight">{title}</h1>
-        {desc && <p className="mt-0.5 text-xs leading-snug text-white/75">{desc}</p>}
-      </div>
+    <div className={cn("rounded-3xl bg-gradient-to-br from-teal-800 via-teal-900 to-slate-950 p-4 text-white shadow-xl shadow-teal-950/20", className)}>
+      <h1 className="text-lg font-extrabold leading-tight tracking-tight">{title}</h1>
+      {desc && <p className="mt-0.5 text-xs leading-snug text-teal-100/80">{desc}</p>}
     </div>
   );
 }

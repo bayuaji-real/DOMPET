@@ -27,6 +27,11 @@ export function createClient() {
 
   return createBrowserClient<Database>(
     supabaseUrl || "https://placeholder.supabase.co",
-    supabaseAnonKey || "placeholder-anon-key"
+    supabaseAnonKey || "placeholder-anon-key",
+    {
+      // Cookie sesi hanya dikirim lewat HTTPS dan tidak ikut permintaan lintas situs.
+      // Tidak HttpOnly: aplikasi membaca data langsung dari browser. Kompensasinya CSP dan header keamanan di next.config.ts.
+      cookieOptions: { sameSite: "lax", secure: typeof window !== "undefined" && window.location.protocol === "https:" },
+    }
   );
 }

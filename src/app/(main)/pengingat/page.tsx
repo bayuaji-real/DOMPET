@@ -23,7 +23,7 @@ export default function PengingatPage() {
     <div className="pb-24">
       <TopHeader title="Pengingat" />
       <div className="space-y-3 px-4 pt-2">
-        <PageHero emoji="⏰" title="Pengingat" desc="Tagihan dan gajian 14 hari ke depan." tone="amber" />
+        <PageHero title="Pengingat" desc="Tagihan dan gajian 14 hari ke depan." />
         <p className="text-sm text-muted-foreground">Tagihan dan gajian dalam 14 hari ke depan.</p>
         {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
         {!items && !err && <div className="h-20 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}

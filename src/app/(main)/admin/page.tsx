@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { PageHero } from "@/components/ui/form-kit";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ export default function AdminPage() {
     <div className="pb-24">
       <TopHeader title="Admin" />
       <div className="space-y-4 px-4 pt-2">
+        <PageHero title="Admin" desc="Pengguna, paket, pemakaian API, dan data pasar." />
         {role === undefined && <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
         {role === null && <p role="alert" className="rounded-2xl bg-rose-500/10 p-4 text-xs font-semibold text-rose-700 dark:text-rose-300">Halaman ini hanya untuk admin.</p>}
         {role && locked && <MfaChallenge onDone={reload} title="Admin wajib memakai kode MFA. Masukkan kode dari aplikasi authenticator." />}

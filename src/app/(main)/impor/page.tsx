@@ -15,7 +15,7 @@ import { PageHero } from "@/components/ui/form-kit";
 const MAX_BYTES = 1_000_000;
 
 export default function ImporPage() {
-  return (<div className="pb-24"><TopHeader title="Impor Mutasi" /><div className="space-y-4 px-4 pt-2"><PageHero emoji="📥" title="Impor Mutasi" desc="Masukkan mutasi rekening dari berkas CSV." tone="indigo" /><Gate feature="impor_csv"><Impor /></Gate></div></div>);
+  return (<div className="pb-24"><TopHeader title="Impor Mutasi" /><div className="space-y-4 px-4 pt-2"><PageHero title="Impor Mutasi" desc="Masukkan mutasi rekening dari berkas CSV." /><Gate feature="impor_csv"><Impor /></Gate></div></div>);
 }
 
 function Impor() {

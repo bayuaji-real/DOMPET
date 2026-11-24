@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { ChevronRight, PieChart as PieIcon } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, XAxis, Tooltip } from "recharts";
+import { useUnifiedHealth } from "@/lib/data/unified-health";
 import { formatRupiah } from "@/lib/utils";
 import type { AnalyticsData, CategoryExpense, DailyExpense, HealthStatus } from "@/types/analytics";
 import type { Transaction } from "@/lib/data/transactions";
@@ -173,7 +174,8 @@ export function AnalisisCard({ walletId = null, walletName, wallet = null, month
   const categories = filtering ? derived?.categories ?? [] : data?.categories ?? [];
   const dailyExpenses = filtering ? derived?.dailyExpenses ?? [] : data?.dailyExpenses ?? [];
   // Status kesehatan dihitung untuk semua dompet, jadi disembunyikan saat satu dompet dipilih.
-  const health = filtering ? undefined : data?.financialHealth;
+  const unifiedHealth = useUnifiedHealth(data?.financialHealth);
+  const health = filtering ? undefined : unifiedHealth;
   // Jam sekarang hanya boleh dibaca di perangkat (bukan saat halaman dibangun di server), jadi tunggu mounted.
   const cashflow = React.useMemo(() => (mounted ? dailyCashflow(monthTxs, walletId ?? null) : []), [mounted, monthTxs, walletId]);
   const hasFlow = cashflow.some((d) => d.masuk > 0 || d.keluar > 0);

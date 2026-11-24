@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { PageHero } from "@/components/ui/form-kit";
 import { Check, Sparkles } from "lucide-react";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ export default function PaketPage() {
     <div className="pb-24">
       <TopHeader title="Paket" />
       <div className="space-y-4 px-4 pt-2">
+        <PageHero title="Paket & Uji Coba" desc="Gratis, Premium, atau Pro. Coba gratis 7 hari." />
         <div className="rounded-3xl border border-teal-500/30 bg-teal-500/10 p-4">
           <p className="text-xs text-muted-foreground">Paketmu sekarang</p>
           <p className="text-lg font-bold" data-testid="paket-aktif">{loading ? "..." : PLAN_LABEL[ent.plan]}{ent.source === "trial" && daysLeft > 0 ? ` (uji coba, sisa ${daysLeft} hari)` : ""}</p>

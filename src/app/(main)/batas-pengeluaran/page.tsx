@@ -50,7 +50,7 @@ export default function BatasPengeluaranPage() {
       {dialog}
       <TopHeader title="Batas Pengeluaran" />
       <div className="space-y-4 px-4 pt-2">
-        <PageHero emoji="🚧" title="Batas Pengeluaran" desc="Atur batas belanja, kamu diingatkan saat hampir habis." tone="amber" />
+        <PageHero title="Batas Pengeluaran" desc="Atur batas belanja, kamu diingatkan saat hampir habis." />
         <p className="text-xs text-muted-foreground">Atur batas per hari, minggu, atau bulan, boleh khusus kategori tertentu. Kamu diperingatkan saat hampir habis.</p>
         {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
         <Button className="h-10 w-full rounded-2xl text-xs" onClick={() => setOpen(!open)}>{open ? "Tutup" : "Tambah batas"}</Button>

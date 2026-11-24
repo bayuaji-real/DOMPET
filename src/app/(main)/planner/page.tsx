@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { PageHero } from "@/components/ui/form-kit";
 import Link from "next/link";
 import { Trash2, Plus, Check } from "lucide-react";
 import { TopHeader } from "@/components/layout/top-header";
@@ -52,6 +53,7 @@ export default function PlannerPage() {
       {dialog}
       <TopHeader title="Planner Acara" />
       <div className="space-y-4 px-4 pt-2">
+        <PageHero title="Planner Acara" desc="Lamaran, nikah, dan acara: vendor, tamu, dan budget." />
         {err && <p role="alert" className="rounded-2xl bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300">{err}</p>}
         {!events && !err && <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
         {events && !ev && <NewEvent onDone={loadEvents} />}

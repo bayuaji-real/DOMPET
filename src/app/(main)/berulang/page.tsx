@@ -44,7 +44,7 @@ export default function BerulangPage() {
       <TopHeader title="Transaksi Berulang" />
       {dialog}
       <div className="space-y-4 px-4 pt-2">
-        <PageHero emoji="🔁" title="Transaksi Berulang" desc="Tagihan dan pemasukan rutin, tinggal tekan Catat." tone="sky" />
+        <PageHero title="Transaksi Berulang" desc="Tagihan dan pemasukan rutin, tinggal tekan Catat." />
         <p className="text-sm text-muted-foreground">Tagihan atau pemasukan yang datang tiap bulan (listrik, cicilan, gaji). Saat jatuh tempo, tinggal tekan Catat sekarang.</p>
         {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
         {list === null && !err && <div className="h-20 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}

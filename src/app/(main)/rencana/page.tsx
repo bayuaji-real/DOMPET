@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { PageHero } from "@/components/ui/form-kit";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, Loader2, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";
 import { AiChat } from "@/components/ai/ai-chat";
@@ -236,12 +237,7 @@ export default function RencanaPage() {
       <TopHeader title="Rencana Keuangan" />
 
       <div className="space-y-5 px-4 pb-6 pt-5">
-        <div>
-          <h1 className="text-lg font-extrabold">Rencana Keuangan</h1>
-          <p className="text-xs text-muted-foreground">
-            Gaji dikurangi biaya hidup & tagihan, sisanya diisi ke kebutuhan dengan tenggat paling dekat dulu (kelipatan Rp50.000).
-          </p>
-        </div>
+        <PageHero title="Rencana Keuangan" desc="Gaji dikurangi biaya hidup dan tagihan, sisanya diisi ke kebutuhan dengan tenggat paling dekat dulu (kelipatan Rp50.000)." />
 
         <Button type="button" variant="outline" onClick={() => setView("chat")} className="w-full rounded-xl text-xs">
           <Sparkles className="h-4 w-4 text-fuchsia-600" /> Kembali ke obrolan dengan Ruby

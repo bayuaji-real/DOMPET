@@ -12,7 +12,7 @@ import { createGroup, joinGroup, listGroups, type GroupRow } from "@/lib/data/be
 import { PageHero } from "@/components/ui/form-kit";
 
 export default function BersamaPage() {
-  return (<div className="pb-24"><TopHeader title="Dompet Bersama" /><div className="space-y-4 px-4 pt-2"><PageHero emoji="👫" title="Dompet Bersama" desc="Kelola uang berdua atau beramai-ramai." tone="sky" /><Gate feature="dompet_bersama"><Daftar /></Gate></div></div>);
+  return (<div className="pb-24"><TopHeader title="Dompet Bersama" /><div className="space-y-4 px-4 pt-2"><PageHero title="Dompet Bersama" desc="Kelola uang berdua atau beramai-ramai." /><Gate feature="dompet_bersama"><Daftar /></Gate></div></div>);
 }
 
 function Daftar() {

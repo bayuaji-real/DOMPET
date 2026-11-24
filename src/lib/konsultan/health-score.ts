@@ -1,3 +1,4 @@
+import type { FinancialHealth, HealthStatus } from "@/types/analytics";
 export interface HealthInput { monthlyIncome: number; monthlyExpense: number; liquidSavings: number; monthlyDebtPayment: number }
 export interface HealthPart { key: "tabung" | "darurat" | "utang" | "arus"; label: string; score: number; max: number; tip: string }
 export interface HealthResult { total: number; level: "perlu perhatian" | "cukup" | "sehat"; parts: HealthPart[] }
@@ -18,4 +19,32 @@ export function healthScore(i: HealthInput): HealthResult {
   ];
   const total = parts.reduce((s, p) => s + p.score, 0);
   return { total, level: total >= 70 ? "sehat" : total >= 40 ? "cukup" : "perlu perhatian", parts };
+}
+
+type SnapLike = { hasData: boolean; monthlyIncome: number; monthlyExpense: number; freeCash?: number; liquidSavings: number };
+
+/**
+ * SATU RUMUS untuk semua halaman: status di Analisis dan Beranda memakai healthScore() yang sama dengan
+ * halaman Kesehatan Finansial (rata-rata bulanan, dana darurat dari uang bebas pakai di luar tabungan dan investasi).
+ * sehat >= 70, cukup (tampil "waspada") >= 40, sisanya "kritis".
+ */
+export function unifyHealth(fh: FinancialHealth, snap: SnapLike | null, monthlyDebtPayment: number): FinancialHealth {
+  if (!snap || !snap.hasData) return fh;
+  const free = snap.freeCash ?? snap.liquidSavings;
+  const r = healthScore({ monthlyIncome: snap.monthlyIncome, monthlyExpense: snap.monthlyExpense, liquidSavings: free, monthlyDebtPayment });
+  const part = (k: HealthPart["key"]): HealthStatus => {
+    const p = r.parts.find((x) => x.key === k)!;
+    const ratio = p.score / p.max;
+    return ratio >= 0.7 ? "sehat" : ratio >= 0.35 ? "waspada" : "kritis";
+  };
+  const exp = Math.max(snap.monthlyExpense, 0);
+  return {
+    ...fh,
+    overallStatus: r.level === "sehat" ? "sehat" : r.level === "cukup" ? "waspada" : "kritis",
+    savingsRate: snap.monthlyIncome > 0 ? Math.round(((snap.monthlyIncome - exp) / snap.monthlyIncome) * 100) : 0,
+    savingsRateStatus: part("tabung"),
+    emergencyFundBalance: Math.round(free),
+    emergencyFundMonths: exp > 0 ? Math.round((free / exp) * 10) / 10 : 0,
+    emergencyStatus: part("darurat"),
+  };
 }

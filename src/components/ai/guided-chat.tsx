@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { PageHero } from "@/components/ui/form-kit";
 import Link from "next/link";
 import { Send, RotateCcw } from "lucide-react";
 import { TopHeader } from "@/components/layout/top-header";
@@ -70,6 +71,7 @@ export function GuidedChat({ flow, prefill }: { flow: Flow; prefill?: () => Prom
     <div className="fixed inset-x-0 top-0 z-30 mx-auto flex max-w-[430px] flex-col bg-background" style={{ bottom: "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
       <TopHeader title={flow.title} subtitle={flow.subtitle} />
       <div className="flex-1 overflow-y-auto bg-[#efeae2] px-3 py-3 dark:bg-[#0b141a]">
+        <PageHero title={flow.title} desc={flow.subtitle} className="mb-3" />
         <Bubble msg={{ role: "model", text: flow.greeting, time: openedAt || undefined }} first profile={profile} />
         {msgs.map((m, i) => (<Bubble key={i} msg={m} first={i === 0 ? true : msgs[i - 1].role !== m.role} profile={profile} />))}
         <div className="ml-10 mt-2 flex flex-wrap gap-1.5">

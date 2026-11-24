@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { PageHero } from "@/components/ui/form-kit";
 import { Send, Trash2, ListChecks } from "lucide-react";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,7 @@ export default function TargetBeliPage() {
       {dialog}
       <TopHeader title="Target Beli" subtitle="Ketik barang dan harganya" />
       <div className="flex-1 overflow-y-auto bg-[#efeae2] px-3 py-3 dark:bg-[#0b141a]">
+        <PageHero title="Target Beli" desc="Ketik barang dan harganya, Ruby hitung mampu atau belum." className="mb-3" />
         <Bubble msg={{ role: "model", text: "Mau beli apa? Ketik barang dan harganya, nanti aku hitung mampu atau tidak.", time: openedAt || undefined }} first profile={profile} />
         {msgs.length === 0 && (
           <div className="ml-10 mt-2 flex flex-wrap gap-1.5">

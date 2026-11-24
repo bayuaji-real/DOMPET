@@ -29,7 +29,7 @@ export default function InvestasiPage() {
     <div className="pb-24">
       <TopHeader title="Investasi" />
       <div className="px-4 pt-2">
-        <PageHero emoji="📈" title="Investasi" desc="Pantau aset dan acuan pasar dengan sumber resmi." tone="emerald" className="mb-4" />
+        <PageHero title="Investasi" desc="Pantau aset dan acuan pasar dengan sumber resmi." className="mb-4" />
         <div role="tablist" aria-label="Bagian investasi" className="mb-4 grid gap-1 rounded-2xl bg-muted p-1" style={{ gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))` }}>
           {TABS.map((t) => (
             <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`rounded-xl py-2 text-xs font-semibold ${tab === t.id ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{t.label}</button>
