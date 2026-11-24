@@ -67,7 +67,7 @@ function Cicilan() {
   const a = annuityPayment(price, num(flat), n);
   const cheaper = f.total <= p.total ? "bunga flat" : "paylater";
   const row = (emoji: string, tone: "sky" | "violet", label: string, c: { payment: number; total: number; interest: number; effectiveAnnualPct: number }, best: boolean) => (
-    <div className={`space-y-2.5 rounded-3xl border bg-card p-4 shadow-xs ${best ? "border-emerald-400/70 shadow-[0_0_16px_rgba(52,211,153,0.25)]" : "border-border/80"}`}>
+    <div className={`space-y-2.5 rounded-3xl border bg-card p-4 shadow-xs ${best ? "border-emerald-400/70" : "border-border/80"}`}>
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2.5"><IconBox tone={tone === "sky" ? "sky" : "violet"}>{emoji}</IconBox><p className="truncate text-sm font-extrabold">{label}</p></div>
         {best && <Pill icon="🏆">Lebih hemat</Pill>}
@@ -115,7 +115,7 @@ function Utang({ s }: { s: FinanceSnapshot }) {
   const valid = f.name.trim() && f.balance > 0;
   const fmtMonths = (m: number) => (m >= 12 ? `${Math.floor(m / 12)} thn ${m % 12} bln` : `${m} bln`);
   const plan = (emoji: string, title: string, r: typeof av, best: boolean) => (
-    <div className={`space-y-2.5 rounded-3xl border bg-card p-4 shadow-xs ${best ? "border-emerald-400/70 shadow-[0_0_16px_rgba(52,211,153,0.25)]" : "border-border/80"}`}>
+    <div className={`space-y-2.5 rounded-3xl border bg-card p-4 shadow-xs ${best ? "border-emerald-400/70" : "border-border/80"}`}>
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2.5"><IconBox tone={best ? "neon" : "amber"}>{emoji}</IconBox><p className="text-sm font-extrabold leading-tight">{title}</p></div>
         {best && <Pill icon="🏆">Paling hemat</Pill>}

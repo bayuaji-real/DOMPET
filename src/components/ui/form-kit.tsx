@@ -35,7 +35,7 @@ const TONES = {
   indigo: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
   violet: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
   emerald: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-  neon: "bg-emerald-400/20 text-emerald-600 ring-1 ring-emerald-400/60 shadow-[0_0_12px_rgba(52,211,153,0.45)] dark:text-emerald-300",
+  neon: "bg-teal-500/10 text-teal-700 ring-1 ring-teal-500/60 dark:text-teal-300",
 } as const;
 export type Tone = keyof typeof TONES;
 
@@ -64,7 +64,7 @@ export function SectionLabel({ children }: { children: React.ReactNode }) {
 
 const ACTIVE: Record<string, string> = {
   teal: "bg-teal-600 text-white shadow-md shadow-teal-600/30",
-  neon: "bg-emerald-500 text-white shadow-md shadow-emerald-500/40 ring-1 ring-emerald-300/70",
+  neon: "border border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300 font-semibold",
   rose: "bg-rose-500 text-white shadow-md shadow-rose-500/30",
   sky: "bg-sky-500 text-white shadow-md shadow-sky-500/30",
   amber: "bg-amber-500 text-white shadow-md shadow-amber-500/30",
@@ -116,7 +116,7 @@ export function Tabs<T extends string>({ value, onChange, options, label }: { va
 }
 
 const PILL = {
-  neon: "border-emerald-400/70 bg-emerald-400/20 text-emerald-700 shadow-[0_0_10px_rgba(52,211,153,0.35)] dark:text-emerald-300",
+  neon: "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300 font-semibold",
   rose: "border-rose-400/50 bg-rose-500/15 text-rose-700 dark:text-rose-300",
   amber: "border-amber-400/50 bg-amber-500/15 text-amber-700 dark:text-amber-300",
   sky: "border-sky-400/50 bg-sky-500/15 text-sky-700 dark:text-sky-300",
@@ -174,7 +174,7 @@ export function Notice({ tone = "amber", emoji, role, className, children }: { t
 export const chipCls = (on: boolean) =>
   cn(
     "cursor-pointer rounded-full border px-3 py-1.5 text-xs font-bold transition-all active:scale-95",
-    on ? "border-emerald-400 bg-emerald-400/20 text-emerald-700 shadow-[0_0_12px_rgba(52,211,153,0.45)] dark:text-emerald-300" : "border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+    on ? "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300 font-semibold" : "border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
   );
 
 /** Tombol utama: lebar penuh, gradien hijau, bulat, ada bayangan. Untuk Simpan, Tambah, Buat. */

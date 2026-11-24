@@ -108,7 +108,7 @@ export default function BantuanPage() {
           </RubyBubble>
         </div>
         {done ? (
-          <div className="space-y-3 rounded-3xl border border-emerald-400/60 bg-emerald-400/10 p-5 text-center shadow-[0_0_18px_rgba(52,211,153,0.25)]">
+          <div className="space-y-3 rounded-3xl border border-emerald-400/60 bg-emerald-400/10 p-5 text-center">
             <CheckCircle2 className="mx-auto h-9 w-9 text-emerald-500" />
             <p className="text-sm font-bold text-foreground">Terima kasih, laporanmu sudah terkirim.</p>
             <Button onClick={reset} variant="outline" className="cursor-pointer rounded-2xl border-emerald-400/60 text-xs font-bold">Kirim lagi</Button>

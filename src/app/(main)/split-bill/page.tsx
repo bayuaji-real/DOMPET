@@ -208,7 +208,7 @@ export default function SplitBillPage() {
 
   const chip = (on: boolean) =>
     `rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-      on ? "border-emerald-400 bg-emerald-400/20 text-emerald-700 shadow-[0_0_12px_rgba(52,211,153,0.4)] dark:text-emerald-300" : "border-border text-muted-foreground"
+      on ? "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300 font-semibold" : "border-border text-muted-foreground"
     }`;
 
   return (
@@ -237,7 +237,7 @@ export default function SplitBillPage() {
                   type="button"
                   disabled={scanning}
                   onClick={() => fileRef.current?.click()}
-                  className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-emerald-400/60 bg-emerald-400/10 p-4 text-center text-emerald-700 shadow-[0_0_14px_rgba(52,211,153,0.3)] shadow-xs transition-all hover:bg-teal-500/15 active:scale-95 disabled:opacity-60 dark:text-teal-300"
+                  className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-emerald-400/60 bg-emerald-400/10 p-4 text-center text-emerald-700 shadow-xs transition-all hover:bg-teal-500/15 active:scale-95 disabled:opacity-60 dark:text-teal-300"
                 >
                   <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-500/20 text-2xl">{scanning ? <Loader2 className="h-6 w-6 animate-spin" /> : "📸"}</span>
                   <span className="text-sm font-extrabold">{scanning ? "Membaca..." : "Foto Struk"}</span>
@@ -374,7 +374,7 @@ export default function SplitBillPage() {
                   onClick={() => setExtras({ shippingMode: m })}
                   aria-pressed={draft.extras.shippingMode === m}
                   className={`rounded-xl border px-3 py-2 text-left text-xs font-semibold ${
-                    draft.extras.shippingMode === m ? "border-emerald-400 bg-emerald-400/20 text-emerald-700 shadow-[0_0_12px_rgba(52,211,153,0.4)] dark:text-emerald-300" : "border-border"
+                    draft.extras.shippingMode === m ? "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300 font-semibold" : "border-border"
                   }`}
                 >
                   {m === "equal" ? "Rata per orang" : "Sesuai porsi pesanan"}

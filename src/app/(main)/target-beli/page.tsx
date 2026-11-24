@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { PageHero, IconBox, EmptyState } from "@/components/ui/form-kit";
+import { IconBox, EmptyState } from "@/components/ui/form-kit";
 import { Send, Trash2, ListChecks } from "lucide-react";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
 import { MoneyInput } from "@/components/konsultan/money-input";
 import { useConfirm } from "@/components/ui/use-confirm";
-import { Bubble, nowLabel, type Msg } from "@/components/ai/ai-chat";
+import { Bubble, ReplyBubble, ReplyRow, nowLabel, type Msg } from "@/components/ai/ai-chat";
 import { notify } from "@/lib/notify";
 import { formatRupiah } from "@/lib/utils";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
@@ -20,7 +20,7 @@ import { addMonths } from "@/lib/savings-feasibility";
 
 const rp = (n: number) => formatRupiah(Math.round(n));
 const fmtDate = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
-const TONE: Record<string, string> = { aman: "border-emerald-400/70 bg-emerald-400/20 text-emerald-700 shadow-[0_0_10px_rgba(52,211,153,0.35)] dark:text-emerald-300", pas: "border-amber-400/50 bg-amber-500/15 text-amber-800 dark:text-amber-300", berat: "border-rose-400/50 bg-rose-500/15 text-rose-700 dark:text-rose-300", belum_ada_data: "border-border/70 bg-muted text-muted-foreground" };
+const TONE: Record<string, string> = { aman: "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300 font-semibold", pas: "border-amber-400/50 bg-amber-500/15 text-amber-800 dark:text-amber-300", berat: "border-rose-400/50 bg-rose-500/15 text-rose-700 dark:text-rose-300", belum_ada_data: "border-border/70 bg-muted text-muted-foreground" };
 const EMOJI: Record<string, string> = { aman: "✅", pas: "⚖️", berat: "🔥", belum_ada_data: "❔" };
 const LABEL: Record<string, string> = { aman: "Aman", pas: "Pas-pasan", berat: "Berat", belum_ada_data: "Belum bisa dinilai" };
 const SUGGEST = ["Laptop 12jt tunai", "Motor 25jt cicilan 24 bulan dp 5jt", "HP 3jt 6 bulan lagi"];
@@ -94,12 +94,12 @@ export default function TargetBeliPage() {
       {dialog}
       <TopHeader title="Target Beli" subtitle="Ketik barang dan harganya" />
       <div className="flex-1 overflow-y-auto bg-[#efeae2] px-3 py-3 dark:bg-[#0b141a]">
-        <PageHero title="Target Beli" desc="Ketik barang dan harganya, Ruby hitung mampu atau belum." className="mb-3" />
         <Bubble msg={{ role: "model", text: "Mau beli apa? Ketik barang dan harganya, nanti aku hitung mampu atau tidak.", time: openedAt || undefined }} first profile={profile} />
         {msgs.length === 0 && (
-          <div className="ml-10 mt-2 flex flex-wrap gap-1.5">
-            {SUGGEST.map((t) => (<button key={t} type="button" onClick={() => void send(t)} className="cursor-pointer rounded-full border border-emerald-400/70 bg-white px-3 py-1.5 text-[11px] font-bold text-emerald-800 shadow-[0_0_10px_rgba(52,211,153,0.35)] transition-all active:scale-95 dark:bg-[#202c33] dark:text-emerald-200">{t}</button>))}
-          </div>
+          <ReplyBubble>
+            <p className="mb-1.5">Ketuk salah satu, atau ketik sendiri di bawah ya:</p>
+            <div className="flex flex-col gap-1.5">{SUGGEST.map((t) => (<ReplyRow key={t} label={t} onClick={() => void send(t)} />))}</div>
+          </ReplyBubble>
         )}
         {msgs.map((m, i) => (<Bubble key={i} msg={m} first={i === 0 || msgs[i - 1].role !== m.role} profile={profile} />))}
         {busy && <p className="ml-10 mt-2 text-[11px] text-zinc-500">Menghitung...</p>}
@@ -127,7 +127,7 @@ export default function TargetBeliPage() {
         <div ref={endRef} />
       </div>
       <form onSubmit={(e) => { e.preventDefault(); void send(input); }} className="flex shrink-0 items-center gap-2 border-t border-border/60 bg-background px-3 py-2.5">
-        <button type="button" onClick={() => setShowList(!showList)} aria-pressed={showList} aria-label="Target saya" className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border ${showList ? "border-emerald-400 bg-emerald-500 text-white shadow-[0_0_12px_rgba(52,211,153,0.5)]" : "bg-muted/40"}`}><ListChecks className="h-4 w-4" /></button>
+        <button type="button" onClick={() => setShowList(!showList)} aria-pressed={showList} aria-label="Target saya" className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border ${showList ? "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300" : "bg-muted/40"}`}><ListChecks className="h-4 w-4" /></button>
         <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={300} aria-label="Pesan Target Beli" placeholder="Misal: Laptop 12jt cicilan 12 bulan" className="h-10 flex-1 rounded-full border border-border bg-muted/40 px-4 text-xs outline-none focus:ring-2 focus:ring-emerald-400/50" />
         <button type="submit" disabled={busy || !input.trim()} aria-label="Kirim" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-600/30 transition-all active:scale-90 disabled:opacity-40"><Send className="h-4 w-4" /></button>
       </form>

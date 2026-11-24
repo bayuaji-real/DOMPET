@@ -1,16 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { PageHero } from "@/components/ui/form-kit";
 import Link from "next/link";
 import { Send, RotateCcw } from "lucide-react";
 import { TopHeader } from "@/components/layout/top-header";
-import { Bubble, nowLabel, type Msg } from "@/components/ai/ai-chat";
+import { Bubble, ReplyBubble, ReplyRow, nowLabel, type Msg } from "@/components/ai/ai-chat";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
 import { parseAnswer, type Answers, type Flow } from "@/lib/konsultan/guided";
 
 export type Prefill = { label: string; values: Answers };
-const chipCls = "cursor-pointer rounded-full bg-white px-3 py-1.5 text-[11px] text-zinc-800 shadow-sm dark:bg-[#202c33] dark:text-zinc-100";
 
 /** Layar chat bergaya Chat AI dengan pertanyaan tetap. Tanpa AI, jadi gratis dan hasilnya selalu sama untuk angka yang sama. */
 export function GuidedChat({ flow, prefill }: { flow: Flow; prefill?: () => Promise<Prefill | null> }) {
@@ -71,13 +69,17 @@ export function GuidedChat({ flow, prefill }: { flow: Flow; prefill?: () => Prom
     <div className="fixed inset-x-0 top-0 z-30 mx-auto flex max-w-[430px] flex-col bg-background" style={{ bottom: "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
       <TopHeader title={flow.title} subtitle={flow.subtitle} />
       <div className="flex-1 overflow-y-auto bg-[#efeae2] px-3 py-3 dark:bg-[#0b141a]">
-        <PageHero title={flow.title} desc={flow.subtitle} className="mb-3" />
         <Bubble msg={{ role: "model", text: flow.greeting, time: openedAt || undefined }} first profile={profile} />
         {msgs.map((m, i) => (<Bubble key={i} msg={m} first={i === 0 ? true : msgs[i - 1].role !== m.role} profile={profile} />))}
-        <div className="ml-10 mt-2 flex flex-wrap gap-1.5">
-          {chips.map((c) => (<button key={c.label} type="button" onClick={c.run} className={chipCls}>{c.label === "Hitung lagi" && <RotateCcw className="mr-1 inline h-3 w-3" />}{c.label}</button>))}
-          {done && flow.links?.map((l) => (<Link key={l.href + l.text} href={l.href} className={chipCls}>{l.text}</Link>))}
-        </div>
+        {(chips.length > 0 || (done && !!flow.links?.length)) && (
+          <ReplyBubble>
+            <p className="mb-1.5">{done ? "Mau hitung lagi atau buka fitur lain?" : "Ketuk salah satu, atau ketik sendiri di bawah ya:"}</p>
+            <div className="flex flex-col gap-1.5">
+              {chips.map((c) => (<ReplyRow key={c.label} label={c.label} onClick={c.run} icon={c.label === "Hitung lagi" ? <RotateCcw className="h-3 w-3" aria-hidden="true" /> : undefined} />))}
+              {done && flow.links?.map((l) => (<ReplyRow key={l.href + l.text} label={l.text} href={l.href} />))}
+            </div>
+          </ReplyBubble>
+        )}
         <div ref={endRef} />
       </div>
       <p className="bg-background px-3 pt-1.5 text-center text-[10px] leading-tight text-muted-foreground">{flow.footer}</p>

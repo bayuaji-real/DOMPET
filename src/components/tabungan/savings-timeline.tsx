@@ -192,7 +192,7 @@ export function SavingsTimeline({ goals, todayStr }: Props) {
             aria-pressed={mode === id}
             onClick={() => setMode(id)}
             className={`cursor-pointer rounded-xl py-1.5 text-xs font-bold transition-all active:scale-95 ${
-              mode === id ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/40 ring-1 ring-emerald-300/70" : "text-muted-foreground"
+              mode === id ? "border border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300 font-semibold" : "text-muted-foreground"
             }`}
           >
             {label}

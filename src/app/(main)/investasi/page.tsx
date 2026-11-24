@@ -78,7 +78,7 @@ function Kalkulator() {
 }
 
 function Stat({ label, value, strong, neg }: { label: string; value: string; strong?: boolean; neg?: boolean }) {
-  return (<div className={`rounded-2xl border p-2 ${strong ? "border-emerald-400/70 bg-emerald-400/15 shadow-[0_0_12px_rgba(52,211,153,0.3)]" : neg ? "border-rose-400/40 bg-rose-500/10" : "border-border/70 bg-muted/50"}`}><p className="text-[10px] font-semibold text-muted-foreground">{label}</p><p className={`text-xs ${strong ? "font-extrabold text-emerald-700 dark:text-emerald-300" : "font-bold"} ${neg ? "text-rose-600" : ""}`}>{value}</p></div>);
+  return (<div className={`rounded-2xl border p-2 ${strong ? "border-emerald-400/70 bg-emerald-400/15" : neg ? "border-rose-400/40 bg-rose-500/10" : "border-border/70 bg-muted/50"}`}><p className="text-[10px] font-semibold text-muted-foreground">{label}</p><p className={`text-xs ${strong ? "font-extrabold text-emerald-700 dark:text-emerald-300" : "font-bold"} ${neg ? "text-rose-600" : ""}`}>{value}</p></div>);
 }
 
 function Portofolio() {

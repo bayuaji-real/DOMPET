@@ -274,7 +274,7 @@ export default function RencanaPage() {
                         type="button"
                         aria-pressed={manual.frequency === f}
                         onClick={() => setManual({ ...manual, frequency: f })}
-                        className={`rounded-xl border px-3 py-2 text-xs font-semibold ${manual.frequency === f ? "border-emerald-400 bg-emerald-400/20 text-emerald-700 shadow-[0_0_12px_rgba(52,211,153,0.4)] dark:text-emerald-300" : "border-border"}`}
+                        className={`rounded-xl border px-3 py-2 text-xs font-semibold ${manual.frequency === f ? "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300 font-semibold" : "border-border"}`}
                       >
                         {f === "biweekly" ? "Tiap 2 minggu" : "Tiap bulan"}
                       </button>

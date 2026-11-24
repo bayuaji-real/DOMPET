@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckCheck, ChevronRight, Send } from "lucide-react";
 import type { AIChatResponse, SavingsProposal } from "@/app/api/ai-chat/route";
@@ -102,6 +103,25 @@ export function Bubble({
   );
 }
 
+/** Gaya baris pilihan cepat (dipakai semua chat Ruby): kotak berbingkai teal dengan panah di kanan. */
+export const quickRow =
+  "flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-teal-600/25 bg-teal-50 px-3 py-2 text-left text-xs font-medium text-teal-800 transition-colors hover:bg-teal-100 dark:border-teal-400/25 dark:bg-[#2a3942] dark:text-teal-200 dark:hover:bg-[#32454f]";
+
+/** Bubble Ruby berisi daftar pilihan. Isinya: ReplyTitle dan ReplyRow. Seragam di Tanya AI dan semua chat terpandu. */
+export function ReplyBubble({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mt-0.5 flex items-start gap-2">
+      <span className="w-8 shrink-0" aria-hidden="true" />
+      <div className="w-full max-w-[85%] rounded-2xl bg-white px-3 pb-2.5 pt-2 text-xs leading-relaxed text-zinc-900 shadow-sm dark:bg-[#202c33] dark:text-zinc-50">{children}</div>
+    </div>
+  );
+}
+
+export function ReplyRow({ label, onClick, href, icon }: { label: string; onClick?: () => void; href?: string; icon?: React.ReactNode }) {
+  const inner = (<><span className="flex items-center gap-1.5">{icon}{label}</span><ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden="true" /></>);
+  return href ? <Link href={href} className={quickRow}>{inner}</Link> : <button type="button" onClick={onClick} className={quickRow}>{inner}</button>;
+}
+
 /** Bubble Ruby berisi pilihan cepat (daftar ke bawah): ketuk untuk bertanya, atau buka fitur lain. */
 function QuickReplies({
   suggestions,
@@ -113,40 +133,25 @@ function QuickReplies({
   onPick: (text: string) => void;
 }) {
   const router = useRouter();
-  const row =
-    "flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-teal-600/25 bg-teal-50 px-3 py-2 text-left text-xs font-medium text-teal-800 transition-colors hover:bg-teal-100 dark:border-teal-400/25 dark:bg-[#2a3942] dark:text-teal-200 dark:hover:bg-[#32454f]";
   return (
-    <div className="mt-0.5 flex items-start gap-2">
-      <span className="w-8 shrink-0" aria-hidden="true" />
-      <div className="w-full max-w-[85%] rounded-2xl bg-white px-3 pb-2.5 pt-2 text-xs leading-relaxed text-zinc-900 shadow-sm dark:bg-[#202c33] dark:text-zinc-50">
-        {suggestions && suggestions.length > 0 && (
-          <>
-            <p className="mb-1.5">Ketuk salah satu, atau ketik sendiri di bawah ya:</p>
-            <div className="flex flex-col gap-1.5">
-              {suggestions.map((t) => (
-                <button key={t} type="button" onClick={() => onPick(t)} className={row}>
-                  <span>{t}</span>
-                  <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden="true" />
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-        {showMenu && (
-          <>
-            <p className={`mb-1.5 ${suggestions && suggestions.length > 0 ? "mt-3" : ""}`}>Mau buka fitur lain? Pilih saja, nanti aku antar:</p>
-            <div className="flex flex-col gap-1.5">
-              {RUBY_MENU.map((m) => (
-                <button key={m.href} type="button" onClick={() => router.push(m.href)} className={row}>
-                  <span>{m.label}</span>
-                  <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden="true" />
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+    <ReplyBubble>
+      {suggestions && suggestions.length > 0 && (
+        <>
+          <p className="mb-1.5">Ketuk salah satu, atau ketik sendiri di bawah ya:</p>
+          <div className="flex flex-col gap-1.5">
+            {suggestions.map((t) => (<ReplyRow key={t} label={t} onClick={() => onPick(t)} />))}
+          </div>
+        </>
+      )}
+      {showMenu && (
+        <>
+          <p className={`mb-1.5 ${suggestions && suggestions.length > 0 ? "mt-3" : ""}`}>Mau buka fitur lain? Pilih saja, nanti aku antar:</p>
+          <div className="flex flex-col gap-1.5">
+            {RUBY_MENU.map((m) => (<ReplyRow key={m.href} label={m.label} onClick={() => router.push(m.href)} />))}
+          </div>
+        </>
+      )}
+    </ReplyBubble>
   );
 }
 

@@ -54,7 +54,7 @@ export default function PaketPage() {
           const current = ent.plan === t.plan;
           const canTrial = t.plan !== "free" && ent.source === "free" && ent.trialAvailable[t.plan as "premium" | "pro"];
           return (
-            <section key={t.plan} className={`rounded-3xl border bg-card p-4 shadow-xs ${current ? "border-emerald-400 shadow-[0_0_18px_rgba(52,211,153,0.3)]" : "border-border/80"}`} aria-label={`Paket ${PLAN_LABEL[t.plan]}`}>
+            <section key={t.plan} className={`rounded-3xl border bg-card p-4 shadow-xs ${current ? "border-emerald-400" : "border-border/80"}`} aria-label={`Paket ${PLAN_LABEL[t.plan]}`}>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2.5"><IconBox tone={t.plan === "pro" ? "neon" : t.plan === "premium" ? "violet" : "sky"}>{t.plan === "pro" ? "👑" : t.plan === "premium" ? "⭐" : "🌱"}</IconBox>
                   <div className="min-w-0"><h2 className="text-base font-extrabold">{PLAN_LABEL[t.plan]}</h2><p className="text-[11px] text-muted-foreground">{t.tagline}</p></div></div>

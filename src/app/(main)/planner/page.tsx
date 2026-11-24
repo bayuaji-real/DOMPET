@@ -60,7 +60,7 @@ export default function PlannerPage() {
         {ev && (
           <>
             <div role="tablist" aria-label="Bagian planner" className="grid grid-cols-6 gap-1 rounded-2xl bg-muted p-1">
-              {TABS.map((t) => (<button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`flex cursor-pointer flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px] font-bold transition-all active:scale-95 ${tab === t.id ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/40 ring-1 ring-emerald-300/70" : "text-muted-foreground hover:text-foreground"}`}><span className="text-sm leading-none" aria-hidden>{t.emoji}</span>{t.label}</button>))}
+              {TABS.map((t) => (<button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`flex cursor-pointer flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px] font-bold transition-all active:scale-95 ${tab === t.id ? "border border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300 font-semibold" : "text-muted-foreground hover:text-foreground"}`}><span className="text-sm leading-none" aria-hidden>{t.emoji}</span>{t.label}</button>))}
             </div>
             {!data ? <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" /> : (
               <>

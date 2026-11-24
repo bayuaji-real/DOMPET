@@ -433,7 +433,7 @@ export default function TransaksiPage() {
               aria-label={`Filter transaksi: ${activeFilterLabel}`}
               className={`flex h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition-colors cursor-pointer ${
                 filterType !== "all"
-                  ? "border-emerald-400 bg-emerald-400/20 text-emerald-700 shadow-[0_0_12px_rgba(52,211,153,0.4)] dark:text-emerald-300"
+                  ? "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300 font-semibold"
                   : "border-border/60 bg-card text-foreground hover:bg-muted/50"
               }`}
             >

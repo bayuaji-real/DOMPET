@@ -83,7 +83,7 @@ function Impor() {
   return (
     <div className="space-y-3">
       <FormCard title="Impor dari CSV" desc="Unduh mutasi dari m-banking (CSV), pilih berkasnya atau tempel isinya. Kamu bisa meninjau dulu sebelum disimpan." icon="📥">
-        <input type="file" accept=".csv,text/csv,text/plain" aria-label="Pilih berkas CSV" onChange={(e) => onFile(e.target.files?.[0])} className="block w-full cursor-pointer rounded-2xl border border-dashed border-emerald-400/60 bg-emerald-400/5 p-3 text-xs file:mr-3 file:rounded-full file:border-0 file:bg-emerald-400/25 file:px-3 file:py-1 file:text-xs file:font-bold file:text-emerald-800" />
+        <input type="file" accept=".csv,text/csv,text/plain" aria-label="Pilih berkas CSV" onChange={(e) => onFile(e.target.files?.[0])} className="block w-full cursor-pointer rounded-2xl border border-dashed border-emerald-400/60 bg-emerald-400/5 p-3 text-xs file:mr-3 file:rounded-full file:border-0 file:bg-teal-600 file:px-3 file:py-1 file:text-xs file:font-bold file:text-white" />
         <textarea aria-label="Isi CSV" className="h-32 w-full rounded-2xl border border-border/70 bg-muted/30 p-3 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/60" placeholder={"Tanggal,Keterangan,Jumlah\n24/11/2026,Kopi,-25.000"} value={text} onChange={(e) => setText(e.target.value)} />
         <Cta disabled={!text.trim()} onClick={baca}><span aria-hidden>📖</span> Baca mutasi</Cta>
       </FormCard>
@@ -91,7 +91,7 @@ function Impor() {
         <section aria-label="Impor dengan AI">
          <FormCard title="Atau baca dengan AI (teks atau PDF)" desc="Memakai 1 kuota AI. Hasilnya bisa salah, jadi selalu tinjau dulu sebelum disimpan." icon="✨">
           <textarea aria-label="Isi mutasi untuk AI" className="h-24 w-full rounded-2xl border border-border/70 bg-muted/30 p-3 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/60" placeholder="Tempel isi mutasi di sini" value={aiText} onChange={(e) => setAiText(e.target.value)} />
-          <input type="file" accept="application/pdf" aria-label="Pilih PDF e-statement" onChange={(e) => onPdf(e.target.files?.[0])} className="block w-full cursor-pointer rounded-2xl border border-dashed border-violet-400/60 bg-violet-400/5 p-3 text-xs file:mr-3 file:rounded-full file:border-0 file:bg-violet-400/25 file:px-3 file:py-1 file:text-xs file:font-bold file:text-violet-800" />
+          <input type="file" accept="application/pdf" aria-label="Pilih PDF e-statement" onChange={(e) => onPdf(e.target.files?.[0])} className="block w-full cursor-pointer rounded-2xl border border-dashed border-violet-400/60 bg-violet-400/5 p-3 text-xs file:mr-3 file:rounded-full file:border-0 file:bg-violet-600 file:px-3 file:py-1 file:text-xs file:font-bold file:text-white" />
           {aiPdfName && <Pill tone="violet" icon="📄">PDF dipilih: {aiPdfName}</Pill>}
           <Cta className="from-violet-600 to-indigo-500 shadow-violet-600/25 hover:from-violet-700 hover:to-indigo-600" disabled={aiBusy || (!aiText.trim() && !aiPdf)} onClick={bacaAi}>{aiBusy ? "Membaca..." : "Baca dengan AI"}</Cta>
          </FormCard>
