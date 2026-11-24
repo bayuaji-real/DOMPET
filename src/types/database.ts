@@ -434,6 +434,10 @@ export interface Database {
         Insert: { group_id: string; from_user: string; to_user: string; amount: number; date?: string };
         Update: never; Relationships: [];
       };
+      payment_prices: {
+        Row: { months: number; amount: number };
+        Insert: never; Update: never; Relationships: [];
+      };
       subscription_requests: {
         Row: { id: string; user_id: string; plan: "premium" | "pro"; note: string | null; status: string; created_at?: string };
         Insert: { plan: "premium" | "pro"; note?: string | null };
@@ -586,6 +590,11 @@ export interface Database {
       admin_delete_benchmark: { Args: { p_code: string }; Returns: undefined };
       admin_mfa_status: { Args: Record<string, never>; Returns: Json };
       admin_set_require_mfa: { Args: { p_on: boolean }; Returns: undefined };
+      admin_list_payments: { Args: Record<string, never>; Returns: { id: string; user_id: string; email: string; months: number; amount: number; status: string; created_at: string; expires_at: string; proof_path: string | null; proof_ref: string | null; proof_paid_at: string | null; temp_pro_until: string | null; attempts: number; last_note: string | null; confirmed_at: string | null }[] };
+      admin_confirm_payment: { Args: { p_id: string }; Returns: undefined };
+      admin_reject_payment: { Args: { p_id: string; p_reason?: string | null }; Returns: undefined };
+      create_payment_request: { Args: { p_months: number }; Returns: Json };
+      get_my_payment_request: { Args: Record<string, never>; Returns: Json };
       start_trial: { Args: { p_plan: string }; Returns: Json };
       create_shared_group: { Args: { p_name: string; p_display: string }; Returns: Json };
       join_shared_group: { Args: { p_code: string; p_display: string }; Returns: string };
