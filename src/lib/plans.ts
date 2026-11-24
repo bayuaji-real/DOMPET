@@ -22,11 +22,11 @@ export type FeatureKey =
   | "laporan_mingguan" | "kalkulator_zakat" | "impor_csv" | "impor_ai" | "dompet_bersama" | "pengingat";
 
 export const FEATURE_MIN_PLAN: Record<FeatureKey, Plan> = {
-  ai_chat: "premium", ai_struk: "premium", ai_suara: "premium", ai_insight: "premium", ai_rencana: "premium", ai_impor: "premium",
-  skor_kesehatan: "premium", peringatan_dini: "premium", simulator_cicilan: "premium", mode_thr: "premium",
+  ai_chat: "pro", ai_struk: "pro", ai_suara: "pro", ai_insight: "pro", ai_rencana: "pro", ai_impor: "pro",
+  skor_kesehatan: "pro", peringatan_dini: "pro", simulator_cicilan: "pro", mode_thr: "pro",
   proyeksi_arus_kas: "pro", lunasi_utang: "pro",
-  kalkulator_investasi: "free", portofolio: "premium", info_pasar: "pro",
-  laporan_mingguan: "free", kalkulator_zakat: "free", impor_csv: "premium", impor_ai: "premium", dompet_bersama: "premium", pengingat: "free",
+  kalkulator_investasi: "free", portofolio: "pro", info_pasar: "pro",
+  laporan_mingguan: "free", kalkulator_zakat: "free", impor_csv: "pro", impor_ai: "pro", dompet_bersama: "pro", pengingat: "free",
 };
 
 export const FEATURE_LABEL: Record<FeatureKey, string> = {

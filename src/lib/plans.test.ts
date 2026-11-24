@@ -7,10 +7,13 @@ describe("plans", () => {
       if (k.startsWith("ai_")) expect(canUse("free", k)).toBe(false);
     }
   });
-  it("Premium boleh AI tapi tidak boleh fitur Pro", () => {
-    expect(canUse("premium", "ai_chat")).toBe(true);
-    expect(canUse("premium", "proyeksi_arus_kas")).toBe(false);
-    expect(canUse("premium", "info_pasar")).toBe(false);
+  it("Gratis tidak boleh fitur berbayar mana pun (tidak ada paket Premium lagi)", () => {
+    for (const k of Object.keys(FEATURE_MIN_PLAN) as FeatureKey[]) {
+      expect(["free", "pro"]).toContain(FEATURE_MIN_PLAN[k]);
+    }
+    expect(canUse("free", "proyeksi_arus_kas")).toBe(false);
+    expect(canUse("free", "info_pasar")).toBe(false);
+    expect(canUse("free", "portofolio")).toBe(false);
   });
   it("Pro boleh semua", () => {
     for (const k of Object.keys(FEATURE_MIN_PLAN) as FeatureKey[]) expect(canUse("pro", k)).toBe(true);
@@ -46,7 +49,7 @@ describe("plans", () => {
     expect(trialDaysLeft("bukan-tanggal", now)).toBe(0);
   });
   it("pesan ramah tanpa istilah teknis", () => {
-    expect(upgradeMessage("ai_chat")).toContain("Premium");
+    expect(upgradeMessage("ai_chat")).toContain("Pro");
     expect(trialErrorMessage("UJICOBA_SUDAH_DIPAKAI")).toContain("sudah pernah");
     expect(trialErrorMessage("apa saja")).not.toMatch(/supabase|rpc|sql/i);
   });

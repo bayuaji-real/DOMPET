@@ -9,6 +9,10 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ ok: false, error: "Login dulu" }, { status: 401 });
 
+  // Hanya admin: endpoint ini memanggil Gemini (berbiaya), jangan terbuka untuk akun Gratis.
+  const { data: role } = await supabase.rpc("my_admin_role");
+  if (!role) return NextResponse.json({ ok: false, error: "Khusus admin" }, { status: 403 });
+
   // #3 Antrean: cegah serbuan permintaan ke Gemini.
   const rl = rateLimit(`api:${user.id}`);
   if (!rl.ok) return NextResponse.json({ ok: false, error: "Terlalu banyak permintaan. Coba lagi sebentar." }, { status: 429 });

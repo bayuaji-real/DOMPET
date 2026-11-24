@@ -116,7 +116,7 @@ describe("Dompet Bersama", () => {
     await u.click(screen.getByRole("button", { name: "Gabung" }));
     expect((await screen.findByRole("alert")).textContent).toMatch(/Kode undangan tidak ditemukan/);
   });
-  it("Gratis melihat gembok", () => { plan = "free"; render(<BersamaPage />); expect(screen.getByText(/Tersedia di paket Premium/)).toBeTruthy(); });
+  it("Gratis melihat gembok", () => { plan = "free"; render(<BersamaPage />); expect(screen.getByText(/Tersedia di paket Pro/)).toBeTruthy(); });
   it("detail grup: saran transfer, kode undangan, catat pengeluaran", async () => {
     const u = userEvent.setup(); render(<GrupPage />);
     expect(await screen.findByText("Liburan")).toBeTruthy();

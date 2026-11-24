@@ -67,7 +67,7 @@ describe("Investasi: kalkulator", () => {
     entRaw = { plan: "free" }; const u = userEvent.setup(); render(<InvestasiPage />);
     expect(screen.getByText("Perkiraan nilai akhir")).toBeTruthy();
     await u.click(screen.getByRole("tab", { name: "Portofolio" }));
-    expect(screen.getByText(/Tersedia di paket Premium/)).toBeTruthy();
+    expect(screen.getByText(/Tersedia di paket Pro/)).toBeTruthy();
     await u.click(screen.getByRole("tab", { name: "Info Pasar" }));
     expect(screen.getByText(/Tersedia di paket Pro/)).toBeTruthy();
     expect(screen.getByRole("link", { name: /Lihat paket/ }).getAttribute("href")).toBe("/paket");
@@ -88,28 +88,28 @@ describe("Investasi: kalkulator", () => {
 
 describe("Paket", () => {
   it("Gratis dengan uji coba tersedia: tombol coba gratis memanggil startTrial", async () => {
-    entRaw = { plan: "free", source: "free", trial_available: { premium: true, pro: true } }; startTrial.mockResolvedValue({ ok: true });
+    entRaw = { plan: "free", source: "free", trial_available: { premium: false, pro: true } }; startTrial.mockResolvedValue({ ok: true });
     const u = userEvent.setup(); render(<PaketPage />);
-    const btns = screen.getAllByRole("button", { name: /Coba gratis 7 hari/ }); expect(btns.length).toBe(2);
+    const btns = screen.getAllByRole("button", { name: /Coba gratis 7 hari/ }); expect(btns.length).toBe(1);
     await u.click(btns[0]);
-    await waitFor(() => expect(startTrial).toHaveBeenCalledWith("premium"));
+    await waitFor(() => expect(startTrial).toHaveBeenCalledWith("pro"));
     expect(await screen.findByRole("status")).toBeTruthy();
   });
   it("galat dari server ditampilkan dengan bahasa awam", async () => {
-    entRaw = { plan: "free", source: "free", trial_available: { premium: true, pro: true } }; startTrial.mockResolvedValue({ ok: false, message: "Uji coba paket ini sudah pernah kamu pakai." });
+    entRaw = { plan: "free", source: "free", trial_available: { premium: false, pro: true } }; startTrial.mockResolvedValue({ ok: false, message: "Uji coba paket ini sudah pernah kamu pakai." });
     const u = userEvent.setup(); render(<PaketPage />);
-    await u.click(screen.getAllByRole("button", { name: /Coba gratis/ })[1]);
+    await u.click(screen.getAllByRole("button", { name: /Coba gratis/ })[0]);
     expect((await screen.findByRole("status")).textContent).toMatch(/sudah pernah/);
   });
   it("uji coba sudah dipakai: tidak ada tombol, ada penjelasan", () => {
     entRaw = { plan: "free", source: "free", trial_available: { premium: false, pro: false } }; render(<PaketPage />);
     expect(screen.queryAllByRole("button", { name: /Coba gratis/ }).length).toBe(0);
-    expect(screen.getAllByText(/sudah kamu pakai/).length).toBe(2);
+    expect(screen.getAllByText(/sudah kamu pakai/).length).toBe(1);
   });
   it("sedang uji coba: menampilkan sisa hari dan kuota", () => {
-    entRaw = { plan: "premium", source: "trial", trial_ends_at: new Date(Date.now() + 3 * 86_400_000).toISOString(), ai_limit: 100, ai_used: 40, trial_available: { premium: false, pro: true } };
+    entRaw = { plan: "pro", source: "trial", trial_ends_at: new Date(Date.now() + 3 * 86_400_000).toISOString(), ai_limit: 100, ai_used: 40, trial_available: { premium: false, pro: false } };
     render(<PaketPage />);
-    expect(screen.getByTestId("paket-aktif").textContent).toMatch(/Premium \(uji coba, sisa 3 hari\)/);
+    expect(screen.getByTestId("paket-aktif").textContent).toMatch(/Pro \(uji coba, sisa 3 hari\)/);
     expect(screen.getByText(/60 dari 100/)).toBeTruthy();
   });
 });
@@ -134,9 +134,9 @@ describe("Cicilan & Utang", () => {
     expect(screen.getByText("Paylater")).toBeTruthy();
     expect(screen.getAllByText(/Setara bunga sekitar/).length).toBe(2);
   });
-  it("Premium: tab Utang terkunci, Cicilan terbuka", async () => {
-    entRaw = { plan: "premium", source: "paid", ai_limit: 100, ai_used: 0 }; const u = userEvent.setup(); render(<CicilanUtangPage />);
-    expect(await screen.findByText("Cicilan bunga flat")).toBeTruthy();
+  it("Gratis: Cicilan dan Utang terkunci, paket Pro disebut", async () => {
+    entRaw = { plan: "free", source: "free", ai_limit: 0, ai_used: 0 }; const u = userEvent.setup(); render(<CicilanUtangPage />);
+    expect(await screen.findByText(/paket Pro/)).toBeTruthy();
     await u.click(screen.getByRole("tab", { name: "Utang" })); expect(screen.getByText(/paket Pro/)).toBeTruthy();
   });
   it("Utang kosong: ada pesan dan form", async () => {
@@ -184,5 +184,5 @@ describe("THR & Zakat", () => {
     const sec = screen.getByRole("region", { name: "Mode THR" });
     expect(within(sec).getByText("Rp25.000")).toBeTruthy();
   });
-  it("THR terkunci di Gratis, zakat tetap terbuka", () => { entRaw = { plan: "free" }; render(<ThrZakatPage />); expect(screen.getByText("Kalkulator zakat")).toBeTruthy(); expect(screen.getByText(/Tersedia di paket Premium/)).toBeTruthy(); });
+  it("THR terkunci di Gratis, zakat tetap terbuka", () => { entRaw = { plan: "free" }; render(<ThrZakatPage />); expect(screen.getByText("Kalkulator zakat")).toBeTruthy(); expect(screen.getByText(/Tersedia di paket Pro/)).toBeTruthy(); });
 });

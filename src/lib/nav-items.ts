@@ -72,7 +72,7 @@ export const MORE_GROUPS: MoreGroup[] = [
     items: [
       { label: "Investasi", description: "Kalkulator, portofolio & info pasar", href: "/investasi", icon: TrendingUp, tone: "bg-teal-500/15 text-teal-600 dark:text-teal-400" },
       { label: "Keamanan", description: "PIN, MFA, notifikasi, dan hapus akun", href: "/keamanan", icon: ShieldCheck, tone: "bg-slate-500/15 text-slate-600 dark:text-slate-400" },
-      { label: "Paket & Uji Coba", description: "Gratis, Premium, Pro. Coba gratis 7 hari", href: "/paket", icon: Crown, tone: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400" },
+      { label: "Paket & Uji Coba", description: "Gratis atau Pro. Coba Pro gratis 7 hari", href: "/paket", icon: Crown, tone: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400" },
     ],
   },
 ];
