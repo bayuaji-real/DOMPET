@@ -14,7 +14,15 @@ interface TopHeaderProps {
   showLogout?: boolean; // deprecated prop, kept for compatibility
 }
 
-export function TopHeader({ title }: TopHeaderProps) {
+export function TopHeader(props: TopHeaderProps) {
+  return (
+    <React.Suspense fallback={<div className="h-14" />}>
+      <TopHeaderInner {...props} />
+    </React.Suspense>
+  );
+}
+
+function TopHeaderInner({ title }: TopHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [profile, setProfile] = React.useState<UserProfile>({
