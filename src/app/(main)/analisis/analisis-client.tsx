@@ -180,6 +180,8 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
             nominal: c.nominal,
             percentage: c.percentage,
           })),
+          // Status yang sama dengan kartu di layar (satu rumus), supaya kalimat Ruby tidak bertentangan.
+          financialHealth: { overallStatus: data.financialHealth.overallStatus, emergencyFundMonths: data.financialHealth.emergencyFundMonths },
           forceRefresh: force,
         }),
       });
