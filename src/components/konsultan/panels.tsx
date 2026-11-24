@@ -14,25 +14,35 @@ export function Skor({ s }: { s: FinanceSnapshot }) {
   React.useEffect(() => { getDebts().then((d) => setDebt(d.reduce((x, r) => x + Number(r.min_payment), 0))).catch(() => {}); }, []);
   if (!s.hasData) return <Empty />;
   const r = healthScore({ monthlyIncome: s.monthlyIncome, monthlyExpense: s.monthlyExpense, liquidSavings: s.freeCash ?? s.liquidSavings, monthlyDebtPayment: debt });
-  const hero = r.level === "sehat" ? "from-teal-600 via-teal-700 to-teal-800" : r.level === "cukup" ? "from-amber-600 via-amber-700 to-amber-800" : "from-rose-600 via-rose-700 to-rose-800";
+  const lvTone = r.level === "sehat" ? "neon" : r.level === "cukup" ? "amber" : "rose";
   const face = r.level === "sehat" ? "😄" : r.level === "cukup" ? "🙂" : "😟";
   const BAR = ["bg-teal-500", "bg-indigo-500", "bg-amber-500", "bg-sky-500", "bg-violet-500"];
   const EMO = ["💸", "🛟", "🏦", "🌊", "⭐"];
+  const tone = (p: { score: number; max: number }) => (p.score / p.max >= 0.7 ? "neon" : p.score / p.max >= 0.4 ? "amber" : "rose") as "neon" | "amber" | "rose";
   return (
     <div className="space-y-3">
-      <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${hero} p-5 text-center text-white shadow-lg`}>
-        <span aria-hidden className="absolute -right-3 -top-4 text-8xl opacity-15">{face}</span>
-        <p className="text-4xl" aria-hidden>{face}</p>
-        <p className="mt-1 text-5xl font-extrabold" data-testid="skor-total">{r.total}</p>
-        <p className="text-xs font-semibold text-white/80">dari 100 · kondisi {r.level}</p>
+      <div className="grid grid-cols-5 items-stretch gap-2">
+        <div className="col-span-2 flex flex-col items-center justify-center gap-1 rounded-3xl border border-border/80 bg-card p-3 text-center shadow-xs">
+          <p className="text-3xl" aria-hidden>{face}</p>
+          <p className="text-5xl font-extrabold tabular-nums" data-testid="skor-total">{r.total}</p>
+          <p className="text-[11px] font-semibold text-muted-foreground">dari 100</p>
+          <Pill tone={lvTone}>Kondisi {r.level}</Pill>
+        </div>
+        <ul className="col-span-3 grid auto-rows-fr gap-2">
+          {r.parts.map((p, i) => (
+            <li key={p.key} className="flex flex-col justify-center gap-1.5 rounded-2xl border border-border/70 bg-card px-2.5 py-2 shadow-xs">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="flex min-w-0 items-center gap-1.5 text-[11px] font-extrabold leading-tight"><span aria-hidden className="text-sm leading-none">{EMO[i % EMO.length]}</span><span className="truncate">{p.label}</span></span>
+                <Pill tone={tone(p)} className="shrink-0 px-1.5 text-[10px]">{p.score}/{p.max}</Pill>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={p.score} aria-valuemin={0} aria-valuemax={p.max} aria-label={p.label}><div className={`h-full rounded-full ${BAR[i % BAR.length]}`} style={{ width: `${(p.score / p.max) * 100}%` }} /></div>
+            </li>
+          ))}
+        </ul>
       </div>
-      <ul className="space-y-2">
+      <ul className="space-y-1.5">
         {r.parts.map((p, i) => (
-          <li key={p.key} className="rounded-2xl border border-border/70 bg-card p-3 shadow-xs">
-            <div className="flex items-center justify-between gap-2 text-sm font-extrabold"><span className="flex items-center gap-2"><span aria-hidden className="flex h-7 w-7 items-center justify-center rounded-xl bg-muted text-sm">{EMO[i % EMO.length]}</span>{p.label}</span><Pill tone={p.score / p.max >= 0.7 ? "neon" : p.score / p.max >= 0.4 ? "amber" : "rose"}>{p.score}/{p.max}</Pill></div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={p.score} aria-valuemin={0} aria-valuemax={p.max} aria-label={p.label}><div className={`h-full rounded-full ${BAR[i % BAR.length]}`} style={{ width: `${(p.score / p.max) * 100}%` }} /></div>
-            <p className="mt-1.5 text-[11px] text-muted-foreground">{p.tip}</p>
-          </li>
+          <li key={p.key} className="flex items-start gap-2 rounded-2xl border border-border/70 bg-card p-2.5 text-[11px] shadow-xs"><span aria-hidden className="text-sm leading-none">{EMO[i % EMO.length]}</span><span><b className="font-extrabold">{p.label}:</b> <span className="text-muted-foreground">{p.tip}</span></span></li>
         ))}
       </ul>
       <Notice tone="sky" emoji="🧮">Dihitung dari rata-rata {s.monthsCovered ?? 3} bulan data: pemasukan {formatRupiah(s.monthlyIncome)}, pengeluaran {formatRupiah(s.monthlyExpense)}, uang bebas pakai {formatRupiah(s.freeCash ?? s.liquidSavings)} (di luar dompet tabungan dan investasi). Cicilan utang dari menu Utang.</Notice>

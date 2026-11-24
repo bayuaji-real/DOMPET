@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { notify } from "@/lib/notify";
 import { TopHeader } from "@/components/layout/top-header";
 import { SavingsTimeline } from "@/components/tabungan/savings-timeline";
@@ -555,13 +554,6 @@ export default function TabunganPage() {
         title="Tabungan & Impian"
         subtitle="Rencanakan target & pantau proyeksi gajian"
       />
-
-      <div className="px-4 pt-2">
-        <Link href="/planner" className="flex items-center justify-between rounded-xl bg-rose-500/10 p-3 text-sm">
-          <span><span className="font-semibold">Planner Acara</span><span className="block text-xs text-muted-foreground">Rencanakan lamaran atau nikah: item, harga, tanggal butuh, dan pembayaran</span></span>
-          <ChevronRight className="size-4 shrink-0" />
-        </Link>
-      </div>
 
       {/* Toast Feedback */}
       {toastMessage && (
