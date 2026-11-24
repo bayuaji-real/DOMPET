@@ -573,7 +573,7 @@ export default function TabunganPage() {
 
       <div className="space-y-4 p-4">
         {/* A. Ringkasan Atas */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800 via-emerald-600 to-lime-300 p-4.5 text-white shadow-lg shadow-emerald-600/25">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 p-4.5 text-white shadow-lg shadow-teal-700/25">
           <div className="flex items-center justify-between pb-3 border-b border-white/10">
             <div>
               <p className="text-[11px] text-white/90 font-medium">Total Terkumpul</p>

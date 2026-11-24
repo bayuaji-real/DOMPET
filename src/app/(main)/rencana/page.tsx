@@ -239,7 +239,7 @@ export default function RencanaPage() {
       <div className="space-y-5 px-4 pb-6 pt-5">
         <PageHero title="Rencana Keuangan" desc="Gaji dikurangi biaya hidup dan tagihan, sisanya diisi ke kebutuhan dengan tenggat paling dekat dulu (kelipatan Rp50.000)." />
 
-        <Button type="button" variant="outline" onClick={() => setView("chat")} className="w-full rounded-xl text-xs">
+        <Button type="button" variant="outline" onClick={() => setView("chat")} className="h-10 w-full rounded-2xl border-emerald-400/60 text-xs font-bold">
           <Sparkles className="h-4 w-4 text-fuchsia-600" /> Kembali ke obrolan dengan Ruby
         </Button>
 
@@ -274,7 +274,7 @@ export default function RencanaPage() {
                         type="button"
                         aria-pressed={manual.frequency === f}
                         onClick={() => setManual({ ...manual, frequency: f })}
-                        className={`rounded-xl border px-3 py-2 text-xs font-semibold ${manual.frequency === f ? "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300" : "border-border"}`}
+                        className={`rounded-xl border px-3 py-2 text-xs font-semibold ${manual.frequency === f ? "border-emerald-400 bg-emerald-400/20 text-emerald-700 shadow-[0_0_12px_rgba(52,211,153,0.4)] dark:text-emerald-300" : "border-border"}`}
                       >
                         {f === "biweekly" ? "Tiap 2 minggu" : "Tiap bulan"}
                       </button>
@@ -306,7 +306,7 @@ export default function RencanaPage() {
               {goals.map((g) => {
                 const on = !excluded.includes(g.id);
                 return (
-                  <label key={g.id} className="flex items-center justify-between gap-2 rounded-2xl bg-muted/40 px-3 py-2">
+                  <label key={g.id} className="flex items-center justify-between gap-2 rounded-2xl border border-border/70 bg-card px-3 py-2 shadow-xs">
                     <span className="min-w-0">
                       <span className="block text-xs font-bold">{g.name}</span>
                       <span className="block text-[11px] text-muted-foreground">
@@ -324,7 +324,7 @@ export default function RencanaPage() {
                 );
               })}
               {extras.map((e) => (
-                <div key={e.id} className="flex items-center justify-between gap-2 rounded-2xl bg-muted/40 px-3 py-2">
+                <div key={e.id} className="flex items-center justify-between gap-2 rounded-2xl border border-border/70 bg-card px-3 py-2 shadow-xs">
                   <span className="min-w-0">
                     <span className="block text-xs font-bold">{e.name}</span>
                     <span className="block text-[11px] text-muted-foreground">
@@ -346,7 +346,7 @@ export default function RencanaPage() {
                     <Input id="rc-dl" type="date" min={today} value={newNeed.deadline} onChange={(e) => setNewNeed({ ...newNeed, deadline: e.target.value })} />
                   </div>
                 </div>
-                <Button type="submit" variant="outline" className="w-full rounded-xl" disabled={!newNeed.name.trim() || newNeed.amount <= 0}>
+                <Button type="submit" variant="outline" className="h-10 w-full rounded-2xl border-emerald-400/60 font-bold" disabled={!newNeed.name.trim() || newNeed.amount <= 0}>
                   <Plus className="h-4 w-4" /> Tambah
                 </Button>
               </form>
@@ -354,10 +354,10 @@ export default function RencanaPage() {
 
             {/* 3. Hasil */}
             {paydays.length === 0 ? (
-              <p className="rounded-2xl bg-muted/40 p-4 text-center text-xs text-muted-foreground">Isi gaji dulu supaya rencananya bisa dihitung.</p>
+              <p className="rounded-3xl border border-dashed border-emerald-400/50 bg-emerald-400/5 p-4 text-center text-xs text-muted-foreground">Isi gaji dulu supaya rencananya bisa dihitung.</p>
             ) : (
               <section className="space-y-3" aria-live="polite">
-                <div className={`rounded-3xl border p-4 ${late.length ? "border-amber-500/40 bg-amber-500/5" : "border-teal-500/30 bg-teal-500/5"}`}>
+                <div className={`rounded-3xl border p-4 ${late.length ? "border-amber-500/40 bg-amber-500/5" : "border-emerald-400/50 bg-emerald-400/10"}`}>
                   <div className="flex items-center gap-2">
                     {late.length ? <AlertTriangle className="h-5 w-5 text-amber-600" /> : <CheckCircle2 className="h-5 w-5 text-teal-600" />}
                     <h2 className="text-sm font-extrabold">{late.length ? `${late.length} kebutuhan belum terkejar` : "Semua kebutuhan terkejar"}</h2>
@@ -427,7 +427,7 @@ export default function RencanaPage() {
                   ))}
                 </div>
                 {plan.allocations.length > 6 && (
-                  <Button type="button" variant="outline" className="w-full rounded-xl" onClick={() => setShowAll((s) => !s)}>
+                  <Button type="button" variant="outline" className="h-10 w-full rounded-2xl border-emerald-400/60 font-bold" onClick={() => setShowAll((s) => !s)}>
                     {showAll ? "Tampilkan lebih sedikit" : `Lihat semua ${plan.allocations.length} gajian`}
                   </Button>
                 )}
@@ -489,7 +489,7 @@ export default function RencanaPage() {
                           );
                         })}
                       </div>
-                      <Button type="button" variant="outline" onClick={askAI} disabled={aiState === "loading"} className="w-full rounded-xl text-xs">
+                      <Button type="button" variant="outline" onClick={askAI} disabled={aiState === "loading"} className="h-10 w-full rounded-2xl border-emerald-400/60 text-xs font-bold">
                         Buat ulang saran
                       </Button>
                     </div>

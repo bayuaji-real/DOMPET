@@ -14,7 +14,7 @@ export function Skor({ s }: { s: FinanceSnapshot }) {
   React.useEffect(() => { getDebts().then((d) => setDebt(d.reduce((x, r) => x + Number(r.min_payment), 0))).catch(() => {}); }, []);
   if (!s.hasData) return <Empty />;
   const r = healthScore({ monthlyIncome: s.monthlyIncome, monthlyExpense: s.monthlyExpense, liquidSavings: s.freeCash ?? s.liquidSavings, monthlyDebtPayment: debt });
-  const hero = r.level === "sehat" ? "from-emerald-800 via-emerald-600 to-lime-300" : r.level === "cukup" ? "from-amber-700 via-amber-500 to-yellow-300" : "from-rose-800 via-rose-600 to-pink-300";
+  const hero = r.level === "sehat" ? "from-teal-600 via-teal-700 to-teal-800" : r.level === "cukup" ? "from-amber-600 via-amber-700 to-amber-800" : "from-rose-600 via-rose-700 to-rose-800";
   const face = r.level === "sehat" ? "😄" : r.level === "cukup" ? "🙂" : "😟";
   const BAR = ["bg-teal-500", "bg-indigo-500", "bg-amber-500", "bg-sky-500", "bg-violet-500"];
   const EMO = ["💸", "🛟", "🏦", "🌊", "⭐"];

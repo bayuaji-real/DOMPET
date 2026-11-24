@@ -182,14 +182,14 @@ export function Cta({ className, ...props }: React.ComponentProps<typeof Button>
   return <Button {...props} className={cn("h-11 w-full cursor-pointer rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 text-xs font-bold text-white shadow-md shadow-emerald-600/25 transition-all hover:from-emerald-700 hover:to-teal-600 active:scale-[0.98]", className)} />;
 }
 
-/** Gradien aurora hijau ke hijau muda. Dipakai kartu judul dan kartu atas (Dompet, Tabungan, Beranda). */
-export const AURORA = "bg-gradient-to-br from-emerald-800 via-emerald-600 to-lime-300";
+/** Gradien teal terang (teal-600, teal-700, teal-800). Dipakai kartu judul dan kartu atas (Dompet, Tabungan, Beranda). */
+export const AURORA = "bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800";
 /** Cahaya lembut di pojok kartu aurora. */
 export function AuroraGlow() {
   return (
     <>
-      <span aria-hidden className="pointer-events-none absolute -right-8 -top-10 size-36 rounded-full bg-lime-200/40 blur-2xl" />
-      <span aria-hidden className="pointer-events-none absolute -bottom-12 left-1/3 size-32 rounded-full bg-teal-200/30 blur-2xl" />
+      <span aria-hidden className="pointer-events-none absolute -right-8 -top-10 size-36 rounded-full bg-white/15 blur-2xl" />
+      <span aria-hidden className="pointer-events-none absolute -bottom-12 left-1/3 size-32 rounded-full bg-teal-300/20 blur-2xl" />
     </>
   );
 }
@@ -197,7 +197,7 @@ export function AuroraGlow() {
 /** Kartu judul halaman: gradien aurora hijau ke hijau muda. Tanpa ikon atau ilustrasi. */
 export function PageHero({ title, desc, className }: { title: string; desc?: string; className?: string }) {
   return (
-    <div className={cn("relative overflow-hidden rounded-3xl p-4 text-white shadow-lg shadow-emerald-600/25", AURORA, className)}>
+    <div className={cn("relative overflow-hidden rounded-3xl p-4 text-white shadow-lg shadow-teal-700/25", AURORA, className)}>
       <AuroraGlow />
       <h1 className="relative text-lg font-extrabold leading-tight tracking-tight drop-shadow-sm">{title}</h1>
       {desc && <p className="relative mt-0.5 text-xs font-medium leading-snug text-white/95 drop-shadow-sm">{desc}</p>}

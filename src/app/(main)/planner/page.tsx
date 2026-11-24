@@ -60,7 +60,7 @@ export default function PlannerPage() {
         {ev && (
           <>
             <div role="tablist" aria-label="Bagian planner" className="grid grid-cols-6 gap-1 rounded-2xl bg-muted p-1">
-              {TABS.map((t) => (<button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`flex cursor-pointer flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px] font-bold transition-all active:scale-95 ${tab === t.id ? "bg-teal-600 text-white shadow-xs" : "text-muted-foreground hover:text-foreground"}`}><span className="text-sm leading-none" aria-hidden>{t.emoji}</span>{t.label}</button>))}
+              {TABS.map((t) => (<button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`flex cursor-pointer flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px] font-bold transition-all active:scale-95 ${tab === t.id ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/40 ring-1 ring-emerald-300/70" : "text-muted-foreground hover:text-foreground"}`}><span className="text-sm leading-none" aria-hidden>{t.emoji}</span>{t.label}</button>))}
             </div>
             {!data ? <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" /> : (
               <>
@@ -136,7 +136,7 @@ function Ringkasan({ ev, d, today, onSaved, onDelete }: { ev: P.EventRow; d: P.P
   const [f, setF] = React.useState({ title: ev.title, date: ev.event_date ?? "", budget: ev.total_budget });
   return (
     <div className="space-y-3">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800 via-emerald-600 to-lime-300 p-5 text-white shadow-lg shadow-emerald-600/25">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 p-5 text-white shadow-lg shadow-teal-700/25">
         <span aria-hidden className="absolute -right-2 -top-3 text-7xl opacity-20">💍</span>
         <p className="text-xs font-semibold text-white/90">{ev.title}</p>
         {days === null ? <p className="mt-1 text-base font-extrabold">Tanggal acara belum diisi</p> : days > 0 ? <p className="mt-1 text-3xl font-extrabold">{days} hari lagi</p> : days === 0 ? <p className="mt-1 text-3xl font-extrabold">Hari ini! 🎉</p> : <p className="mt-1 text-base font-extrabold">Acara sudah lewat {Math.abs(days)} hari</p>}
@@ -353,7 +353,7 @@ function GoalLink({ ev, obligation, onSaved }: { ev: P.EventRow; obligation: num
       )}
       {g && (
         <div className="space-y-1 text-sm">
-          <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, Math.round(Number(g.percent ?? 0)))}%` }} /></div>
+          <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-lime-300" style={{ width: `${Math.min(100, Math.round(Number(g.percent ?? 0)))}%` }} /></div>
           <p className="text-xs text-muted-foreground">Terkumpul {formatRupiah(Number(g.saved ?? 0))} dari target {formatRupiah(Number(g.target_amount))}.</p>
           {obligation > 0 && <p className="text-xs">{Number(g.saved ?? 0) >= obligation ? "Tabunganmu sudah cukup menutup sisa kewajiban planner." : `Kurang ${formatRupiah(obligation - Number(g.saved ?? 0))} untuk menutup sisa kewajiban planner.`}</p>}
         </div>

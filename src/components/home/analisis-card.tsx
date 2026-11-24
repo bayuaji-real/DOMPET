@@ -188,7 +188,7 @@ export function AnalisisCard({ walletId = null, walletName, wallet = null, month
         <SavingsWalletAnalysis wallet={{ id: wallet.id, name: wallet.name ?? "Tabungan", goal_id: wallet.goal_id, balance: wallet.balance }} hide={hide} />
         <Link
           href="/tabungan"
-          className="flex items-center justify-center gap-1 rounded-xl border border-border/70 py-2 text-xs font-bold text-foreground transition-colors hover:bg-muted/50"
+          className="flex items-center justify-center gap-1 rounded-2xl border border-emerald-400/60 bg-emerald-400/10 py-2 text-xs font-bold text-emerald-700 transition-all hover:bg-emerald-400/20 active:scale-95 dark:text-emerald-300"
         >
           Buka Tabungan <ChevronRight className="h-4 w-4" />
         </Link>
@@ -306,7 +306,7 @@ export function AnalisisCard({ walletId = null, walletName, wallet = null, month
               )}
             </>
           ) : (
-            <p className="rounded-2xl bg-muted/40 p-3 text-center text-xs text-muted-foreground">
+            <p className="rounded-3xl border border-dashed border-emerald-400/50 bg-emerald-400/5 p-3 text-center text-xs text-muted-foreground">
               {filtering ? "Dompet ini belum punya transaksi bulan ini." : "Belum ada transaksi bulan ini. Catat transaksi pertamamu untuk melihat ringkasan."}
             </p>
           )}
@@ -315,7 +315,7 @@ export function AnalisisCard({ walletId = null, walletName, wallet = null, month
 
       <Link
         href="/analisis"
-        className="flex items-center justify-center gap-1 rounded-xl border border-border/70 py-2 text-xs font-bold text-foreground transition-colors hover:bg-muted/50"
+        className="flex items-center justify-center gap-1 rounded-2xl border border-emerald-400/60 bg-emerald-400/10 py-2 text-xs font-bold text-emerald-700 transition-all hover:bg-emerald-400/20 active:scale-95 dark:text-emerald-300"
       >
         Lihat detail analisis <ChevronRight className="h-4 w-4" />
       </Link>

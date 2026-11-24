@@ -208,7 +208,7 @@ export default function SplitBillPage() {
 
   const chip = (on: boolean) =>
     `rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-      on ? "border-teal-500 bg-teal-500/15 text-teal-700 dark:text-teal-300" : "border-border text-muted-foreground"
+      on ? "border-emerald-400 bg-emerald-400/20 text-emerald-700 shadow-[0_0_12px_rgba(52,211,153,0.4)] dark:text-emerald-300" : "border-border text-muted-foreground"
     }`;
 
   return (
@@ -237,7 +237,7 @@ export default function SplitBillPage() {
                   type="button"
                   disabled={scanning}
                   onClick={() => fileRef.current?.click()}
-                  className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-teal-500/40 bg-teal-500/10 p-4 text-center text-teal-700 shadow-xs transition-all hover:bg-teal-500/15 active:scale-95 disabled:opacity-60 dark:text-teal-300"
+                  className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-emerald-400/60 bg-emerald-400/10 p-4 text-center text-emerald-700 shadow-[0_0_14px_rgba(52,211,153,0.3)] shadow-xs transition-all hover:bg-teal-500/15 active:scale-95 disabled:opacity-60 dark:text-teal-300"
                 >
                   <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-500/20 text-2xl">{scanning ? <Loader2 className="h-6 w-6 animate-spin" /> : "📸"}</span>
                   <span className="text-sm font-extrabold">{scanning ? "Membaca..." : "Foto Struk"}</span>
@@ -374,7 +374,7 @@ export default function SplitBillPage() {
                   onClick={() => setExtras({ shippingMode: m })}
                   aria-pressed={draft.extras.shippingMode === m}
                   className={`rounded-xl border px-3 py-2 text-left text-xs font-semibold ${
-                    draft.extras.shippingMode === m ? "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-300" : "border-border"
+                    draft.extras.shippingMode === m ? "border-emerald-400 bg-emerald-400/20 text-emerald-700 shadow-[0_0_12px_rgba(52,211,153,0.4)] dark:text-emerald-300" : "border-border"
                   }`}
                 >
                   {m === "equal" ? "Rata per orang" : "Sesuai porsi pesanan"}
@@ -385,7 +385,7 @@ export default function SplitBillPage() {
           </div>
         </section>
 
-        <section className="space-y-3 rounded-3xl border border-teal-500/30 bg-teal-500/5 p-4" aria-live="polite">
+        <section className="space-y-3 rounded-3xl border border-emerald-400/50 bg-emerald-400/10 p-4" aria-live="polite">
           <div className="flex items-baseline justify-between">
             <h2 className="text-sm font-bold">Hasil</h2>
             <p className="text-lg font-extrabold">{formatRupiah(result.grandTotal)}</p>
@@ -444,7 +444,7 @@ export default function SplitBillPage() {
             <Button type="button" variant="outline" onClick={copy} className="rounded-xl" disabled={result.grandTotal <= 0}>
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {copied ? "Tersalin" : "Salin"}
             </Button>
-            <Button type="button" onClick={share} className="rounded-xl bg-teal-600 text-white hover:bg-teal-700" disabled={result.grandTotal <= 0}>
+            <Button type="button" onClick={share} className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-md shadow-emerald-600/25 hover:from-emerald-700 hover:to-teal-600 active:scale-95" disabled={result.grandTotal <= 0}>
               <Share2 className="h-4 w-4" /> Bagikan
             </Button>
           </div>
@@ -467,7 +467,7 @@ export default function SplitBillPage() {
                   </option>
                 ))}
               </Select>
-              <Button type="button" variant="outline" onClick={recordMyShare} disabled={recordState === "saving" || recordState === "done"} className="w-full rounded-xl">
+              <Button type="button" variant="outline" onClick={recordMyShare} disabled={recordState === "saving" || recordState === "done"} className="h-10 w-full rounded-2xl border-emerald-400/60 font-bold">
                 {recordState === "saving" ? "Menyimpan…" : recordState === "done" ? "Sudah dicatat ✓" : "Catat ke Riwayat"}
               </Button>
               {recordState === "error" && <p role="alert" className="text-[11px] font-semibold text-rose-600">Gagal mencatat. Coba lagi.</p>}

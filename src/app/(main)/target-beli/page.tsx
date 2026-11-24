@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { PageHero } from "@/components/ui/form-kit";
+import { PageHero, IconBox, EmptyState } from "@/components/ui/form-kit";
 import { Send, Trash2, ListChecks } from "lucide-react";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,8 @@ import { addMonths } from "@/lib/savings-feasibility";
 
 const rp = (n: number) => formatRupiah(Math.round(n));
 const fmtDate = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
-const TONE: Record<string, string> = { aman: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300", pas: "bg-amber-500/15 text-amber-800 dark:text-amber-300", berat: "bg-red-500/15 text-red-700 dark:text-red-300", belum_ada_data: "bg-muted text-muted-foreground" };
+const TONE: Record<string, string> = { aman: "border-emerald-400/70 bg-emerald-400/20 text-emerald-700 shadow-[0_0_10px_rgba(52,211,153,0.35)] dark:text-emerald-300", pas: "border-amber-400/50 bg-amber-500/15 text-amber-800 dark:text-amber-300", berat: "border-rose-400/50 bg-rose-500/15 text-rose-700 dark:text-rose-300", belum_ada_data: "border-border/70 bg-muted text-muted-foreground" };
+const EMOJI: Record<string, string> = { aman: "✅", pas: "⚖️", berat: "🔥", belum_ada_data: "❔" };
 const LABEL: Record<string, string> = { aman: "Aman", pas: "Pas-pasan", berat: "Berat", belum_ada_data: "Belum bisa dinilai" };
 const SUGGEST = ["Laptop 12jt tunai", "Motor 25jt cicilan 24 bulan dp 5jt", "HP 3jt 6 bulan lagi"];
 
@@ -97,21 +98,21 @@ export default function TargetBeliPage() {
         <Bubble msg={{ role: "model", text: "Mau beli apa? Ketik barang dan harganya, nanti aku hitung mampu atau tidak.", time: openedAt || undefined }} first profile={profile} />
         {msgs.length === 0 && (
           <div className="ml-10 mt-2 flex flex-wrap gap-1.5">
-            {SUGGEST.map((t) => (<button key={t} type="button" onClick={() => void send(t)} className="cursor-pointer rounded-full bg-white px-3 py-1.5 text-[11px] text-zinc-800 shadow-sm dark:bg-[#202c33] dark:text-zinc-100">{t}</button>))}
+            {SUGGEST.map((t) => (<button key={t} type="button" onClick={() => void send(t)} className="cursor-pointer rounded-full border border-emerald-400/70 bg-white px-3 py-1.5 text-[11px] font-bold text-emerald-800 shadow-[0_0_10px_rgba(52,211,153,0.35)] transition-all active:scale-95 dark:bg-[#202c33] dark:text-emerald-200">{t}</button>))}
           </div>
         )}
         {msgs.map((m, i) => (<Bubble key={i} msg={m} first={i === 0 || msgs[i - 1].role !== m.role} profile={profile} />))}
         {busy && <p className="ml-10 mt-2 text-[11px] text-zinc-500">Menghitung...</p>}
         {showList && (
           <ul className="mt-3 space-y-2">
-            {empty && <li className="rounded-xl bg-white p-3 text-xs text-zinc-600 shadow-sm dark:bg-[#202c33] dark:text-zinc-300">Belum ada target.</li>}
+            {empty && <li><EmptyState emoji="🛍️">Belum ada target.</EmptyState></li>}
             {snap && list?.map((g) => {
               const r = analyze(g, snap, infl);
               return (
-                <li key={g.id} className="space-y-1.5 rounded-xl bg-white p-3 text-xs text-zinc-900 shadow-sm dark:bg-[#202c33] dark:text-zinc-50">
+                <li key={g.id} className="space-y-2 rounded-3xl border border-border/60 bg-white p-3.5 text-xs text-zinc-900 shadow-sm dark:bg-[#202c33] dark:text-zinc-50">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0"><p className="truncate font-semibold">{g.name}{g.status === "terbeli" ? " (terbeli)" : ""}</p><p className="text-[11px] text-zinc-500 dark:text-zinc-400">{rp(Number(g.price))} · {g.mode === "cicilan" ? `cicilan ${g.months} bln` : "tunai"} · terkumpul {rp(Number(g.saved))}</p></div>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${TONE[r.verdict]}`}>{LABEL[r.verdict]}</span>
+                    <div className="flex min-w-0 items-start gap-2.5"><IconBox tone={r.verdict === "aman" ? "neon" : r.verdict === "berat" ? "rose" : "amber"}>🛍️</IconBox><div className="min-w-0"><p className="truncate text-sm font-extrabold">{g.name}{g.status === "terbeli" ? " (terbeli)" : ""}</p><p className="text-[11px] text-zinc-500 dark:text-zinc-400">{rp(Number(g.price))} · {g.mode === "cicilan" ? `cicilan ${g.months} bln` : "tunai"} · terkumpul {rp(Number(g.saved))}</p></div></div>
+                    <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${TONE[r.verdict]}`}><span aria-hidden>{EMOJI[r.verdict]} </span>{LABEL[r.verdict]}</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <AddFunds onSave={async (n) => { try { await updatePurchase(g.id, { saved: Number(g.saved) + n }); await load(); } catch { notify("Belum bisa disimpan."); } }} />
@@ -126,9 +127,9 @@ export default function TargetBeliPage() {
         <div ref={endRef} />
       </div>
       <form onSubmit={(e) => { e.preventDefault(); void send(input); }} className="flex shrink-0 items-center gap-2 border-t border-border/60 bg-background px-3 py-2.5">
-        <button type="button" onClick={() => setShowList(!showList)} aria-pressed={showList} aria-label="Target saya" className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border ${showList ? "bg-teal-600 text-white" : "bg-muted/40"}`}><ListChecks className="h-4 w-4" /></button>
-        <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={300} aria-label="Pesan Target Beli" placeholder="Misal: Laptop 12jt cicilan 12 bulan" className="h-10 flex-1 rounded-full border border-border bg-muted/40 px-4 text-xs outline-none focus:ring-2 focus:ring-teal-500/40" />
-        <button type="submit" disabled={busy || !input.trim()} aria-label="Kirim" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-teal-600 text-white shadow-sm disabled:opacity-40"><Send className="h-4 w-4" /></button>
+        <button type="button" onClick={() => setShowList(!showList)} aria-pressed={showList} aria-label="Target saya" className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border ${showList ? "border-emerald-400 bg-emerald-500 text-white shadow-[0_0_12px_rgba(52,211,153,0.5)]" : "bg-muted/40"}`}><ListChecks className="h-4 w-4" /></button>
+        <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={300} aria-label="Pesan Target Beli" placeholder="Misal: Laptop 12jt cicilan 12 bulan" className="h-10 flex-1 rounded-full border border-border bg-muted/40 px-4 text-xs outline-none focus:ring-2 focus:ring-emerald-400/50" />
+        <button type="submit" disabled={busy || !input.trim()} aria-label="Kirim" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-600/30 transition-all active:scale-90 disabled:opacity-40"><Send className="h-4 w-4" /></button>
       </form>
     </div>
   );

@@ -144,7 +144,7 @@ export function TotalSaldoCarousel({
   return (
     <section
       aria-label="Saldo"
-      className="relative rounded-3xl bg-gradient-to-br from-emerald-800 via-emerald-600 to-lime-300 p-5 text-white shadow-lg shadow-emerald-600/25"
+      className="relative rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 p-5 text-white shadow-lg shadow-teal-700/25"
     >
       <div className="flex items-center justify-between gap-2">
         <div ref={boxRef} className="relative min-w-0">

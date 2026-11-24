@@ -7,6 +7,7 @@ import { compressImage } from "@/lib/image-compression";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
 import { RubyBubble, ASSISTANT_GREETING } from "@/components/ai/ruby";
+import { PageHero, FormCard, Cta, Pill, Notice } from "@/components/ui/form-kit";
 
 type Kind = "bug" | "usul";
 
@@ -89,6 +90,7 @@ export default function BantuanPage() {
     <div className="flex flex-1 flex-col">
       <TopHeader title="Hubungi Bantuan" subtitle="Lapor masalah atau usul fitur ke tim kami" />
       <div className="space-y-4 p-4">
+        <PageHero title="Hubungi Bantuan" desc="Lapor masalah atau usul fitur, tim kami membacanya." />
         <div className="space-y-2 rounded-3xl bg-[#efeae2] p-3 dark:bg-[#0b141a]">
           <RubyBubble>
             <p>{ASSISTANT_GREETING}</p>
@@ -106,32 +108,32 @@ export default function BantuanPage() {
           </RubyBubble>
         </div>
         {done ? (
-          <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-5 text-center">
-            <CheckCircle2 className="mx-auto h-9 w-9 text-teal-600" />
+          <div className="space-y-3 rounded-3xl border border-emerald-400/60 bg-emerald-400/10 p-5 text-center shadow-[0_0_18px_rgba(52,211,153,0.25)]">
+            <CheckCircle2 className="mx-auto h-9 w-9 text-emerald-500" />
             <p className="text-sm font-bold text-foreground">Terima kasih, laporanmu sudah terkirim.</p>
-            <Button onClick={reset} variant="outline" className="cursor-pointer rounded-xl text-xs">Kirim lagi</Button>
+            <Button onClick={reset} variant="outline" className="cursor-pointer rounded-2xl border-emerald-400/60 text-xs font-bold">Kirim lagi</Button>
           </div>
         ) : !kind ? (
           <div className="grid gap-3">
-            <button type="button" onClick={() => setKind("bug")} className="flex cursor-pointer items-center gap-3 rounded-3xl border border-border/70 bg-card p-4 text-left hover:bg-muted/40">
+            <button type="button" onClick={() => setKind("bug")} className="flex cursor-pointer items-center gap-3 rounded-3xl border border-rose-400/40 bg-card p-4 text-left shadow-xs transition-all hover:bg-muted/40 active:scale-[0.98]">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-600"><Bug className="h-5 w-5" /></span>
               <span><span className="block text-sm font-bold text-foreground">Lapor Bug</span><span className="block text-[11px] text-muted-foreground">Ada yang error atau tidak jalan</span></span>
             </button>
-            <button type="button" onClick={() => setKind("usul")} className="flex cursor-pointer items-center gap-3 rounded-3xl border border-border/70 bg-card p-4 text-left hover:bg-muted/40">
+            <button type="button" onClick={() => setKind("usul")} className="flex cursor-pointer items-center gap-3 rounded-3xl border border-amber-400/40 bg-card p-4 text-left shadow-xs transition-all hover:bg-muted/40 active:scale-[0.98]">
               <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600"><Lightbulb className="h-5 w-5" /></span>
               <span><span className="block text-sm font-bold text-foreground">Usul Fitur</span><span className="block text-[11px] text-muted-foreground">Ide supaya Dompetku makin enak dipakai</span></span>
             </button>
           </div>
         ) : (
-          <form onSubmit={submit} className="space-y-3 rounded-3xl border border-border/70 bg-card p-4">
-            <h2 className="text-sm font-extrabold text-foreground">{kind === "bug" ? "Lapor Bug" : "Usul Fitur"}</h2>
+          <form onSubmit={submit}>
+           <FormCard title={kind === "bug" ? "Lapor Bug" : "Usul Fitur"} desc={kind === "bug" ? "Ceritakan apa yang error." : "Ceritakan idemu."} icon={kind === "bug" ? "🐞" : "💡"}>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={120}
               required
               placeholder={kind === "bug" ? "Singkatnya, apa yang error?" : "Fitur apa yang kamu mau?"}
-              className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs outline-none focus:ring-2 focus:ring-teal-500/40"
+              className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs outline-none focus:ring-2 focus:ring-emerald-400/50"
             />
             <textarea
               value={body}
@@ -140,7 +142,7 @@ export default function BantuanPage() {
               required
               rows={6}
               placeholder={kind === "bug" ? "Ceritakan: kamu sedang apa, lalu apa yang terjadi?" : "Ceritakan idenya dan kenapa berguna."}
-              className="w-full rounded-xl border border-border bg-background p-3 text-xs outline-none focus:ring-2 focus:ring-teal-500/40"
+              className="w-full rounded-xl border border-border bg-background p-3 text-xs outline-none focus:ring-2 focus:ring-emerald-400/50"
             />
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void pickPhoto(e.target.files?.[0]); e.target.value = ""; }} aria-label="Pilih foto" />
             {photo ? (
@@ -154,14 +156,15 @@ export default function BantuanPage() {
                 <ImagePlus className="h-4 w-4" /> Tambah foto / tangkapan layar (opsional)
               </button>
             )}
-            <p className="text-[10px] text-muted-foreground">Jangan tulis kata sandi atau nomor rekening di sini.</p>
-            {error && <p className="rounded-xl bg-rose-500/10 px-3 py-2 text-[11px] text-rose-600">{error}</p>}
+            <Pill tone="amber" icon="🔒">Jangan tulis kata sandi atau nomor rekening di sini</Pill>
+            {error && <Notice tone="rose" emoji="⚠️">{error}</Notice>}
             <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={reset} className="h-9 cursor-pointer rounded-xl text-xs">Kembali</Button>
-              <Button type="submit" disabled={sending || title.trim().length < 3 || body.trim().length < 5} className="h-9 flex-1 cursor-pointer rounded-xl bg-teal-600 text-xs font-bold text-white hover:bg-teal-500">
+              <Button type="button" variant="outline" onClick={reset} className="h-11 cursor-pointer rounded-2xl text-xs font-bold">Kembali</Button>
+              <Cta type="submit" disabled={sending || title.trim().length < 3 || body.trim().length < 5} className="flex-1">
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Kirim"}
-              </Button>
+              </Cta>
             </div>
+           </FormCard>
           </form>
         )}
       </div>

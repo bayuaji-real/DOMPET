@@ -120,7 +120,7 @@ export function DueRecurringCard({
                 type="button"
                 onClick={() => handleAction(item.id, "record")}
                 disabled={loadingId === item.id}
-                className="h-8 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-95 transition-all text-[11px] font-bold text-white shadow-xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                className="h-8 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 active:scale-95 transition-all text-[11px] font-bold text-white shadow-md shadow-emerald-600/25 flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 title="Catat sebagai pengeluaran sekarang"
               >
                 {loadingId === item.id ? (

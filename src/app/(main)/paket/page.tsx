@@ -41,7 +41,7 @@ export default function PaketPage() {
       <TopHeader title="Paket" />
       <div className="space-y-4 px-4 pt-2">
         <PageHero title="Paket & Uji Coba" desc="Gratis, Premium, atau Pro. Coba gratis 7 hari." />
-        <div className={`relative overflow-hidden rounded-3xl p-4 text-white shadow-lg shadow-emerald-600/25 ${AURORA}`}>
+        <div className={`relative overflow-hidden rounded-3xl p-4 text-white shadow-lg shadow-teal-700/25 ${AURORA}`}>
           <AuroraGlow />
           <p className="relative text-xs font-semibold text-white/90">Paketmu sekarang</p>
           <p className="relative text-lg font-extrabold" data-testid="paket-aktif">{loading ? "..." : PLAN_LABEL[ent.plan]}{ent.source === "trial" && daysLeft > 0 ? ` (uji coba, sisa ${daysLeft} hari)` : ""}</p>

@@ -20,8 +20,8 @@ export function LimitAlerts() {
   return (
     <section aria-label="Peringatan batas pengeluaran" className="space-y-2">
       {warn.map((s) => (
-        <Link key={s.limit.id} href="/batas-pengeluaran" role="alert" className={`block rounded-2xl p-3 text-xs font-medium ${s.level === "lewat" ? "bg-red-500/10 text-red-700 dark:text-red-300" : "bg-amber-500/10 text-amber-800 dark:text-amber-300"}`}>
-          {limitMessage(s, (n) => formatRupiah(Math.round(n)))}
+        <Link key={s.limit.id} href="/batas-pengeluaran" role="alert" className={`flex items-start gap-2 rounded-2xl border p-3 text-xs font-semibold transition-all active:scale-[0.98] ${s.level === "lewat" ? "border-rose-400/50 bg-rose-500/10 text-rose-700 dark:text-rose-300" : "border-amber-400/50 bg-amber-500/10 text-amber-800 dark:text-amber-300"}`}>
+          <span aria-hidden className="text-base leading-none">{s.level === "lewat" ? "🚨" : "⚠️"}</span><span>{limitMessage(s, (n) => formatRupiah(Math.round(n)))}</span>
         </Link>
       ))}
     </section>
