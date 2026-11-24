@@ -140,7 +140,7 @@ function UsersTab({ isSuper }: { isSuper: boolean }) {
       <div className="overflow-hidden rounded-3xl border border-border/80 bg-card shadow-xs">
         <table className="w-full table-fixed text-left text-xs">
           <thead className="bg-muted/70 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-            <tr><th className="px-3 py-2">Pengguna</th><th className="w-[86px] px-1 py-2">Paket</th><th className="w-9 px-1 py-2 text-right">AI</th><th className="w-[62px] px-3 py-2 text-right">Daftar</th></tr>
+            <tr><th className="px-3 py-2">Pengguna</th><th className="w-[78px] px-1 py-2">Paket</th><th className="w-9 px-1 py-2 text-right">AI</th><th className="w-[74px] px-2 py-2 text-right">Daftar</th></tr>
           </thead>
           <tbody>
             {list.map((u) => { const pp = planPill(u.plan); return (
@@ -151,7 +151,7 @@ function UsersTab({ isSuper }: { isSuper: boolean }) {
                 </td>
                 <td className="px-1 py-2.5"><Pill tone={pp.tone} icon={pp.icon} className="px-1.5 text-[10px]">{pp.label}</Pill></td>
                 <td className="px-1 py-2.5 text-right font-bold tabular-nums">{u.ai_used}</td>
-                <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">{fmtShort(u.created_at)}</td>
+                <td className="whitespace-nowrap px-2 py-2.5 text-right text-[11px] tabular-nums text-muted-foreground">{fmtShort(u.created_at)}</td>
               </tr>); })}
             {list.length === 0 && <tr><td colSpan={4} className="px-3 py-5 text-center text-xs text-muted-foreground">Tidak ada pengguna yang cocok.</td></tr>}
           </tbody>
@@ -271,11 +271,11 @@ function MfaSwitch({ status, onChange }: { status: A.MfaStatus; onChange: () => 
   };
   return (
     <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
-      <p className="text-sm font-semibold">Kode MFA wajib untuk admin: {status.require_mfa ? "Aktif" : "Belum aktif"}</p>
+      <p className="text-sm font-extrabold"><span aria-hidden>🔐 </span>Kode MFA wajib untuk admin: {status.require_mfa ? "Aktif" : "Belum aktif"}</p>
       <p className="text-xs text-muted-foreground">{status.require_mfa ? "Semua admin harus memasukkan kode dari aplikasi authenticator sebelum memakai halaman Admin." : "Daftarkan MFA-mu dulu di menu Keamanan, masukkan kodenya di sini, lalu wajibkan. Dengan begitu kamu tidak terkunci."}</p>
       {err && <p role="alert" className="text-xs text-red-600">{err}</p>}
       {needCode && <MfaChallenge onDone={() => { setNeedCode(false); setErr(""); onChange(); }} />}
-      <Button size="sm" variant="outline" onClick={flip}>{status.require_mfa ? "Matikan kewajiban" : "Wajibkan MFA untuk admin"}</Button>
+      <Button size="sm" variant="outline" className="h-9 rounded-2xl border-emerald-400/60 text-xs font-bold" onClick={flip}>{status.require_mfa ? "Matikan kewajiban" : "Wajibkan MFA untuk admin"}</Button>
     </div>
   );
 }

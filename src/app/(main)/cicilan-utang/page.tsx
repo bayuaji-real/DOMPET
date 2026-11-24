@@ -86,7 +86,7 @@ function Cicilan() {
         <Field label="Harga barang"><MoneyInput value={price} onChange={setPrice} aria-label="Harga barang" suffix="Rp" /></Field>
         <div className="grid grid-cols-3 gap-2">
           <Field label="Tenor (bulan)"><Input className="h-10 rounded-xl" inputMode="numeric" aria-label="Tenor bulan" value={months} onChange={(e) => setMonths(e.target.value.replace(/\D/g, "").slice(0, 3))} /></Field>
-          <Field label="Bunga flat/thn (%)"><Input className="h-10 rounded-xl" inputMode="decimal" aria-label="Bunga flat per tahun" value={flat} onChange={(e) => setFlat(e.target.value.replace(/[^\d.,]/g, ""))} /></Field>
+          <Field label="Bunga/thn (%)"><Input className="h-10 rounded-xl" inputMode="decimal" aria-label="Bunga flat per tahun" value={flat} onChange={(e) => setFlat(e.target.value.replace(/[^\d.,]/g, ""))} /></Field>
           <Field label="Paylater/bln (%)"><Input className="h-10 rounded-xl" inputMode="decimal" aria-label="Biaya paylater per bulan" value={fee} onChange={(e) => setFee(e.target.value.replace(/[^\d.,]/g, ""))} /></Field>
         </div>
       </FormCard>
