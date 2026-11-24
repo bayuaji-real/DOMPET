@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { PiggyBank } from "lucide-react";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine } from "recharts";
 import { getSavingsGoals, type GoalProgress } from "@/lib/data/goals";
 import { getTransactions, type Transaction } from "@/lib/data/transactions";
 import { calculateSavingsProjection } from "@/lib/savings";
@@ -21,6 +22,8 @@ interface MonthBar {
   key: string;
   label: string;
   deposit: number;
+  /** Setoran dikurangi penarikan bulan itu. */
+  net: number;
 }
 
 /** Enam bulan terakhir (termasuk bulan ini), dari yang terlama. */
@@ -73,15 +76,20 @@ export function SavingsWalletAnalysis({ wallet, hide = false }: Props) {
 
   const { bars, depositThisMonth, withdrawThisMonth, avgDeposit } = React.useMemo(() => {
     const byMonth = new Map<string, number>(months.map((m) => [m.key, 0]));
+    const netByMonth = new Map<string, number>(months.map((m) => [m.key, 0]));
     let withdraw = 0;
     for (const t of txs) {
       const key = String(t.date).slice(0, 7);
       const amt = Number(t.amount) || 0;
       const forThisWallet = t.to_wallet_id === wallet.id || (wallet.goal_id && t.goal_id === wallet.goal_id);
-      if (t.type === "goal_deposit" && forThisWallet && byMonth.has(key)) byMonth.set(key, (byMonth.get(key) ?? 0) + amt);
+      if (t.type === "goal_deposit" && forThisWallet && byMonth.has(key)) {
+        byMonth.set(key, (byMonth.get(key) ?? 0) + amt);
+        netByMonth.set(key, (netByMonth.get(key) ?? 0) + amt);
+      }
+      if (t.type === "goal_withdraw" && forThisWallet && netByMonth.has(key)) netByMonth.set(key, (netByMonth.get(key) ?? 0) - amt);
       if (t.type === "goal_withdraw" && forThisWallet && key === today.slice(0, 7)) withdraw += amt;
     }
-    const list: MonthBar[] = months.map((m) => ({ ...m, deposit: byMonth.get(m.key) ?? 0 }));
+    const list: MonthBar[] = months.map((m) => ({ ...m, deposit: byMonth.get(m.key) ?? 0, net: netByMonth.get(m.key) ?? 0 }));
     // Rata-rata dihitung dari bulan yang sudah ada setoran (jangan menghukum bulan sebelum mulai menabung).
     const active = list.filter((b) => b.deposit > 0);
     const avg = active.length ? active.reduce((s, b) => s + b.deposit, 0) / active.length : 0;
@@ -128,6 +136,11 @@ export function SavingsWalletAnalysis({ wallet, hide = false }: Props) {
 
   const maxBar = Math.max(1, ...bars.map((b) => b.deposit));
   const hasAnyDeposit = bars.some((b) => b.deposit > 0);
+  // Saldo akhir tiap bulan: mundur dari saldo sekarang dikurangi mutasi bulan-bulan sesudahnya.
+  const balanceSeries = bars.map((b, i) => {
+    const after = bars.slice(i + 1).reduce((sum, x) => sum + x.net, 0);
+    return { label: b.label, saldo: Math.max(0, saved - after) };
+  });
 
   return (
     <section aria-label={`Analisis tabungan ${wallet.name}`} className="space-y-3">
@@ -204,32 +217,57 @@ export function SavingsWalletAnalysis({ wallet, hide = false }: Props) {
         </p>
       )}
 
-      {hasAnyDeposit ? (
-        <div>
-          <p className="mb-1 text-[10px] font-semibold text-muted-foreground">Setoran 6 bulan terakhir</p>
-          <div className="flex h-16 items-end gap-1.5" aria-hidden="true">
-            {bars.map((b) => (
-              <div key={b.key} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
-                <div
-                  className="w-full rounded-t-md bg-violet-500/80"
-                  style={{ height: `${b.deposit > 0 ? Math.max(8, (b.deposit / maxBar) * 100) : 0}%` }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-1 flex gap-1.5 text-center text-[9px] text-muted-foreground" aria-hidden="true">
-            {bars.map((b) => (
-              <span key={b.key} className="flex-1">
-                {b.label}
-              </span>
-            ))}
-          </div>
+      {/* Grafik 1: saldo tabungan 6 bulan terakhir menuju target (selalu tampil) */}
+      <div>
+        <p className="mb-1 text-[10px] font-semibold text-muted-foreground">Saldo tabungan 6 bulan terakhir{target > 0 ? " (garis putus = target)" : ""}</p>
+        <div className="h-36 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={balanceSeries} margin={{ top: 8, right: 6, left: 6, bottom: 0 }}>
+              <defs>
+                <linearGradient id="savBalance" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.5} />
+                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.03} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="label" stroke="#71717a" fontSize={10} tickLine={false} axisLine={false} interval={0} />
+              <YAxis hide domain={[0, Math.max(target, saved, 1)]} />
+              <Tooltip
+                formatter={(v) => [money(Number(v)), "Saldo"]}
+                contentStyle={{ borderRadius: 12, fontSize: 11, border: "none", background: "rgba(24,24,27,0.95)", color: "#fff" }}
+              />
+              {target > 0 && <ReferenceLine y={target} stroke="#14b8a6" strokeDasharray="4 4" strokeWidth={1.5} />}
+              <Area type="monotone" dataKey="saldo" stroke="#8b5cf6" strokeWidth={2.5} fill="url(#savBalance)" isAnimationActive={false} dot={{ r: 3, fill: "#8b5cf6", strokeWidth: 0 }} />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
-      ) : (
-        <p className="rounded-2xl bg-muted/40 p-3 text-center text-xs text-muted-foreground">
-          Belum ada setoran dalam 6 bulan terakhir. Setor pertama lewat menu Tabungan untuk melihat grafiknya.
-        </p>
-      )}
+      </div>
+
+      {/* Grafik 2: setoran per bulan (selalu tampil, bulan kosong = batang rata) */}
+      <div>
+        <p className="mb-1 text-[10px] font-semibold text-muted-foreground">Setoran per bulan</p>
+        <div className="flex h-16 items-end gap-1.5" aria-hidden="true">
+          {bars.map((b) => (
+            <div key={b.key} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
+              <div
+                className={`w-full rounded-t-md ${b.deposit > 0 ? "bg-violet-500/80" : "bg-muted-foreground/25"}`}
+                style={{ height: b.deposit > 0 ? `${Math.max(8, (b.deposit / maxBar) * 100)}%` : "3px" }}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="mt-1 flex gap-1.5 text-center text-[9px] text-muted-foreground" aria-hidden="true">
+          {bars.map((b) => (
+            <span key={b.key} className="flex-1">
+              {b.label}
+            </span>
+          ))}
+        </div>
+        {!hasAnyDeposit && (
+          <p className="mt-2 rounded-2xl bg-muted/40 p-2.5 text-center text-[11px] text-muted-foreground">
+            Belum ada setoran dalam 6 bulan terakhir. Setor lewat menu Tabungan, batang di atas akan terisi.
+          </p>
+        )}
+      </div>
 
       {(estimate || neededPerMonth) && (
         <ul className="space-y-1 text-[11px] text-muted-foreground">

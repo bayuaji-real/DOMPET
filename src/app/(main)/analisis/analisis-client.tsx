@@ -81,6 +81,7 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
   const [insight, setInsight] = React.useState<AIInsightResult | null>(null);
   const [isInsightLoading, setIsInsightLoading] = React.useState(false);
   const [insightError, setInsightError] = React.useState<string | null>(null);
+  const [insightAt, setInsightAt] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -128,13 +129,29 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Insight tersimpan di perangkat per periode: tetap tampil setelah pindah halaman atau tutup aplikasi,
+  // sampai pengguna menekan "Perbarui".
+  const insightKey = `dompet_insight_${data.period.type ?? period}_${data.period.startDate}${data.period.type === "custom" ? `_${data.period.endDate}` : ""}`;
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem(insightKey);
+      if (raw) {
+        const saved = JSON.parse(raw) as { result: AIInsightResult; at: string };
+        setInsight(saved.result);
+        setInsightAt(saved.at);
+        return;
+      }
+    } catch {}
+    setInsight(null);
+    setInsightAt(null);
+  }, [insightKey]);
+
   const handlePeriodChange = (newPeriod: AnalyticsPeriod) => {
     if (newPeriod === "custom") {
       setShowCustomModal(true);
       return;
     }
     setPeriod(newPeriod);
-    setInsight(null);
     fetchData(newPeriod);
   };
 
@@ -169,6 +186,11 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
       }
 
       setInsight(json.data);
+      const at = new Date().toISOString();
+      setInsightAt(at);
+      try {
+        localStorage.setItem(insightKey, JSON.stringify({ result: json.data, at }));
+      } catch {}
     } catch (err: any) {
       console.error("Gagal mendapatkan wawasan:", err);
       setInsightError(err.message || "Mohon maaf, jaringan kami sedang padat. Coba sebentar lagi ya.");
@@ -268,7 +290,6 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                   onClick={() => {
                     setPeriod("custom");
                     setShowCustomModal(false);
-                    setInsight(null);
                     fetchData("custom", customStart, customEnd);
                   }}
                   className="w-1/2 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-sm"
@@ -544,6 +565,11 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                 </div>
               </RubyBubble>
 
+              {insightAt && (
+                <p className="text-[10px] text-muted-foreground">
+                  Dibuat {new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Jakarta" }).format(new Date(insightAt))} WIB. Tetap tersimpan sampai kamu menekan Perbarui.
+                </p>
+              )}
               {insight.actionableTip && (
                 <div className="rounded-2xl border border-teal-500/40 bg-teal-500/15 p-3 flex items-start gap-2.5 mt-2">
                   <Lightbulb className="h-4 w-4 text-teal-600 dark:text-teal-400 mt-0.5 shrink-0" />
@@ -714,8 +740,8 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                   </button>
                 ))}
               </div>
-              <span className="flex items-center gap-1 font-semibold text-teal-600 dark:text-teal-400">
-                <span className="h-2 w-2 rounded-full bg-teal-500" /> Masuk
+              <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" /> Masuk
               </span>
               <span className="flex items-center gap-1 font-semibold text-rose-600 dark:text-rose-400">
                 <span className="h-2 w-2 rounded-full bg-rose-500" /> Keluar
@@ -757,8 +783,8 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                       color: "#fff",
                     }}
                   />
-                  <Line type="monotone" dataKey="income" stroke="#0d9488" strokeWidth={3} dot={{ r: 4, fill: "#0d9488", strokeWidth: 0 }} />
-                  <Line type="monotone" dataKey="expense" stroke="#f43f5e" strokeWidth={3} dot={{ r: 4, fill: "#f43f5e", strokeWidth: 0 }} />
+                  <Line type="monotone" dataKey="income" stroke="#22c55e" strokeWidth={3} dot={{ r: 4, fill: "#22c55e", strokeWidth: 0 }} />
+                  <Line type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={3} dot={{ r: 4, fill: "#ef4444", strokeWidth: 0 }} />
                 </LineChart>
                 ) : (
                                 <BarChart data={data.monthlyCashflow} margin={{ top: 10, right: 5, left: -20, bottom: 0 }}>
@@ -791,8 +817,8 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                       color: "#fff",
                     }}
                   />
-                  <Bar dataKey="income" fill="#14b8a6" radius={[6, 6, 0, 0]} maxBarSize={18} />
-                  <Bar dataKey="expense" fill="#fb7185" radius={[6, 6, 0, 0]} maxBarSize={18} />
+                  <Bar dataKey="income" fill="#22c55e" radius={[6, 6, 0, 0]} maxBarSize={18} />
+                  <Bar dataKey="expense" fill="#ef4444" radius={[6, 6, 0, 0]} maxBarSize={18} />
                 </BarChart>
                 )}
               </ResponsiveContainer>

@@ -47,6 +47,26 @@ const DonutChart = React.memo(function DonutChart({ data }: { data: CategoryExpe
   );
 });
 
+/** Pemasukan vs pengeluaran per hari bulan ini (satu dompet atau semua dompet), untuk grafik tren arus kas. */
+function dailyCashflow(txs: Transaction[], walletId: string | null) {
+  const today = todayJakarta();
+  const lastDay = Number(today.slice(8, 10));
+  const inc = new Map<string, number>();
+  const exp = new Map<string, number>();
+  for (const t of txs) {
+    if (walletId && t.wallet_id !== walletId) continue;
+    const d = String(t.date).split("T")[0];
+    const amt = Number(t.amount) || 0;
+    if (t.type === "income") inc.set(d, (inc.get(d) ?? 0) + amt);
+    else if (t.type === "expense") exp.set(d, (exp.get(d) ?? 0) + amt);
+  }
+  return Array.from({ length: lastDay }, (_, i) => {
+    const day = String(i + 1).padStart(2, "0");
+    const date = `${today.slice(0, 7)}-${day}`;
+    return { day, masuk: inc.get(date) ?? 0, keluar: exp.get(date) ?? 0 };
+  });
+}
+
 interface AnalisisCardProps {
   /** Dompet terpilih di kartu Total Saldo. Kosong = semua dompet. */
   walletId?: string | null;
@@ -154,6 +174,8 @@ export function AnalisisCard({ walletId = null, walletName, wallet = null, month
   const dailyExpenses = filtering ? derived?.dailyExpenses ?? [] : data?.dailyExpenses ?? [];
   // Status kesehatan dihitung untuk semua dompet, jadi disembunyikan saat satu dompet dipilih.
   const health = filtering ? undefined : data?.financialHealth;
+  const cashflow = React.useMemo(() => dailyCashflow(monthTxs, walletId ?? null), [monthTxs, walletId]);
+  const hasFlow = cashflow.some((d) => d.masuk > 0 || d.keluar > 0);
   const top = categories[0];
   const hasData = !!s && (s.totalIncome > 0 || s.totalExpense > 0);
 
@@ -218,27 +240,42 @@ export function AnalisisCard({ walletId = null, walletName, wallet = null, month
                   </ul>
                 </div>
               )}
-              {/* Tren pengeluaran harian */}
-              {dailyExpenses.length > 1 && (
+              {/* Tren arus kas: hijau = pemasukan, merah = pengeluaran */}
+              {cashflow.length > 1 && hasFlow && (
                 <div>
-                  <p className="mb-1 text-[10px] font-semibold text-muted-foreground">Pengeluaran harian</p>
-                  <div className="h-20 w-full">
+                  <div className="mb-1 flex items-center justify-between">
+                    <p className="text-[10px] font-semibold text-muted-foreground">Tren arus kas bulan ini</p>
+                    <div className="flex items-center gap-2.5 text-[10px] font-semibold">
+                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" /> Masuk
+                      </span>
+                      <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400">
+                        <span className="h-2 w-2 rounded-full bg-red-500" /> Keluar
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-28 w-full">
                     {mounted && (
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={dailyExpenses} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
+                        <AreaChart data={cashflow} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
                           <defs>
-                            <linearGradient id="homeDaily" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.55} />
-                              <stop offset="100%" stopColor="#f43f5e" stopOpacity={0.02} />
+                            <linearGradient id="homeIncome" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#22c55e" stopOpacity={0.45} />
+                              <stop offset="100%" stopColor="#22c55e" stopOpacity={0.02} />
+                            </linearGradient>
+                            <linearGradient id="homeExpense" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#ef4444" stopOpacity={0.45} />
+                              <stop offset="100%" stopColor="#ef4444" stopOpacity={0.02} />
                             </linearGradient>
                           </defs>
-                          <XAxis dataKey="day" hide />
+                          <XAxis dataKey="day" stroke="#71717a" fontSize={9} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={18} />
                           <Tooltip
-                            formatter={(v) => [money(Number(v)), "Keluar"]}
+                            formatter={(v, name) => [money(Number(v)), name === "masuk" ? "Masuk" : "Keluar"]}
                             labelFormatter={(l) => `Tgl ${l}`}
                             contentStyle={{ borderRadius: 12, fontSize: 11, border: "none", background: "rgba(24,24,27,0.95)", color: "#fff" }}
                           />
-                          <Area type="monotone" dataKey="amount" stroke="#f43f5e" strokeWidth={2} fill="url(#homeDaily)" isAnimationActive={false} />
+                          <Area type="monotone" dataKey="masuk" stroke="#22c55e" strokeWidth={2} fill="url(#homeIncome)" isAnimationActive={false} />
+                          <Area type="monotone" dataKey="keluar" stroke="#ef4444" strokeWidth={2} fill="url(#homeExpense)" isAnimationActive={false} />
                         </AreaChart>
                       </ResponsiveContainer>
                     )}
@@ -252,7 +289,7 @@ export function AnalisisCard({ walletId = null, walletName, wallet = null, month
                 </div>
                 <div>
                   <p className="text-[10px] text-muted-foreground">Keluar</p>
-                  <p className="text-xs font-extrabold text-rose-600 dark:text-rose-400">{money(s.totalExpense)}</p>
+                  <p className="text-xs font-extrabold text-red-600 dark:text-red-400">{money(s.totalExpense)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-muted-foreground">Menabung</p>
