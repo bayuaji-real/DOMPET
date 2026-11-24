@@ -11,7 +11,7 @@ export default async function AnalisisPage() {
   // Halaman terbuka seketika; data asli dimuat layar sekali lewat /api/analytics
   // (sebelumnya dihitung dua kali: di server lalu di layar).
   return (
-    <Gate feature="analisis">
+    <Gate feature="analisis" redirect>
       <AnalisisClient initialData={emptyAnalyticsData("month")} />
     </Gate>
   );

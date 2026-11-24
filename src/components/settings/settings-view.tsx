@@ -353,8 +353,8 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
     e.preventDefault();
     setPasswordError(null);
 
-    if (newPassword.length < 6) {
-      setPasswordError("Kata sandi minimal 6 karakter.");
+    if (newPassword.length < 8) {
+      setPasswordError("Kata sandi minimal 8 karakter.");
       return;
     }
 

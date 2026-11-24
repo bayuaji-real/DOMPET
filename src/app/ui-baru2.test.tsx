@@ -7,7 +7,8 @@ import userEvent from "@testing-library/user-event";
 vi.mock("@/components/layout/top-header", () => ({ TopHeader: ({ title }: { title: string }) => <h1>{title}</h1> }));
 vi.mock("next/link", () => ({ default: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a> }));
 const push = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }), useParams: () => ({ id: "g1" }) }));
+const replace = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace, refresh: vi.fn() }), useParams: () => ({ id: "g1" }) }));
 vi.mock("@/lib/notify", () => ({ notify: vi.fn() }));
 
 let plan = "pro";
@@ -116,7 +117,7 @@ describe("Dompet Bersama", () => {
     await u.click(screen.getByRole("button", { name: "Gabung" }));
     expect((await screen.findByRole("alert")).textContent).toMatch(/Kode undangan tidak ditemukan/);
   });
-  it("Gratis melihat gembok", () => { plan = "free"; render(<BersamaPage />); expect(screen.getByText(/Tersedia di paket Pro/)).toBeTruthy(); });
+  it("Gratis langsung diarahkan ke halaman Paket", () => { plan = "free"; replace.mockClear(); render(<BersamaPage />); expect(replace).toHaveBeenCalledWith("/paket"); expect(screen.queryByText("Dompet bersama")).toBeNull(); });
   it("detail grup: saran transfer, kode undangan, catat pengeluaran", async () => {
     const u = userEvent.setup(); render(<GrupPage />);
     expect(await screen.findByText("Liburan")).toBeTruthy();

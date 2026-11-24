@@ -11,6 +11,8 @@ vi.mock("@/hooks/use-entitlement", async () => {
   const ent = pe({ plan: "pro", source: "paid", ai_limit: 1000, ai_used: 0 });
   return { useEntitlement: () => ({ ent, loading: false, reload: async () => {}, can: (f: never) => canUse(ent.plan, f) }) };
 });
+const nav = vi.hoisted(() => ({ replace: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: nav.replace, push: vi.fn(), refresh: vi.fn() }), usePathname: () => "/" }));
 vi.mock("next/link", () => ({ default: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a> }));
 vi.mock("@/components/ui/use-confirm", () => ({ useConfirm: () => [async () => true, null] }));
 vi.mock("@/lib/data/finance-snapshot", () => ({ getFinanceSnapshot: async () => ({ monthlyIncome: 6_000_000, monthlyExpense: 3_500_000, monthlyExpenseX: 0, today: "2026-11-24", hasData: true }) }));

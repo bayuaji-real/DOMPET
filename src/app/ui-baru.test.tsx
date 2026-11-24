@@ -6,6 +6,8 @@ import userEvent from "@testing-library/user-event";
 import { parseEntitlement } from "@/lib/plans";
 
 vi.mock("@/components/layout/top-header", () => ({ TopHeader: ({ title }: { title: string }) => <h1>{title}</h1> }));
+const nav = vi.hoisted(() => ({ replace: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: nav.replace, push: vi.fn(), refresh: vi.fn() }), usePathname: () => "/" }));
 vi.mock("next/link", () => ({ default: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a> }));
 
 let entRaw: Record<string, unknown> = { plan: "pro", source: "paid", ai_limit: 1000, ai_used: 0 };
@@ -64,14 +66,15 @@ describe("Investasi: kalkulator", () => {
     expect(items[0].textContent).toContain("Dana B");
     expect(screen.getByText(/Sumber resmi sesuai tautan/)).toBeTruthy();
   });
-  it("paket Gratis melihat gembok di Portofolio dan Info Pasar, kalkulator tetap terbuka", async () => {
-    entRaw = { plan: "free" }; const u = userEvent.setup(); render(<InvestasiPage />);
+  it("paket Gratis: kalkulator terbuka, Portofolio dan Info Pasar langsung ke halaman Paket", async () => {
+    entRaw = { plan: "free" }; nav.replace.mockClear(); const u = userEvent.setup(); render(<InvestasiPage />);
     expect(screen.getByText("Perkiraan nilai akhir")).toBeTruthy();
+    expect(nav.replace).not.toHaveBeenCalled();
     await u.click(screen.getByRole("tab", { name: "Portofolio" }));
-    expect(screen.getByText(/Tersedia di paket Pro/)).toBeTruthy();
+    await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/paket"));
+    nav.replace.mockClear();
     await u.click(screen.getByRole("tab", { name: "Info Pasar" }));
-    expect(screen.getByText(/Tersedia di paket Pro/)).toBeTruthy();
-    expect(screen.getByRole("link", { name: /Lihat paket/ }).getAttribute("href")).toBe("/paket");
+    await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/paket"));
   });
   it("Portofolio: tombol simpan nonaktif sampai formulir lengkap", async () => {
     const u = userEvent.setup(); render(<InvestasiPage />);
@@ -157,10 +160,10 @@ describe("Cicilan & Utang", () => {
     expect(screen.getByText("Paylater")).toBeTruthy();
     expect(screen.getAllByText(/Setara bunga sekitar/).length).toBe(2);
   });
-  it("Basic: Simulator cicilan dan rencana lunasi utang sama-sama terkunci (Pro)", async () => {
-    entRaw = { plan: "free", source: "free", ai_limit: 0, ai_used: 0 }; const u = userEvent.setup(); render(<CicilanUtangPage />);
-    expect(await screen.findByText(/paket Pro/)).toBeTruthy();
-    await u.click(screen.getByRole("tab", { name: "Utang" })); expect(screen.getByText(/Tersedia di paket Pro/)).toBeTruthy();
+  it("Basic: Cicilan & Utang langsung diarahkan ke halaman Paket", async () => {
+    entRaw = { plan: "free", source: "free", ai_limit: 0, ai_used: 0 }; nav.replace.mockClear(); render(<CicilanUtangPage />);
+    await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/paket"));
+    expect(screen.queryByText("Cicilan bunga flat")).toBeNull();
   });
   it("Utang kosong: ada pesan dan form", async () => {
     const u = userEvent.setup(); render(<CicilanUtangPage />);

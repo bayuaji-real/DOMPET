@@ -34,7 +34,7 @@ export default function CicilanUtangPage() {
         <PageHero title="Cicilan & Utang" desc="Hitung biaya cicilan dan atur urutan melunasi utang." />
         <Tabs value={tab} onChange={setTab} label="Bagian cicilan dan utang" options={TABS.map((t) => ({ value: t.id, label: t.label, icon: t.icon }))} />
         {err && <Notice tone="rose" emoji="⚠️" role="alert">{err}</Notice>}
-        <Gate feature={cur.feature}>
+        <Gate feature={cur.feature} redirect>
           {tab === "cicilan" && <Cicilan />}
           {tab === "utang" && (!snap && !err ? <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" /> : snap && <Utang s={snap} />)}
         </Gate>

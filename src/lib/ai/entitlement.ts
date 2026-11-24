@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { estimateCostIdr, usageOf, type UsageInfo } from "@/lib/ai/gemini";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit } from "@/lib/rate-limit";
 import { AI_LOG_FEATURE, QUOTA_MESSAGE, cicipHabisMessage, parseEntitlement, upgradeMessage, canUse, type AiFeatureKey } from "@/lib/plans";
 
 type Guard = { ok: true; userId: string } | { ok: false; response: NextResponse };
@@ -12,6 +13,9 @@ type Guard = { ok: true; userId: string } | { ok: false; response: NextResponse 
  */
 export async function guardAi(feature: AiFeatureKey, userId: string, logFeature?: string, tanpaCicip = false): Promise<Guard> {
   if (userId === "demo-user" && process.env.NODE_ENV !== "production") return { ok: true, userId };
+  // Kuota dihitung setelah jawaban selesai, jadi permintaan paralel bisa menembus sesaat. Batasi laju per pengguna (maks 8 panggilan AI per menit per server).
+  const burst = rateLimit(`ai-burst:${userId}`, 8, 60_000);
+  if (!burst.ok) return { ok: false, response: NextResponse.json({ success: false, error: "Terlalu cepat. Tunggu sebentar lalu coba lagi." }, { status: 429, headers: { "Retry-After": String(burst.retryAfter) } }) };
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("get_my_entitlement");

@@ -17,7 +17,7 @@ export default function Page() {
       <div className="space-y-4 px-4 pt-2">
         <PageHero title="Kesehatan Finansial" desc="Skor kondisi keuanganmu." />
         {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
-        <Gate feature="skor_kesehatan">
+        <Gate feature="skor_kesehatan" redirect>
           {!snap && !err ? <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" /> : snap && <Skor s={snap} />}
         </Gate>
       </div>

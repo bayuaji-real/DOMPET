@@ -19,7 +19,7 @@ import { Select } from "@/components/ui/select";
 type Data = Awaited<ReturnType<typeof loadGroup>>;
 
 export default function GrupPage() {
-  return (<div className="pb-24"><TopHeader title="Grup Patungan" /><div className="px-4 pt-2"><Gate feature="dompet_bersama"><Detail /></Gate></div></div>);
+  return (<div className="pb-24"><TopHeader title="Grup Patungan" /><div className="px-4 pt-2"><Gate feature="dompet_bersama" redirect><Detail /></Gate></div></div>);
 }
 
 function Detail() {

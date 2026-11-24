@@ -32,8 +32,8 @@ export default function InvestasiPage() {
         <PageHero title="Investasi" desc="Pantau aset dan acuan pasar dengan sumber resmi." className="mb-4" />
         <div className="mb-4"><Tabs value={tab} onChange={setTab} label="Bagian investasi" options={TABS.map((t) => ({ value: t.id, label: t.label, icon: t.icon }))} /></div>
         {tab === "kalkulator" && <Kalkulator />}
-        {tab === "portofolio" && <Gate feature="portofolio"><Portofolio /></Gate>}
-        {SHOW_PASAR && tab === "pasar" && <Gate feature="info_pasar"><Pasar /></Gate>}
+        {tab === "portofolio" && <Gate feature="portofolio" redirect><Portofolio /></Gate>}
+        {SHOW_PASAR && tab === "pasar" && <Gate feature="info_pasar" redirect><Pasar /></Gate>}
         <Disclaimer kind="invest" className="mt-4" />
       </div>
     </div>

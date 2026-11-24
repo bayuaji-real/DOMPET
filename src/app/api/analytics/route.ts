@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Gagal mengambil data analisis",
+        error: "Gagal mengambil data analisis. Coba lagi sebentar.",
       },
       { status: 500 }
     );

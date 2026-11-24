@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { serviceClient } from "@/lib/supabase/service";
 import { configurePush, sendPush } from "@/lib/push/send";
 import { apiPush, limitPushes, type PlannedPush } from "@/lib/push/alerts";
@@ -10,7 +11,8 @@ const jakartaToday = () => new Date(Date.now() + 7 * 3600_000).toISOString().sli
 /** Dipanggil terjadwal oleh Vercel Cron. Wajib header Authorization: Bearer CRON_SECRET. */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) return NextResponse.json({ ok: false }, { status: 401 });
+  const got = Buffer.from(req.headers.get("authorization") ?? ""), want = Buffer.from(`Bearer ${secret ?? ""}`);
+  if (!secret || got.length !== want.length || !timingSafeEqual(got, want)) return NextResponse.json({ ok: false }, { status: 401 });
   if (!configurePush()) return NextResponse.json({ ok: false, error: "Kunci VAPID belum diisi" }, { status: 503 });
   const sb = serviceClient();
   if (!sb) return NextResponse.json({ ok: false, error: "Kunci layanan database belum diisi" }, { status: 503 });

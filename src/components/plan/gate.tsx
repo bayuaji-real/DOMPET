@@ -1,15 +1,22 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { TopHeader } from "@/components/layout/top-header";
 import { useEntitlement } from "@/hooks/use-entitlement";
 import { FEATURE_LABEL, FEATURE_MIN_PLAN, PLAN_LABEL, type FeatureKey } from "@/lib/plans";
 
-/** Tampilkan anak jika paket cukup; kalau tidak, tampilkan ajakan ramah ke halaman Paket. */
-export function Gate({ feature, children }: { feature: FeatureKey; children: React.ReactNode }) {
+/**
+ * Tampilkan anak jika paket cukup. Kalau tidak: `redirect` langsung membawa pengguna ke halaman Paket (keputusan Owner,
+ * tanpa kartu penghalang); tanpa `redirect` tampil ajakan ramah di tempat (dipakai bila halaman punya bagian gratis).
+ */
+export function Gate({ feature, children, redirect = false }: { feature: FeatureKey; children: React.ReactNode; redirect?: boolean }) {
   const { can, loading } = useEntitlement();
-  if (loading) return <div className="h-24 animate-pulse rounded-3xl bg-muted" aria-busy="true" />;
+  const router = useRouter();
+  const locked = !loading && !can(feature);
+  React.useEffect(() => { if (redirect && locked) router.replace("/paket"); }, [redirect, locked, router]);
+  if (loading || (redirect && locked)) return <div className="h-24 animate-pulse rounded-3xl bg-muted" aria-busy="true" />;
   if (can(feature)) return <>{children}</>;
   return (
     <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed p-6 text-center">
@@ -23,14 +30,17 @@ export function Gate({ feature, children }: { feature: FeatureKey; children: Rea
   );
 }
 
-/** Gerbang satu halaman penuh: judul halaman tetap tampil, isi (dan pengambilan datanya) hanya jalan kalau paket cukup. */
+/** Gerbang satu halaman penuh: paket kurang = langsung ke halaman Paket. Isi (dan pengambilan datanya) hanya jalan kalau paket cukup. */
 export function PageGate({ feature, title, children }: { feature: FeatureKey; title: string; children: React.ReactNode }) {
   const { can, loading } = useEntitlement();
-  if (!loading && can(feature)) return <>{children}</>;
+  const router = useRouter();
+  const locked = !loading && !can(feature);
+  React.useEffect(() => { if (locked) router.replace("/paket"); }, [locked, router]);
+  if (!loading && !locked) return <>{children}</>;
   return (
     <div className="pb-24">
       <TopHeader title={title} />
-      <div className="px-4 pt-2"><Gate feature={feature}>{null}</Gate></div>
+      <div className="px-4 pt-2"><div className="h-24 animate-pulse rounded-3xl bg-muted" aria-busy="true" /></div>
     </div>
   );
 }

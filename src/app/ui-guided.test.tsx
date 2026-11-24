@@ -10,6 +10,8 @@ vi.mock("@/hooks/use-entitlement", async () => {
   const ent = pe({ plan: "pro", source: "paid", ai_limit: 1000, ai_used: 0 });
   return { useEntitlement: () => ({ ent, loading: false, reload: async () => {}, can: (f: never) => canUse(ent.plan, f) }) };
 });
+const nav = vi.hoisted(() => ({ replace: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: nav.replace, push: vi.fn(), refresh: vi.fn() }), usePathname: () => "/" }));
 vi.mock("next/link", () => ({ default: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a> }));
 vi.mock("@/lib/data/finance-snapshot", () => ({ getFinanceSnapshot: async () => ({ monthlyExpense: 4_000_000 }) }));
 vi.mock("@/lib/data/goals", () => ({ getSavingsGoals: async () => [{ id: "g", name: "Dana Darurat", is_emergency_fund: true, status: "aktif", saved: 5_000_000 }] }));
