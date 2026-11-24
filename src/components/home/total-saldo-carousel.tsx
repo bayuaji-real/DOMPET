@@ -94,15 +94,20 @@ export function TotalSaldoCarousel({
       else if (t.type === "expense") keluar += amt;
     } else {
       const id = selected.id;
-      // Pindah saldo antar dompet biasa bukan pemasukan/pengeluaran (sama dengan kartu Analisis di bawahnya).
+      // Dompet biasa: hanya pemasukan dan pengeluaran asli (sama dengan kartu Analisis di bawahnya).
+      // Pindah saldo dan penarikan/setoran tabungan bukan pemasukan atau pengeluaran.
       // Khusus dompet tabungan, setoran dan penarikan tetap dihitung.
-      const countTransfer = isSavings(selected);
-      if (t.wallet_id === id) {
+      if (!isSavings(selected)) {
+        if (t.wallet_id === id) {
+          if (t.type === "income") masuk += amt;
+          else if (t.type === "expense") keluar += amt;
+        }
+      } else if (t.wallet_id === id) {
         if (t.type === "income" || t.type === "goal_withdraw") masuk += amt;
-        else if (t.type !== "transfer" || countTransfer) keluar += amt;
+        else keluar += amt;
       } else if (t.to_wallet_id === id) {
         if (t.type === "goal_withdraw") keluar += amt;
-        else if (t.type !== "transfer" || countTransfer) masuk += amt;
+        else masuk += amt;
       }
     }
   }

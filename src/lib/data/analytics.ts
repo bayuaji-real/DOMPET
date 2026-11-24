@@ -39,7 +39,12 @@ function withTimeout<T>(p: PromiseLike<T>, ms = 1500): Promise<T> {
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
 /** Label bulan dari database berbahasa Inggris (Aug, Oct, Dec, May): ubah ke bahasa Indonesia. */
 const ID_MONTH: Record<string, string> = { May: "Mei", Aug: "Agt", Oct: "Okt", Dec: "Des" };
-const idMonthLabel = (l: unknown) => { const s = String(l ?? ""); return ID_MONTH[s] ?? s; };
+const idMonthLabel = (l: unknown) => {
+  const s = String(l ?? "");
+  const [first, ...rest] = s.split(" ");
+  const mapped = ID_MONTH[first];
+  return mapped ? [mapped, ...rest].join(" ") : s;
+};
 
 // Dataset sampel 2 bulan realistis (Oktober & November 2026) sebagai baseline fallback
 const SAMPLE_TRANSACTIONS = [
