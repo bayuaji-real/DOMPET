@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { generateJson } from "@/lib/ai/gemini";
 import { createClient } from "@/lib/supabase/server";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
+import { guardAi, logAi } from "@/lib/ai/entitlement";
 import { aiInsightsSchema } from "@/lib/validation";
 
 interface AIInsightResponse {
@@ -105,6 +106,10 @@ Tugasmu:
 2. Berikan 1 saran konkret (actionable tip) yang realistis dan mudah langsung dijalankan minggu ini.
 `.trim();
 
+    // Hasil dari cache gratis; membuat insight baru memakai kuota AI.
+    const guard = await guardAi("ai_insight", auth.userId);
+    if (!guard.ok) return guard.response;
+
     // 3. Panggil Gemini API dengan Response Schema JSON
     const geminiResult = await generateJson<AIInsightResponse>(
       [{ text: promptText }],
@@ -130,6 +135,7 @@ Tugasmu:
       }
     );
 
+    await logAi("ai_insight", geminiResult);
     const generatedInsights = geminiResult.insights || [];
     const generatedTip = geminiResult.actionable_tip || "";
 

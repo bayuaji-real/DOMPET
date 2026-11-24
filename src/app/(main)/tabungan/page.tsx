@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { notify } from "@/lib/notify";
 import { TopHeader } from "@/components/layout/top-header";
 import { SavingsTimeline } from "@/components/tabungan/savings-timeline";
@@ -271,7 +272,7 @@ export default function TabunganPage() {
         planned_per_payday: opts ? opts.planned : pr.feasibility.monthlyNeeded ?? 0,
         priority: goals.length + 1,
         status: "aktif",
-        is_emergency_fund: false,
+        is_emergency_fund: /darurat/i.test(pr.name),
         notes: null,
         ...(user?.id ? { user_id: user.id } : {}),
       };
@@ -427,7 +428,8 @@ export default function TabunganPage() {
           planned_per_payday: plannedNum,
           priority: goals.length + 1,
           status: "aktif",
-          is_emergency_fund: false,
+          // Nama yang memuat "darurat" otomatis ditandai dana darurat (dipakai Skor Kesehatan dan Ilmu Keuangan).
+          is_emergency_fund: /darurat/i.test(formName),
           notes: formNotes || null,
           ...(user?.id ? { user_id: user.id } : {}),
         };
@@ -552,6 +554,13 @@ export default function TabunganPage() {
         title="Tabungan & Impian"
         subtitle="Rencanakan target & pantau proyeksi gajian"
       />
+
+      <div className="px-4 pt-2">
+        <Link href="/planner" className="flex items-center justify-between rounded-xl bg-rose-500/10 p-3 text-sm">
+          <span><span className="font-semibold">Planner Acara</span><span className="block text-xs text-muted-foreground">Rencanakan lamaran atau nikah: item, harga, tanggal butuh, dan pembayaran</span></span>
+          <ChevronRight className="size-4 shrink-0" />
+        </Link>
+      </div>
 
       {/* Toast Feedback */}
       {toastMessage && (

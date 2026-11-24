@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
+import { guardAi, logAi } from "@/lib/ai/entitlement";
 import { scanReceiptSchema } from "@/lib/validation";
 import { USE_SAMPLE_DATA, todayJakarta } from "@/lib/data/sample-mode";
 
@@ -90,6 +91,9 @@ export async function POST(req: NextRequest) {
     if (!auth.authenticated && auth.response) {
       return auth.response;
     }
+
+    const guard = await guardAi("ai_struk", auth.userId);
+    if (!guard.ok) return guard.response;
 
     const body = await req.json();
     const parsed = scanReceiptSchema.safeParse(body);
@@ -280,6 +284,7 @@ export async function POST(req: NextRequest) {
         const outputText = response.output_text;
         if (outputText) {
           const parsed = JSON.parse(outputText);
+          await logAi("ai_struk", { model: "scan-receipt", inputTokens: Number((response as { usage?: { input_tokens?: number } }).usage?.input_tokens ?? 0), outputTokens: Number((response as { usage?: { output_tokens?: number } }).usage?.output_tokens ?? 0) });
           return NextResponse.json({
             is_receipt: Boolean(parsed.is_receipt),
             merchant: String(parsed.merchant || "Toko"),

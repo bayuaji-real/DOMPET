@@ -1,6 +1,7 @@
 "use client";
 
 import { todayJakarta } from "@/lib/data/sample-mode";
+import { notify } from "@/lib/notify";
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -206,6 +207,10 @@ export function BottomNav() {
       });
 
       if (!res.ok) {
+        if (res.status === 402 || res.status === 429) {
+          const j = await res.json().catch(() => ({}));
+          notify(typeof j.error === "string" ? j.error : "Foto struk belum tersedia di paketmu.");
+        }
         throw new Error("Gagal memindai struk dengan Gemini");
       }
 

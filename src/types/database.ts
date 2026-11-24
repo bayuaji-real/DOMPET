@@ -347,11 +347,103 @@ export interface Database {
         };
         Relationships: [];
       };
+      planner_events: {
+        Row: { id: string; user_id: string; title: string; event_type: "lamaran" | "nikah" | "lainnya"; event_date: string | null; total_budget: number; partner_a: string | null; partner_b: string | null; goal_id: string | null; invite_code?: string | null; created_at?: string };
+        Insert: { id?: string; user_id?: string; title: string; event_type?: "lamaran" | "nikah" | "lainnya"; event_date?: string | null; total_budget?: number; partner_a?: string | null; partner_b?: string | null; goal_id?: string | null };
+        Update: { title?: string; event_type?: "lamaran" | "nikah" | "lainnya"; event_date?: string | null; total_budget?: number; partner_a?: string | null; partner_b?: string | null; goal_id?: string | null };
+        Relationships: [];
+      };
+      planner_items: {
+        Row: { id: string; user_id: string; event_id: string; kind: "vendor" | "seserahan" | "lainnya"; name: string; planned_cost: number; side: "pria" | "wanita" | "umum"; status: "belum" | "proses" | "selesai" | "tinjau" | "booking" | "lunas"; needed_date: string | null; contact: string | null; note: string | null; created_at?: string };
+        Insert: { id?: string; user_id?: string; event_id: string; kind: "vendor" | "seserahan" | "lainnya"; name: string; planned_cost?: number; side?: "pria" | "wanita" | "umum"; status?: "belum" | "proses" | "selesai" | "tinjau" | "booking" | "lunas"; needed_date?: string | null; contact?: string | null; note?: string | null };
+        Update: { name?: string; planned_cost?: number; side?: "pria" | "wanita" | "umum"; status?: "belum" | "proses" | "selesai" | "tinjau" | "booking" | "lunas"; needed_date?: string | null; contact?: string | null; note?: string | null };
+        Relationships: [];
+      };
+      planner_payments: {
+        Row: { id: string; user_id: string; event_id: string; item_id: string | null; amount: number; paid_at: string; note: string | null; created_at?: string };
+        Insert: { id?: string; user_id?: string; event_id: string; item_id?: string | null; amount: number; paid_at?: string; note?: string | null };
+        Update: { amount?: number; paid_at?: string; note?: string | null };
+        Relationships: [];
+      };
+      planner_guests: {
+        Row: { id: string; user_id: string; event_id: string; name: string; category: string | null; side: "pria" | "wanita" | "umum"; address: string | null; pax: number; attendance: "belum" | "hadir" | "tidak"; created_at?: string };
+        Insert: { id?: string; user_id?: string; event_id: string; name: string; category?: string | null; side?: "pria" | "wanita" | "umum"; address?: string | null; pax?: number; attendance?: "belum" | "hadir" | "tidak" };
+        Update: { name?: string; category?: string | null; side?: "pria" | "wanita" | "umum"; address?: string | null; pax?: number; attendance?: "belum" | "hadir" | "tidak" };
+        Relationships: [];
+      };
+      planner_todos: {
+        Row: { id: string; user_id: string; event_id: string; kind: "dokumen" | "jadwal"; title: string; side: "pria" | "wanita" | "umum"; due_date: string | null; note: string | null; done: boolean; created_at?: string };
+        Insert: { id?: string; user_id?: string; event_id: string; kind: "dokumen" | "jadwal"; title: string; side?: "pria" | "wanita" | "umum"; due_date?: string | null; note?: string | null; done?: boolean };
+        Update: { title?: string; side?: "pria" | "wanita" | "umum"; due_date?: string | null; note?: string | null; done?: boolean };
+        Relationships: [];
+      };
+      spend_limits: {
+        Row: { id: string; user_id: string; name: string; period: "harian" | "mingguan" | "bulanan"; amount: number; category_ids: string[]; warn_pct: number; is_active: boolean; created_at?: string };
+        Insert: { id?: string; user_id?: string; name: string; period: "harian" | "mingguan" | "bulanan"; amount: number; category_ids?: string[]; warn_pct?: number; is_active?: boolean };
+        Update: { name?: string; period?: "harian" | "mingguan" | "bulanan"; amount?: number; category_ids?: string[]; warn_pct?: number; is_active?: boolean };
+        Relationships: [];
+      };
+      debts: {
+        Row: { id: string; user_id: string; name: string; balance: number; annual_rate: number; min_payment: number; due_day: number | null; created_at?: string };
+        Insert: { id?: string; user_id?: string; name: string; balance: number; annual_rate?: number; min_payment?: number; due_day?: number | null; created_at?: string };
+        Update: { name?: string; balance?: number; annual_rate?: number; min_payment?: number; due_day?: number | null };
+        Relationships: [];
+      };
+      holdings: {
+        Row: { id: string; user_id: string; name: string; kind: "reksa_dana" | "saham" | "emas" | "lainnya"; units: number; avg_price: number; last_price: number | null; last_price_at: string | null; created_at?: string };
+        Insert: { id?: string; user_id?: string; name: string; kind: "reksa_dana" | "saham" | "emas" | "lainnya"; units: number; avg_price: number; last_price?: number | null; last_price_at?: string | null; created_at?: string };
+        Update: { name?: string; kind?: "reksa_dana" | "saham" | "emas" | "lainnya"; units?: number; avg_price?: number; last_price?: number | null; last_price_at?: string | null };
+        Relationships: [];
+      };
+      market_benchmarks: {
+        Row: { code: string; name: string; value: number; unit: "persen" | "poin" | "rupiah"; as_of: string; source_name: string; source_url: string; note: string | null; updated_at?: string };
+        Insert: never; Update: never; Relationships: [];
+      };
+      push_subscriptions: {
+        Row: { id: string; user_id: string; endpoint: string; p256dh: string; auth: string; user_agent: string | null; created_at?: string };
+        Insert: { user_id?: string; endpoint: string; p256dh: string; auth: string; user_agent?: string | null };
+        Update: { endpoint?: string; p256dh?: string; auth?: string }; Relationships: [];
+      };
+      purchase_goals: {
+        Row: { id: string; user_id: string; name: string; price: number; down_payment: number; saved: number; mode: "tunai" | "cicilan"; months: number | null; rate_pct: number | null; target_date: string | null; note: string | null; status: "aktif" | "terbeli" | "batal"; created_at?: string };
+        Insert: { name: string; price: number; down_payment?: number; saved?: number; mode?: "tunai" | "cicilan"; months?: number | null; rate_pct?: number | null; target_date?: string | null; note?: string | null; status?: "aktif" | "terbeli" | "batal" };
+        Update: { name?: string; price?: number; down_payment?: number; saved?: number; mode?: "tunai" | "cicilan"; months?: number | null; rate_pct?: number | null; target_date?: string | null; note?: string | null; status?: "aktif" | "terbeli" | "batal" };
+        Relationships: [];
+      };
+      market_snapshots: {
+        Row: { id: string; name: string; category: "pasar_uang" | "pendapatan_tetap" | "campuran" | "saham"; risk: "rendah" | "sedang" | "tinggi"; ret_1m: number | null; ret_ytd: number | null; ret_1y: number | null; aum: number | null; as_of: string; source_url: string };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      shared_groups: {
+        Row: { id: string; name: string; owner_id: string; invite_code: string; created_at?: string };
+        Insert: never; Update: { name?: string }; Relationships: [];
+      };
+      shared_members: {
+        Row: { group_id: string; user_id: string; display_name: string; joined_at?: string };
+        Insert: never; Update: never; Relationships: [];
+      };
+      shared_expenses: {
+        Row: { id: string; group_id: string; paid_by: string; amount: number; note: string; split_among: string[]; date: string; created_by: string; created_at?: string };
+        Insert: { group_id: string; paid_by: string; amount: number; note: string; split_among: string[]; date?: string };
+        Update: never; Relationships: [];
+      };
+      shared_payments: {
+        Row: { id: string; group_id: string; from_user: string; to_user: string; amount: number; date: string; created_by: string; created_at?: string };
+        Insert: { group_id: string; from_user: string; to_user: string; amount: number; date?: string };
+        Update: never; Relationships: [];
+      };
+      subscription_requests: {
+        Row: { id: string; user_id: string; plan: "premium" | "pro"; note: string | null; status: string; created_at?: string };
+        Insert: { plan: "premium" | "pro"; note?: string | null };
+        Update: never; Relationships: [];
+      };
       ai_usage_logs: {
         Row: {
           id: string;
           user_id: string;
-          feature: "tabungan" | "konsultasi";
+          feature: "tabungan" | "konsultasi" | "struk" | "suara" | "insight" | "rencana" | "impor";
           model: string;
           input_tokens: number;
           output_tokens: number;
@@ -361,7 +453,7 @@ export interface Database {
         Insert: {
           id?: string;
           user_id?: string;
-          feature: "tabungan" | "konsultasi";
+          feature: "tabungan" | "konsultasi" | "struk" | "suara" | "insight" | "rencana" | "impor";
           model: string;
           input_tokens?: number;
           output_tokens?: number;
@@ -475,6 +567,29 @@ export interface Database {
         Args: { p_goal_id: string; p_move_to: string };
         Returns: Json;
       };
+      get_my_entitlement: { Args: Record<string, never>; Returns: Json };
+      planner_create_invite: { Args: { p_event: string }; Returns: string };
+      planner_join: { Args: { p_code: string }; Returns: string };
+      planner_reset_invite: { Args: { p_event: string }; Returns: undefined };
+      my_admin_role: { Args: Record<string, never>; Returns: string | null };
+      admin_list_users: { Args: Record<string, never>; Returns: { user_id: string; email: string; created_at: string; last_sign_in_at: string | null; admin_role: string | null; plan: string; source: string; plan_expires_at: string | null; trial_ends_at: string | null; ai_used: number }[] };
+      admin_set_plan: { Args: { p_user: string; p_plan: string; p_days?: number | null }; Returns: undefined };
+      admin_set_role: { Args: { p_user: string; p_role: string }; Returns: undefined };
+      admin_list_requests: { Args: Record<string, never>; Returns: { id: string; user_id: string; email: string; plan: string; note: string | null; status: string; created_at: string }[] };
+      admin_resolve_request: { Args: { p_id: string; p_status: string; p_days?: number }; Returns: undefined };
+      admin_upsert_market: { Args: { p_id: string | null; p_name: string; p_category: string; p_risk: string; p_ret_1m: number | null; p_ret_ytd: number | null; p_ret_1y: number | null; p_aum: number | null; p_as_of: string; p_source_url: string }; Returns: string };
+      admin_delete_market: { Args: { p_id: string }; Returns: undefined };
+      admin_list_audit: { Args: Record<string, never>; Returns: { id: number; actor_email: string | null; action: string; target_email: string | null; detail: string | null; created_at: string }[] };
+      admin_set_api_budget: { Args: { p_budget: number; p_since: string; p_warn?: number }; Returns: undefined };
+      admin_api_usage: { Args: Record<string, never>; Returns: Json };
+      admin_upsert_benchmark: { Args: { p_code: string; p_name: string; p_value: number; p_unit: string; p_as_of: string; p_source_name: string; p_source_url: string; p_note: string | null }; Returns: undefined };
+      admin_delete_benchmark: { Args: { p_code: string }; Returns: undefined };
+      admin_mfa_status: { Args: Record<string, never>; Returns: Json };
+      admin_set_require_mfa: { Args: { p_on: boolean }; Returns: undefined };
+      start_trial: { Args: { p_plan: string }; Returns: Json };
+      create_shared_group: { Args: { p_name: string; p_display: string }; Returns: Json };
+      join_shared_group: { Args: { p_code: string; p_display: string }; Returns: string };
+      delete_my_account: { Args: Record<string, never>; Returns: undefined };
     };
     Enums: Record<string, never>;
   };

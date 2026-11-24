@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateJson, GeminiPart, GeminiError } from "@/lib/ai/gemini";
 import { createClient } from "@/lib/supabase/server";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
+import { guardAi, logAi } from "@/lib/ai/entitlement";
 import { voiceTransactionSchema } from "@/lib/validation";
 
 export interface ParsedVoiceTransaction {
@@ -24,6 +25,9 @@ export async function POST(req: Request) {
     if (!auth.authenticated && auth.response) {
       return auth.response;
     }
+
+    const guard = await guardAi("ai_suara", auth.userId);
+    if (!guard.ok) return guard.response;
 
     const body = await req.json().catch(() => ({}));
     const parsed = voiceTransactionSchema.safeParse(body);
@@ -199,6 +203,7 @@ PANDUAN & ATURAN EKSTRAKSI:
       timeoutMs: audioBase64 ? 35_000 : 20_000,
     });
 
+    await logAi("ai_suara", result);
     return NextResponse.json({
       success: true,
       transcript: result.transcript,

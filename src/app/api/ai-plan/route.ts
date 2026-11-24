@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { generateJson, GeminiError } from "@/lib/ai/gemini";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
+import { guardAi, logAi } from "@/lib/ai/entitlement";
 import { aiPlanSchema } from "@/lib/validation";
 
 /**
@@ -59,6 +60,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Data kebutuhan kosong" }, { status: 400 });
   }
 
+  const guard = await guardAi("ai_rencana", auth.userId);
+  if (!guard.ok) return guard.response;
+
   const needsText = body.needs
     .slice(0, 20)
     .map(
@@ -93,7 +97,7 @@ Tugas:
   try {
     const result = await generateJson<AIPlanResponse>([{ text: prompt }], {
       system:
-        'Kamu pendamping keuangan pribadi di aplikasi "Dompetku" untuk pengguna Indonesia yang pemula. Sabar, tidak menghakimi, bahasa sederhana. Kamu bukan penasihat keuangan berlisensi: jangan menyebut nama produk investasi atau saham tertentu, cukup kategorinya. Jangan menyebut kata "AI".',
+        'Kamu pendamping keuangan pribadi di aplikasi "Dompetku" untuk pengguna Indonesia yang pemula. Sabar, tidak menghakimi, bahasa sederhana. Kamu bukan penasihat keuangan berlisensi (saranmu hanya berdasarkan data dan riset umum, pengguna wajib mengecek ulang sendiri): jangan menyebut nama produk investasi atau saham tertentu, cukup kategorinya. Jangan menyebut kata "AI".',
       responseSchema: {
         type: "OBJECT",
         properties: {
@@ -119,6 +123,7 @@ Tugas:
       temperature: 0.3,
     });
 
+    await logAi("ai_rencana", result);
     return NextResponse.json({
       success: true,
       data: {

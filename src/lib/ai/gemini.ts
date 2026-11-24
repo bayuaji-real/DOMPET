@@ -80,7 +80,12 @@ async function callModel(model: string, parts: GeminiPart[], opts: GenerateOptio
     ?.map((p: { text?: string }) => p.text ?? "")
     .join("");
   if (!text) throw new GeminiError(`[${model}] respons kosong`, 502, friendly(502));
-  return text;
+  const usage: UsageInfo = {
+    model,
+    inputTokens: Number(json?.usageMetadata?.promptTokenCount ?? 0),
+    outputTokens: Number(json?.usageMetadata?.candidatesTokenCount ?? 0) + Number(json?.usageMetadata?.thoughtsTokenCount ?? 0),
+  };
+  return { text, usage };
 }
 
 
@@ -132,14 +137,27 @@ async function withFallback<T>(call: (model: string, attempt: number) => Promise
  * lalu pindah ke model cadangan.
  */
 export async function generateText(parts: GeminiPart[], opts: GenerateOptions = {}): Promise<string> {
+  return (await generateTextWithUsage(parts, opts)).text;
+}
+
+/** Sama seperti generateText, tapi juga mengembalikan jumlah token (untuk catatan biaya). */
+export async function generateTextWithUsage(parts: GeminiPart[], opts: GenerateOptions = {}): Promise<{ text: string; usage: UsageInfo }> {
   return withFallback((model) => callModel(model, parts, { ...opts, timeoutMs: opts.timeoutMs ?? 20_000 }));
+}
+
+const usageMap = new WeakMap<object, UsageInfo>();
+/** Ambil jumlah token dari hasil generateJson (disimpan tersembunyi, tidak ikut terkirim ke pengguna). */
+export function usageOf(x: unknown): UsageInfo | undefined {
+  return x && typeof x === "object" ? usageMap.get(x as object) : undefined;
 }
 
 /** Sama seperti generateText, tapi langsung mengembalikan objek JSON hasil parse. */
 export async function generateJson<T>(parts: GeminiPart[], opts: GenerateOptions & { responseSchema: Record<string, unknown> }): Promise<T> {
-  const text = await generateText(parts, opts);
+  const { text, usage } = await generateTextWithUsage(parts, opts);
   try {
-    return JSON.parse(text) as T;
+    const parsed = JSON.parse(text) as T;
+    if (parsed && typeof parsed === "object") usageMap.set(parsed as object, usage);
+    return parsed;
   } catch {
     throw new GeminiError("Output bukan JSON valid", 502, "Kami menerima format yang tidak bisa dibaca. Coba lagi ya.");
   }

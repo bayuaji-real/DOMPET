@@ -23,6 +23,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatRupiah, parseRupiahInput, triggerHapticFeedback } from "@/lib/utils";
 import { createTransaction } from "@/lib/data/transactions";
+import { limitWarnings } from "@/lib/data/limits";
+import { notify } from "@/lib/notify";
 import { getSpendableWallets, type WalletBalance } from "@/lib/data/wallets";
 import { NewCategoryInline } from "@/components/category/new-category-inline";
 import { getCategories, getCategoryEmoji, categoryEmoji, type Category } from "@/lib/data/categories";
@@ -127,6 +129,11 @@ export default function TambahTransaksiPage() {
 
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("transaction_created"));
+      }
+
+      // Peringatan batas pengeluaran (hanya untuk pengeluaran). Gagal cek tidak mengganggu pencatatan.
+      if (typeKey === "expense") {
+        limitWarnings().then((ws) => ws.forEach((w) => notify(w))).catch(() => {});
       }
 
       setTimeout(() => {

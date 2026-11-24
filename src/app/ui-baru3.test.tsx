@@ -1,0 +1,102 @@
+// @vitest-environment jsdom
+import * as React from "react";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, cleanup, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+vi.mock("@/components/layout/top-header", () => ({ TopHeader: ({ title }: { title: string }) => <h1>{title}</h1> }));
+vi.mock("@/lib/notify", () => ({ notify: vi.fn() }));
+vi.mock("next/link", () => ({ default: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a> }));
+vi.mock("@/components/ui/use-confirm", () => ({ useConfirm: () => [async () => true, null] }));
+vi.mock("@/lib/data/finance-snapshot", () => ({ getFinanceSnapshot: async () => ({ monthlyIncome: 6_000_000, monthlyExpense: 3_500_000, monthlyExpenseX: 0, today: "2026-11-24", hasData: true }) }));
+vi.mock("@/lib/data/goals", () => ({ getSavingsGoals: async () => [] }));
+
+const purchases = [{ id: "p1", user_id: "u", name: "Laptop kerja", price: 12_000_000, down_payment: 0, saved: 0, mode: "tunai", months: null, rate_pct: null, target_date: "2027-05-24", note: null, status: "aktif" }];
+const addPurchase = vi.fn(async () => {});
+vi.mock("@/lib/data/purchase", () => ({
+  getPurchases: async () => purchases, addPurchase: (...a: unknown[]) => (addPurchase as unknown as (...x: unknown[]) => Promise<void>)(...a),
+  updatePurchase: async () => {}, deletePurchase: async () => {},
+}));
+vi.mock("@/lib/data/admin", async () => {
+  const real = await vi.importActual<typeof import("@/lib/data/admin")>("@/lib/data/admin");
+  return { ...real, getBenchmarks: async () => [
+    { code: "bi_rate", name: "Suku bunga acuan BI (BI-Rate)", value: 6, unit: "persen", as_of: "2026-11-18", source_name: "Bank Indonesia", source_url: "https://www.bi.go.id/x", note: null },
+    { code: "ihsg_lama", name: "IHSG", value: 5439, unit: "poin", as_of: "2026-08-01", source_name: "BEI", source_url: "https://www.idx.co.id/", note: null },
+  ] };
+});
+const listFactors = vi.fn(async () => ({ data: { totp: [] as unknown[], all: [] as unknown[] }, error: null }));
+vi.mock("@/lib/supabase/client", () => ({ createClient: () => ({ auth: { mfa: { listFactors: () => listFactors(), enroll: async () => ({ data: { id: "f1", totp: { qr_code: "data:image/svg+xml;utf-8,<svg/>", secret: "ABCDEF" } }, error: null }), unenroll: async () => ({ error: null }) } } }) }));
+
+import TargetBeliPage from "./(main)/target-beli/page";
+import IlmuPage from "./(main)/ilmu-keuangan/page";
+import { AcuanSection } from "@/components/market/acuan-section";
+import { MfaCard } from "@/components/security/mfa";
+afterEach(() => { cleanup(); vi.clearAllMocks(); });
+
+describe("Target Beli", () => {
+  it("menampilkan penilaian, setoran per bulan, dan perkiraan harga", async () => {
+    render(<TargetBeliPage />);
+    expect(await screen.findByText("Laptop kerja")).toBeTruthy();
+    expect(screen.getAllByText(/Aman|Pas-pasan|Berat/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Sisihkan sekitar/)).toBeTruthy();
+  });
+  it("form tunai disimpan dengan harga dan tanggal target", async () => {
+    const u = userEvent.setup();
+    render(<TargetBeliPage />);
+    await screen.findByText("Laptop kerja");
+    await u.click(screen.getByRole("button", { name: "Tambah target beli" }));
+    await u.type(screen.getByLabelText("Nama barang"), "Kulkas");
+    await u.type(screen.getByLabelText("Harga barang"), "4000000");
+    await u.click(screen.getByRole("button", { name: "Simpan dan hitung" }));
+    await waitFor(() => expect(addPurchase).toHaveBeenCalled());
+    const arg = (addPurchase.mock.calls[0] as unknown[])[0] as Record<string, unknown>;
+    expect(arg.name).toBe("Kulkas"); expect(arg.price).toBe(4000000); expect(arg.mode).toBe("tunai");
+  });
+  it("mode cicilan menampilkan DP, lama, dan bunga", async () => {
+    const u = userEvent.setup();
+    render(<TargetBeliPage />);
+    await screen.findByText("Laptop kerja");
+    await u.click(screen.getByRole("button", { name: "Tambah target beli" }));
+    await u.click(screen.getByRole("button", { name: "Cicilan" }));
+    expect(screen.getByLabelText("Uang muka")).toBeTruthy();
+    expect(screen.getByLabelText("Lama cicilan bulan")).toBeTruthy();
+  });
+});
+
+describe("Ilmu Keuangan: Dana lain", () => {
+  it("memilih dana kesehatan menghitung setoran per bulan dan menampilkan saran", async () => {
+    const u = userEvent.setup();
+    render(<IlmuPage />);
+    await u.click(screen.getByRole("tab", { name: "Dana lain" }));
+    expect(screen.getByRole("button", { name: "Dana pendidikan anak" })).toBeTruthy();
+    await u.type(screen.getByLabelText("Biaya hari ini"), "50000000");
+    expect(screen.getByText("Sisihkan per bulan")).toBeTruthy();
+    expect(screen.getByText(/BPJS Kesehatan/)).toBeTruthy();
+  });
+});
+
+describe("Acuan pasar", () => {
+  it("menampilkan angka, tanggal, sumber, dan menandai angka lama", async () => {
+    render(<AcuanSection />);
+    expect(await screen.findByText("6%")).toBeTruthy();
+    expect(screen.getAllByRole("link", { name: /Sumber:/ }).length).toBe(2);
+    expect(screen.getAllByText(/sudah lama/i).length).toBe(1);
+  });
+});
+
+describe("MFA", () => {
+  it("belum aktif: tombol daftar, lalu menampilkan QR dan kolom kode", async () => {
+    const u = userEvent.setup();
+    render(<MfaCard />);
+    await u.click(await screen.findByRole("button", { name: "Daftarkan MFA" }));
+    expect(await screen.findByAltText(/Kode QR/)).toBeTruthy();
+    expect(screen.getByLabelText("Kode 6 angka dari aplikasi")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Aktifkan" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+  it("sudah aktif: menampilkan status dan tombol matikan", async () => {
+    listFactors.mockResolvedValueOnce({ data: { totp: [{ id: "f9", friendly_name: "Dompetku abc", status: "verified" }], all: [] }, error: null });
+    render(<MfaCard />);
+    expect(await screen.findByText(/MFA aktif/)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Matikan" })).toBeTruthy();
+  });
+});

@@ -1,0 +1,74 @@
+"use client";
+
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { ShieldCheck } from "lucide-react";
+import { TopHeader } from "@/components/layout/top-header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { MfaCard } from "@/components/security/mfa";
+import { PushCard } from "@/components/settings/push-card";
+import { createClient } from "@/lib/supabase/client";
+import { PIN_KEY, PIN_TRIES_KEY, makeStoredPin, validPinFormat } from "@/lib/konsultan/pin";
+
+export default function KeamananPage() {
+  const router = useRouter();
+  const [hasPin, setHasPin] = React.useState(false);
+  const [pin, setPin] = React.useState(""); const [pin2, setPin2] = React.useState("");
+  const [msg, setMsg] = React.useState<{ ok: boolean; text: string } | null>(null);
+  const [confirmText, setConfirmText] = React.useState(""); const [busy, setBusy] = React.useState(false); const [delErr, setDelErr] = React.useState("");
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  React.useEffect(() => { setHasPin(!!localStorage.getItem(PIN_KEY)); }, []);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validPinFormat(pin)) return setMsg({ ok: false, text: "PIN harus 4 sampai 6 angka." });
+    if (pin !== pin2) return setMsg({ ok: false, text: "Kedua PIN belum sama." });
+    localStorage.setItem(PIN_KEY, JSON.stringify(await makeStoredPin(pin)));
+    localStorage.removeItem(PIN_TRIES_KEY); sessionStorage.setItem("dompet_unlocked_at", String(Date.now()));
+    setHasPin(true); setPin(""); setPin2(""); setMsg({ ok: true, text: "PIN aktif di perangkat ini." });
+  };
+  const removePin = () => { localStorage.removeItem(PIN_KEY); localStorage.removeItem(PIN_TRIES_KEY); setHasPin(false); setMsg({ ok: true, text: "PIN dinonaktifkan." }); };
+  const deleteAccount = async () => {
+    setBusy(true); setDelErr("");
+    try {
+      const sb = createClient();
+      const { error } = await sb.rpc("delete_my_account");
+      if (error) throw error;
+      localStorage.removeItem(PIN_KEY); localStorage.removeItem(PIN_TRIES_KEY);
+      await sb.auth.signOut().catch(() => {});
+      router.push("/login"); router.refresh();
+    } catch { setDelErr("Akun belum bisa dihapus. Coba lagi sebentar."); setBusy(false); }
+  };
+
+  return (
+    <div className="pb-24">
+      <TopHeader title="Keamanan" />
+      <div className="space-y-6 px-4 pt-2">
+        <section aria-label="PIN aplikasi" className="space-y-3">
+          <h2 className="flex items-center gap-2 text-lg font-bold"><ShieldCheck className="size-5 text-teal-600" aria-hidden /> PIN aplikasi</h2>
+          <p className="text-sm text-muted-foreground">PIN menutup layar kalau HP-mu dipinjam orang. PIN hanya berlaku di perangkat ini dan tidak menggantikan login.</p>
+          {msg && <p role="status" className={`rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-red-500/10 text-red-700 dark:text-red-300"}`}>{msg.text}</p>}
+          <form onSubmit={save} className="space-y-2">
+            <Input aria-label="PIN baru" type="password" inputMode="numeric" maxLength={6} placeholder={hasPin ? "PIN baru (ganti)" : "PIN 4 sampai 6 angka"} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} />
+            <Input aria-label="Ulangi PIN" type="password" inputMode="numeric" maxLength={6} placeholder="Ulangi PIN" value={pin2} onChange={(e) => setPin2(e.target.value.replace(/\D/g, ""))} />
+            <Button type="submit" className="w-full" disabled={pin.length < 4}>{hasPin ? "Ganti PIN" : "Aktifkan PIN"}</Button>
+          </form>
+          {hasPin && <Button variant="outline" className="w-full" onClick={removePin}>Matikan PIN</Button>}
+        </section>
+
+        <MfaCard />
+
+        <PushCard />
+
+        <section aria-label="Hapus akun" className="space-y-3 rounded-xl border border-red-500/30 p-4">
+          <h2 className="text-lg font-bold text-red-600">Hapus akun</h2>
+          <p className="text-sm text-muted-foreground">Semua datamu (dompet, transaksi, tabungan, utang, portofolio) dihapus permanen dan tidak bisa dikembalikan. Unduh dulu datamu lewat menu Pengaturan di More kalau perlu.</p>
+          <label className="block text-sm">Ketik <b>HAPUS</b> untuk melanjutkan<Input aria-label="Ketik HAPUS" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} /></label>
+          {delErr && <p role="alert" className="text-sm text-red-600">{delErr}</p>}
+          <Button className="w-full bg-red-600 text-white hover:bg-red-700" disabled={confirmText.trim() !== "HAPUS" || busy} onClick={deleteAccount}>{busy ? "Menghapus..." : "Hapus akun saya"}</Button>
+        </section>
+      </div>
+    </div>
+  );
+}

@@ -19,6 +19,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/api") ||
     pathname.startsWith("/icons") ||
     pathname.includes("manifest") ||
+    pathname === "/sw.js" ||
     pathname.includes("favicon.ico") ||
     pathname.endsWith(".png") ||
     pathname.endsWith(".svg") ||
