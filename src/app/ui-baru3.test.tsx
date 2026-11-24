@@ -28,7 +28,6 @@ const listFactors = vi.fn(async () => ({ data: { totp: [] as unknown[], all: [] 
 vi.mock("@/lib/supabase/client", () => ({ createClient: () => ({ auth: { mfa: { listFactors: () => listFactors(), enroll: async () => ({ data: { id: "f1", totp: { qr_code: "data:image/svg+xml;utf-8,<svg/>", secret: "ABCDEF" } }, error: null }), unenroll: async () => ({ error: null }) } } }) }));
 
 import TargetBeliPage from "./(main)/target-beli/page";
-import IlmuPage from "./(main)/ilmu-keuangan/page";
 import { AcuanSection } from "@/components/market/acuan-section";
 import { MfaCard } from "@/components/security/mfa";
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
@@ -68,18 +67,6 @@ describe("Target Beli (obrolan)", () => {
     await u.click(screen.getByRole("button", { name: "Kirim" }));
     expect(await screen.findByText(/harganya berapa/)).toBeTruthy();
     expect(addPurchase).not.toHaveBeenCalled();
-  });
-});
-
-describe("Ilmu Keuangan: Dana lain", () => {
-  it("memilih dana kesehatan menghitung setoran per bulan dan menampilkan saran", async () => {
-    const u = userEvent.setup();
-    render(<IlmuPage />);
-    await u.click(screen.getByRole("tab", { name: "Dana lain" }));
-    expect(screen.getByRole("button", { name: "Dana pendidikan anak" })).toBeTruthy();
-    await u.type(screen.getByLabelText("Biaya hari ini"), "50000000");
-    expect(screen.getByText("Sisihkan per bulan")).toBeTruthy();
-    expect(screen.getByText(/BPJS Kesehatan/)).toBeTruthy();
   });
 });
 

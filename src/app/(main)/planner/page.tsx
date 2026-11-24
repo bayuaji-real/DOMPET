@@ -92,7 +92,7 @@ function NewEvent({ onDone }: { onDone: () => void }) {
     <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
       <p className="font-semibold">Mulai planner acaramu</p>
       <p className="text-xs text-muted-foreground">Catat kebutuhan, harga, dan pembayaran acaramu.</p>
-      <label className="block space-y-1 text-sm">Nama acara<Input aria-label="Nama acara" value={f.title} maxLength={80} placeholder="Contoh: Pernikahan Bayu & Intan" onChange={(e) => setF({ ...f, title: e.target.value })} /></label>
+      <label className="block space-y-1 text-sm">Nama acara<Input aria-label="Nama acara" value={f.title} maxLength={80} placeholder="Contoh: Nikah cuy" onChange={(e) => setF({ ...f, title: e.target.value })} /></label>
       <div className="grid grid-cols-2 gap-2">
         <label className="space-y-1 text-xs">Jenis<select aria-label="Jenis acara" className={selectCls} value={f.type} onChange={(e) => setF({ ...f, type: e.target.value as typeof f.type })}><option value="nikah">Pernikahan</option><option value="lamaran">Lamaran</option><option value="lainnya">Lainnya</option></select></label>
         <label className="space-y-1 text-xs">Tanggal acara<Input type="date" aria-label="Tanggal acara" value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} /></label>

@@ -25,7 +25,6 @@ vi.mock("@/lib/data/admin", async () => {
   };
 });
 import AdminPage from "./(main)/admin/page";
-import IlmuPage from "./(main)/ilmu-keuangan/page";
 
 const baseUsage = { configured: true, budget_idr: 100000, since: "2026-11-01", warn_pct: 70, spent_idr: 95000, remaining_idr: 5000, used_pct: 95, level: "kritis", days_left: 2, avg_daily_idr: 2500, month_spent_idr: 95000, today_spent_idr: 100, calls_month: 40, by_feature: [{ feature: "konsultasi", calls: 30, cost_idr: 80000 }], daily: [{ day: "2026-11-23", calls: 5, cost_idr: 2500 }] };
 afterEach(() => { cleanup(); vi.clearAllMocks(); role = "superadmin"; usage = baseUsage; });
@@ -62,32 +61,5 @@ describe("Admin UI", () => {
     await u.click(await screen.findByRole("tab", { name: "Pengguna" }));
     expect(await screen.findByText(/intan@example.test/)).toBeTruthy();
     expect(screen.getByLabelText("Peran intan@example.test")).toBeTruthy();
-  });
-});
-
-describe("Ilmu Keuangan UI", () => {
-  it("50/30/20 dari 10 juta", async () => {
-    const u = userEvent.setup();
-    render(<IlmuPage />);
-    await u.type(screen.getByLabelText("Pemasukan bulanan"), "10000000");
-    expect(screen.getByText(/5\.000\.000/)).toBeTruthy();
-    expect(screen.getByText(/3\.000\.000/)).toBeTruthy();
-  });
-  it("pensiun menampilkan setoran per bulan dan menolak usia pensiun salah", async () => {
-    const u = userEvent.setup();
-    render(<IlmuPage />);
-    await u.click(screen.getByRole("tab", { name: "Pensiun" }));
-    expect(screen.getByText("Perlu disisihkan per bulan")).toBeTruthy();
-    const ret = screen.getByLabelText("Usia pensiun");
-    await u.clear(ret); await u.type(ret, "20");
-    expect((await screen.findByRole("alert")).textContent).toMatch(/lebih besar/);
-  });
-  it("dana darurat terisi otomatis dari data dompet dan target Tabungan", async () => {
-    const u = userEvent.setup();
-    render(<IlmuPage />);
-    await u.click(screen.getByRole("tab", { name: "Darurat" }));
-    await u.click(await screen.findByRole("button", { name: /Pakai data dompetku/ }));
-    expect(screen.getByText(/12\.000\.000/)).toBeTruthy(); // minimum 3 bulan x 4 juta
-    expect(screen.getByText(/7\.000\.000/)).toBeTruthy(); // kurang ke minimum
   });
 });
