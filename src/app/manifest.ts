@@ -12,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait",
     icons: [
       // Ikon peluncur (HP memotong bentuknya sendiri): kotak penuh berwarna, hanya satu ukuran (512).
-      { src: "/icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/icons/icon-maskable-dark-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
       // Layar pembuka Android memilih ikon "any" yang ukurannya paling dekat: logo transparan berpinggiran
       // lega (splash-logo), supaya tampil sebagai logo tanpa kotak. Jangan menambah ikon maskable di ukuran 192/384.
       { src: "/icons/splash-logo-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
