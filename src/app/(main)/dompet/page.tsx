@@ -742,7 +742,7 @@ export default function DompetPage() {
         </div>
       )}
       <WalletDetailSheet
-        wallet={detailWallet}
+        wallet={detailWallet ? (wallets.find((x) => x.id === detailWallet.id) ?? detailWallet) : null}
         allWallets={wallets}
         hideBalance={hideBalance}
         onClose={() => setDetailWallet(null)}
