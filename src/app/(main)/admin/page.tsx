@@ -80,11 +80,11 @@ function ApiTab({ isSuper }: { isSuper: boolean }) {
       <div role={al.tone === "bad" || al.tone === "warn" ? "alert" : "status"} className={`rounded-2xl p-4 ${cls}`}><p className="font-semibold">{al.title}</p><p className="text-sm">{al.body}</p></div>
       {u.configured && <div className="h-2 overflow-hidden rounded-full bg-muted"><div className={`h-full ${u.level === "aman" ? "bg-emerald-500" : u.level === "waspada" ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${Math.min(100, u.used_pct ?? 0)}%` }} /></div>}
       <div className="grid grid-cols-2 gap-2 text-sm">
-        {[["Top-up diisi", formatRupiah(u.budget_idr)], ["Terpakai sejak " + fmtDate(u.since), formatRupiah(Math.round(u.spent_idr))], ["Bulan ini", formatRupiah(Math.round(u.month_spent_idr))], ["Hari ini", formatRupiah(Math.round(u.today_spent_idr))], ["Panggilan AI bulan ini", String(u.calls_month)], ["Rata-rata per hari (7 hari)", formatRupiah(Math.round(u.avg_daily_idr))]].map(([k, v]) => (<div key={k} className="rounded-2xl p-3 border border-border/70 bg-card shadow-xs"><p className="text-xs text-muted-foreground">{k}</p><p className="font-semibold">{v}</p></div>))}
+        {[["Top-up diisi", formatRupiah(u.budget_idr)], ["Terpakai sejak " + fmtDate(u.since), formatRupiah(Math.round(u.spent_idr))], ["Bulan ini", formatRupiah(Math.round(u.month_spent_idr))], ["Hari ini", formatRupiah(Math.round(u.today_spent_idr))], ["Panggilan Ruby bulan ini", String(u.calls_month)], ["Rata-rata per hari (7 hari)", formatRupiah(Math.round(u.avg_daily_idr))]].map(([k, v]) => (<div key={k} className="rounded-2xl p-3 border border-border/70 bg-card shadow-xs"><p className="text-xs text-muted-foreground">{k}</p><p className="font-semibold">{v}</p></div>))}
       </div>
       <div><p className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Biaya per hari (30 hari)</p>
-        {u.daily.length === 0 ? <p className="rounded-2xl border border-dashed p-3 text-center text-xs text-muted-foreground">Belum ada pemakaian AI.</p> : (
-          <div className="flex h-20 items-end gap-1 rounded-2xl border border-border/70 bg-card p-3 shadow-xs" role="img" aria-label="Grafik biaya AI per hari">{u.daily.map((d) => (<div key={d.day} title={`${d.day}: ${formatRupiah(Math.round(d.cost_idr))}`} className="max-w-6 flex-1 rounded-t-md bg-teal-500/70" style={{ height: `${Math.max(4, (d.cost_idr / max) * 100)}%` }} />))}</div>
+        {u.daily.length === 0 ? <p className="rounded-2xl border border-dashed p-3 text-center text-xs text-muted-foreground">Belum ada pemakaian Ruby.</p> : (
+          <div className="flex h-20 items-end gap-1 rounded-2xl border border-border/70 bg-card p-3 shadow-xs" role="img" aria-label="Grafik biaya Ruby per hari">{u.daily.map((d) => (<div key={d.day} title={`${d.day}: ${formatRupiah(Math.round(d.cost_idr))}`} className="max-w-6 flex-1 rounded-t-md bg-teal-500/70" style={{ height: `${Math.max(4, (d.cost_idr / max) * 100)}%` }} />))}</div>
         )}</div>
       <div><p className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Per fitur (bulan ini)</p>
         <ul className="space-y-1">{u.by_feature.map((x) => (<li key={x.feature} className="flex justify-between rounded-lg bg-muted p-2 text-sm"><span>{FEATURE_LABEL[x.feature] ?? x.feature} <span className="text-xs text-muted-foreground">({x.calls}x)</span></span><span>{formatRupiah(Math.round(x.cost_idr))}</span></li>))}{u.by_feature.length === 0 && <li className="text-xs text-muted-foreground">Belum ada data.</li>}</ul></div>
@@ -140,7 +140,7 @@ function UsersTab({ isSuper }: { isSuper: boolean }) {
       <div className="overflow-hidden rounded-3xl border border-border/80 bg-card shadow-xs">
         <table className="w-full table-fixed text-left text-xs">
           <thead className="bg-muted/70 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
-            <tr><th className="px-3 py-2">Pengguna</th><th className="w-[78px] px-1 py-2">Paket</th><th className="w-9 px-1 py-2 text-right">AI</th><th className="w-[74px] px-2 py-2 text-right">Daftar</th></tr>
+            <tr><th className="px-3 py-2">Pengguna</th><th className="w-[78px] px-1 py-2">Paket</th><th className="w-11 px-1 py-2 text-right">Ruby</th><th className="w-[74px] px-2 py-2 text-right">Daftar</th></tr>
           </thead>
           <tbody>
             {list.map((u) => { const pp = planPill(u.plan); return (
@@ -172,7 +172,7 @@ function UsersTab({ isSuper }: { isSuper: boolean }) {
               <div className="grid grid-cols-2 gap-2">
                 <Stat icon="📅" tone="sky" label="Daftar" value={fmtDate(user.created_at)} />
                 <Stat icon="🔑" tone="violet" label="Login terakhir" value={fmtDate(user.last_sign_in_at)} />
-                <Stat icon="🤖" tone="neon" label="AI bulan ini" value={user.ai_used} />
+                <Stat icon="🤖" tone="neon" label="Ruby bulan ini" value={user.ai_used} />
                 <Stat icon="🎟️" tone="amber" label="Status paket" value={user.source === "paid" ? (user.plan_expires_at ? `sampai ${fmtDate(user.plan_expires_at)}` : "aktif, tanpa batas") : user.source === "trial" ? `uji coba s.d. ${fmtDate(user.trial_ends_at)}` : "gratis"} />
               </div>
               <div className="space-y-1.5">

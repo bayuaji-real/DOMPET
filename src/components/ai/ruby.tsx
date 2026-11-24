@@ -1,7 +1,7 @@
 import * as React from "react";
 
 /** Identitas asisten AI Dompetku. Foto Ruby sementara memakai logo aplikasi. */
-export const ASSISTANT_NAME = "Ruby";
+export const ASSISTANT_NAME = "Ruby Personal Finance Assistant";
 export const ASSISTANT_GREETING = "Halo aku Ruby your personal finance assistant";
 export const ASSISTANT_AVATAR = "/icons/icon-192.png";
 
@@ -43,10 +43,10 @@ export function RubyBubble({
   );
 }
 
-/** Daftar fitur yang bisa dibuka lewat dropdown Ruby di Tanya AI. */
+/** Daftar fitur yang bisa dibuka lewat dropdown Ruby di Tanya Ruby. */
 export const RUBY_MENU: { label: string; href: string }[] = [
   { label: "Buat Tabungan baru", href: "/tabungan" },
-  { label: "Rencana Keuangan AI", href: "/rencana" },
+  { label: "Rencana Keuangan Ruby", href: "/rencana" },
   { label: "Analisis Keuangan", href: "/analisis" },
   { label: "Riwayat Transaksi", href: "/transaksi" },
   { label: "Split Bill", href: "/split-bill" },

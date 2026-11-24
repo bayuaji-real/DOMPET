@@ -435,7 +435,7 @@ export function VoiceRecordingModal({
                 </button>
               </div>
               <p className="text-[10px] text-muted-foreground text-center">
-                Kalimat bebas diurai otomatis dengan AI tanpa perlu rekam suara.
+                Kalimat bebas diurai otomatis oleh Ruby tanpa perlu rekam suara.
               </p>
             </form>
           </>

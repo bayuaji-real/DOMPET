@@ -39,7 +39,7 @@ export const MORE_GROUPS: MoreGroup[] = [
   {
     title: "Analisis & laporan",
     items: [
-      { label: "Analisis Keuangan", description: "Arus kas, kategori, anggaran & insight AI", href: "/analisis", icon: PieChart, tone: "bg-violet-500/15 text-violet-600 dark:text-violet-400" },
+      { label: "Analisis Keuangan", description: "Arus kas, kategori, anggaran & insight Ruby", href: "/analisis", icon: PieChart, tone: "bg-violet-500/15 text-violet-600 dark:text-violet-400" },
       { label: "Kesehatan Finansial", description: "Skor 0-100 dan cara menaikkannya", href: "/kesehatan-finansial", icon: HeartPulse, tone: "bg-pink-500/15 text-pink-600 dark:text-pink-400" },
       { label: "Prediksi Cashflow", description: "Perkiraan saldo 3 bulan ke depan", href: "/prediksi-cashflow", icon: LineChart, tone: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400" },
       { label: "Laporan Mingguan", description: "Ringkasan 7 hari terakhir", href: "/laporan-mingguan", icon: CalendarDays, tone: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
@@ -48,7 +48,7 @@ export const MORE_GROUPS: MoreGroup[] = [
   {
     title: "Rencana & dana",
     items: [
-      { label: "Rencana Keuangan AI", description: "Bagi gaji ke kebutuhan, tenggat & saran dompet", href: "/rencana", icon: Sparkles, tone: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400" },
+      { label: "Rencana Keuangan Ruby", description: "Bagi gaji ke kebutuhan, tenggat & saran dompet", href: "/rencana", icon: Sparkles, tone: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400" },
       { label: "Cicilan & Utang", description: "Bandingkan cicilan dan atur urutan melunasi utang", href: "/cicilan-utang", icon: Scale, tone: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
       { label: "Target Beli", description: "Hitung mampu atau belum membeli sesuatu", href: "/target-beli", icon: ShoppingBag, tone: "bg-purple-500/15 text-purple-600 dark:text-purple-400" },
       { label: "Money planner", description: "Bagi pemasukan jadi pos-pos", href: "/money-planner", icon: Wallet, tone: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },

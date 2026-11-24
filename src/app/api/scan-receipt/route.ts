@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
 
     if (!apiKey && !USE_SAMPLE_DATA) {
       return NextResponse.json(
-        { error: "Fitur AI belum diatur (GEMINI_API_KEY kosong di server)." },
+        { error: "Fitur Ruby belum diatur (GEMINI_API_KEY kosong di server)." },
         { status: 500 },
       );
     }

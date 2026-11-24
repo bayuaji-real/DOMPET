@@ -1264,7 +1264,7 @@ export default function TabunganPage() {
         </div>
       )}
 
-      {/* Chat AI pembuat tabungan */}
+      {/* Chat Ruby pembuat tabungan */}
       <Sheet open={isChatOpen} onOpenChange={setIsChatOpen}>
         <SheetContent
           side="bottom"
@@ -1273,7 +1273,7 @@ export default function TabunganPage() {
         >
           <SheetHeader className="flex-row items-center justify-between border-b border-border/60 px-4 py-3">
             <div>
-              <SheetTitle className="flex items-center gap-1.5 text-sm font-bold"><Sparkles className="h-4 w-4 text-teal-600" /> Buat Tabungan dengan AI</SheetTitle>
+              <SheetTitle className="flex items-center gap-1.5 text-sm font-bold"><Sparkles className="h-4 w-4 text-teal-600" /> Buat Tabungan dengan Ruby</SheetTitle>
               <SheetDescription className="text-[11px]">Ceritakan tujuanmu, aku bantu cek apakah realistis.</SheetDescription>
             </div>
             <div className="flex items-center gap-2">

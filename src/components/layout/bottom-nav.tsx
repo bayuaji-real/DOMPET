@@ -497,7 +497,7 @@ export function BottomNav() {
   const navItems = [
     { label: "Beranda", href: "/", icon: Home, isActive: pathname === "/" },
     { label: "Tabungan", href: "/tabungan", icon: PiggyBank, isActive: pathname.startsWith("/tabungan") },
-    { label: "Tanya AI", href: "/chat", icon: Sparkles, isActive: pathname.startsWith("/chat"), center: true },
+    { label: "Tanya Ruby", href: "/chat", icon: Sparkles, isActive: pathname.startsWith("/chat"), center: true },
     { label: "Dompet", href: "/dompet", icon: Wallet, isActive: pathname.startsWith("/dompet") },
     {
       label: "More",
@@ -648,7 +648,7 @@ export function BottomNav() {
                 <Link
                   key={idx}
                   href={item.href || "/chat"}
-                  aria-label="Tanya AI"
+                  aria-label="Tanya Ruby"
                   className="flex flex-1 flex-col items-center justify-center gap-0.5 min-w-0 cursor-pointer"
                 >
                   <span

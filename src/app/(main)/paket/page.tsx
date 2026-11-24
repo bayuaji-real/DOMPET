@@ -10,9 +10,9 @@ import { requestSubscription, startTrial } from "@/lib/data/entitlement";
 import { PLAN_LABEL, TRIAL_DAYS, trialDaysLeft, type Plan } from "@/lib/plans";
 
 const TIERS: { plan: Plan; harga: string; tagline: string; fitur: string[] }[] = [
-  { plan: "free", harga: "Gratis", tagline: "Catat manual, tanpa AI", fitur: ["Catat pemasukan & pengeluaran", "Dompet, tabungan, split bill", "Kalkulator investasi & zakat", "Laporan mingguan"] },
-  { plan: "premium", harga: "Segera diumumkan", tagline: "Ruby (AI) dengan kuota terbatas", fitur: ["Semua fitur Gratis", "Tanya Ruby, foto struk, catat suara", "Insight & rencana keuangan AI", "Skor kesehatan, peringatan dini, simulator cicilan", "Impor mutasi bank, portofolio investasi"] },
-  { plan: "pro", harga: "Segera diumumkan", tagline: "Semua fitur, kuota AI besar", fitur: ["Semua fitur Premium", "Kuota AI jauh lebih besar", "Proyeksi arus kas 3 bulan", "Rencana lunasi utang", "Info pasar & peringkat return"] },
+  { plan: "free", harga: "Gratis", tagline: "Catat manual, tanpa Ruby", fitur: ["Catat pemasukan & pengeluaran", "Dompet, tabungan, split bill", "Kalkulator investasi & zakat", "Laporan mingguan"] },
+  { plan: "premium", harga: "Segera diumumkan", tagline: "Ruby dengan kuota terbatas", fitur: ["Semua fitur Gratis", "Tanya Ruby, foto struk, catat suara", "Insight & rencana keuangan Ruby", "Skor kesehatan, peringatan dini, simulator cicilan", "Impor mutasi bank, portofolio investasi"] },
+  { plan: "pro", harga: "Segera diumumkan", tagline: "Semua fitur, kuota Ruby besar", fitur: ["Semua fitur Premium", "Kuota Ruby jauh lebih besar", "Proyeksi arus kas 3 bulan", "Rencana lunasi utang", "Info pasar & peringkat return"] },
 ];
 
 export default function PaketPage() {
@@ -45,7 +45,7 @@ export default function PaketPage() {
           <AuroraGlow />
           <p className="relative text-xs font-semibold text-white/90">Paketmu sekarang</p>
           <p className="relative text-lg font-extrabold" data-testid="paket-aktif">{loading ? "..." : PLAN_LABEL[ent.plan]}{ent.source === "trial" && daysLeft > 0 ? ` (uji coba, sisa ${daysLeft} hari)` : ""}</p>
-          {ent.plan !== "free" && <p className="relative mt-1 text-xs font-medium text-white/95">Kuota AI bulan ini: {ent.aiRemaining} dari {ent.aiLimit} tersisa.</p>}
+          {ent.plan !== "free" && <p className="relative mt-1 text-xs font-medium text-white/95">Kuota Ruby bulan ini: {ent.aiRemaining} dari {ent.aiLimit} tersisa.</p>}
         </div>
 
         {msg && <Notice role="status" tone={msg.ok ? "emerald" : "rose"} emoji={msg.ok ? "🎉" : "⚠️"}>{msg.text}</Notice>}

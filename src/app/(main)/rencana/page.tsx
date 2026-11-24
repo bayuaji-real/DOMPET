@@ -215,7 +215,7 @@ export default function RencanaPage() {
       <div className="fixed inset-x-0 top-0 z-30 mx-auto flex max-w-[430px] flex-col bg-background" style={{ bottom: "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
         <TopHeader title="Rencana Keuangan" subtitle="Ngobrol dengan Ruby" />
         <div className="flex shrink-0 items-center justify-between border-b border-border/50 px-4 py-2">
-          <p className="text-[11px] text-muted-foreground">Jawab satu per satu, AI yang menanyakan.</p>
+          <p className="text-[11px] text-muted-foreground">Jawab satu per satu, Ruby yang menanyakan.</p>
           <button type="button" onClick={() => setView("hitung")} className="cursor-pointer rounded-lg border border-border px-2.5 py-1 text-[11px] font-bold text-foreground hover:bg-muted">
             Hitung manual
           </button>

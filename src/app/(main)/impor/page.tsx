@@ -65,7 +65,7 @@ function Impor() {
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.success) { setMsg(typeof j.error === "string" ? j.error : "Mutasi belum bisa dibaca. Coba lagi sebentar."); setRows(null); return; }
       const got = (j.rows as ParsedRow[]);
-      if (got.length === 0) { setMsg("AI tidak menemukan transaksi di isi tadi."); setRows(null); return; }
+      if (got.length === 0) { setMsg("Ruby tidak menemukan transaksi di isi tadi."); setRows(null); return; }
       setSkipped(0); setRows(got.slice(0, 300).map((x) => ({ ...x, on: true, cat: suggestCategory(x.description, history) })));
     } catch { setMsg("Mutasi belum bisa dibaca. Periksa sambungan internet lalu coba lagi."); }
     finally { setAiBusy(false); }
@@ -88,12 +88,12 @@ function Impor() {
         <Cta disabled={!text.trim()} onClick={baca}><span aria-hidden>📖</span> Baca mutasi</Cta>
       </FormCard>
       <Gate feature="impor_ai">
-        <section aria-label="Impor dengan AI">
-         <FormCard title="Atau baca dengan AI (teks atau PDF)" desc="Memakai 1 kuota AI. Hasilnya bisa salah, jadi selalu tinjau dulu sebelum disimpan." icon="✨">
-          <textarea aria-label="Isi mutasi untuk AI" className="h-24 w-full rounded-2xl border border-border/70 bg-muted/30 p-3 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/60" placeholder="Tempel isi mutasi di sini" value={aiText} onChange={(e) => setAiText(e.target.value)} />
+        <section aria-label="Impor dengan Ruby">
+         <FormCard title="Atau baca dengan Ruby (teks atau PDF)" desc="Memakai 1 kuota Ruby. Hasilnya bisa salah, jadi selalu tinjau dulu sebelum disimpan." icon="✨">
+          <textarea aria-label="Isi mutasi untuk Ruby" className="h-24 w-full rounded-2xl border border-border/70 bg-muted/30 p-3 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/60" placeholder="Tempel isi mutasi di sini" value={aiText} onChange={(e) => setAiText(e.target.value)} />
           <input type="file" accept="application/pdf" aria-label="Pilih PDF e-statement" onChange={(e) => onPdf(e.target.files?.[0])} className="block w-full cursor-pointer rounded-2xl border border-dashed border-violet-400/60 bg-violet-400/5 p-3 text-xs file:mr-3 file:rounded-full file:border-0 file:bg-violet-600 file:px-3 file:py-1 file:text-xs file:font-bold file:text-white" />
           {aiPdfName && <Pill tone="violet" icon="📄">PDF dipilih: {aiPdfName}</Pill>}
-          <Cta className="from-violet-600 to-indigo-500 shadow-violet-600/25 hover:from-violet-700 hover:to-indigo-600" disabled={aiBusy || (!aiText.trim() && !aiPdf)} onClick={bacaAi}>{aiBusy ? "Membaca..." : "Baca dengan AI"}</Cta>
+          <Cta className="from-violet-600 to-indigo-500 shadow-violet-600/25 hover:from-violet-700 hover:to-indigo-600" disabled={aiBusy || (!aiText.trim() && !aiPdf)} onClick={bacaAi}>{aiBusy ? "Membaca..." : "Baca dengan Ruby"}</Cta>
          </FormCard>
         </section>
       </Gate>

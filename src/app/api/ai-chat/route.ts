@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
     .gte("created_at", `${today}T00:00:00+07:00`);
   if ((count ?? 0) >= dailyLimit) {
     return NextResponse.json(
-      { success: false, error: "Batas pesan AI hari ini sudah tercapai. Coba lagi besok ya." },
+      { success: false, error: "Batas pesan Ruby hari ini sudah tercapai. Coba lagi besok ya." },
       { status: 429 }
     );
   }

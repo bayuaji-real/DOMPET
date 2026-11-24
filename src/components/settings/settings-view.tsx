@@ -1675,7 +1675,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
               </div>
 
               <div className="p-3.5 rounded-2xl bg-muted/20 border border-border/60 space-y-1">
-                <p className="font-bold text-foreground">Kecerdasan Buatan (AI):</p>
+                <p className="font-bold text-foreground">Ruby (kecerdasan buatan):</p>
                 <p>
                   Didukung oleh Google Gemini 3.5 Flash untuk OCR struk belanja, transkripsi pesan
                   suara, dan analisis rekomendasi finansial santai.

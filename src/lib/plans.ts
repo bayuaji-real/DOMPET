@@ -30,12 +30,12 @@ export const FEATURE_MIN_PLAN: Record<FeatureKey, Plan> = {
 };
 
 export const FEATURE_LABEL: Record<FeatureKey, string> = {
-  ai_chat: "Tanya Ruby (AI)", ai_struk: "Foto struk", ai_suara: "Catat dengan suara", ai_insight: "Insight dari Ruby",
-  ai_rencana: "Rencana Keuangan AI", ai_impor: "Impor mutasi dengan AI",
+  ai_chat: "Tanya Ruby", ai_struk: "Foto struk", ai_suara: "Catat dengan suara", ai_insight: "Insight dari Ruby",
+  ai_rencana: "Rencana Keuangan Ruby", ai_impor: "Impor mutasi dengan Ruby",
   skor_kesehatan: "Skor kesehatan keuangan", peringatan_dini: "Peringatan dini", simulator_cicilan: "Simulator cicilan & paylater",
   mode_thr: "Mode THR & Lebaran", proyeksi_arus_kas: "Proyeksi arus kas 3 bulan", lunasi_utang: "Rencana lunasi utang",
   kalkulator_investasi: "Kalkulator investasi", portofolio: "Portofolio investasi", info_pasar: "Info pasar & peringkat return",
-  laporan_mingguan: "Laporan mingguan", kalkulator_zakat: "Kalkulator zakat", impor_csv: "Impor mutasi CSV", impor_ai: "Impor teks/PDF dengan AI", dompet_bersama: "Dompet bersama", pengingat: "Pengingat"
+  laporan_mingguan: "Laporan mingguan", kalkulator_zakat: "Kalkulator zakat", impor_csv: "Impor mutasi CSV", impor_ai: "Impor teks/PDF dengan Ruby", dompet_bersama: "Dompet bersama", pengingat: "Pengingat"
 };
 
 export type AiFeatureKey = Extract<FeatureKey, `ai_${string}`>;
@@ -99,7 +99,7 @@ export function upgradeMessage(feature: FeatureKey): string {
   return `${FEATURE_LABEL[feature]} ada di paket ${need} ke atas. Coba gratis 7 hari di halaman Paket.`;
 }
 
-export const QUOTA_MESSAGE = "Kuota AI bulan ini sudah habis. Kuota kembali penuh di awal bulan, atau naik ke paket Pro untuk kuota lebih besar.";
+export const QUOTA_MESSAGE = "Kuota Ruby bulan ini sudah habis. Kuota kembali penuh di awal bulan, atau naik ke paket Pro untuk kuota lebih besar.";
 
 /** Teks pemetaan galat fungsi database ke bahasa awam. */
 export function trialErrorMessage(raw: string | undefined | null): string {
