@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Copy, Plus, Share2, Trash2, UserPlus, X } from "lucide-react";
+import { Check, Copy, Loader2, Plus, Share2, Trash2, UserPlus, X } from "lucide-react";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,12 @@ import {
 import { getSpendableWallets, type WalletBalance } from "@/lib/data/wallets";
 import { createTransaction } from "@/lib/data/transactions";
 import { formatRupiah, triggerHapticFeedback } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
+import { FormCard } from "@/components/ui/form-kit";
+import { compressImage } from "@/lib/image-compression";
+import { receiptToSplit } from "@/lib/split-bill-scan";
+import type { ScanReceiptResult } from "@/app/api/scan-receipt/route";
+import { PageHero } from "@/components/ui/form-kit";
 
 const DRAFT_KEY = "dompet_split_bill_draft";
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -51,12 +57,22 @@ export default function SplitBillPage() {
   const [wallets, setWallets] = React.useState<WalletBalance[]>([]);
   const [walletId, setWalletId] = React.useState("");
   const [recordState, setRecordState] = React.useState<"idle" | "saving" | "done" | "error">("idle");
+  // Layar pertama: pilih cara mengisi. Draf lama yang sudah berisi langsung dilanjutkan.
+  const [mode, setMode] = React.useState<"pilih" | "manual" | "foto">("pilih");
+  const [scanning, setScanning] = React.useState(false);
+  const [scanMsg, setScanMsg] = React.useState("");
+  const fileRef = React.useRef<HTMLInputElement>(null);
 
   // Pulihkan draf terakhir (kalau ada) dan muat dompet untuk fitur "catat bagianku"
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
-      if (raw) setDraft({ ...emptyDraft(), ...JSON.parse(raw) });
+      if (raw) {
+        const d = { ...emptyDraft(), ...JSON.parse(raw) } as Draft;
+        setDraft(d);
+        const filled = d.title.trim() || d.people.length > 1 || d.items.some((i) => i.name.trim() || i.price > 0);
+        if (filled) setMode("manual");
+      }
     } catch {}
     setLoaded(true);
     getSpendableWallets()
@@ -160,6 +176,36 @@ export default function SplitBillPage() {
     }
   };
 
+  const handleFoto = async (file: File) => {
+    setScanning(true);
+    setScanMsg("");
+    try {
+      const compressed = await compressImage(file, 1600, 0.8);
+      const res = await fetch("/api/scan-receipt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: compressed.base64, mimeType: "image/jpeg" }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setScanMsg(typeof j.error === "string" && (res.status === 402 || res.status === 429) ? j.error : "Struk belum bisa dibaca. Coba foto lagi, atau isi manual.");
+        return;
+      }
+      const r: ScanReceiptResult = await res.json();
+      const conv = receiptToSplit(r, draft.people.map((p) => p.id), uid);
+      if (!r.is_receipt || conv.items.length === 0) {
+        setScanMsg("Rincian pesanan tidak terbaca dari foto ini. Coba foto yang lebih jelas, atau isi manual.");
+        return;
+      }
+      update({ title: conv.title || draft.title, items: conv.items, extras: conv.extras });
+      setMode("foto");
+    } catch {
+      setScanMsg("Struk belum bisa dibaca. Coba foto lagi, atau isi manual.");
+    } finally {
+      setScanning(false);
+    }
+  };
+
   const chip = (on: boolean) =>
     `rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
       on ? "border-teal-500 bg-teal-500/15 text-teal-700 dark:text-teal-300" : "border-border text-muted-foreground"
@@ -169,10 +215,55 @@ export default function SplitBillPage() {
     <div className="flex flex-1 flex-col">
       <TopHeader title="Split Bill" />
 
-      <div className="space-y-5 px-4 pb-6 pt-5">
-        <div>
-          <h1 className="text-lg font-extrabold">Split Bill</h1>
-          <p className="text-xs text-muted-foreground">Pilih siapa makan apa. Diskon, pajak & service ikut porsi masing-masing; ongkir bisa rata.</p>
+      <div className="space-y-4 px-4 pb-6 pt-4">
+        <PageHero emoji="🧾" title="Split Bill" desc="Bagi tagihan adil, sesuai pesanan masing-masing." tone="violet" />
+        {mode === "pilih" ? (
+          <div className="space-y-4">
+            <FormCard title="Mau isi tagihan dari mana?" desc="Pilih satu dulu. Nama teman dan pembagian diisi sesudahnya.">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                aria-label="Pilih foto struk"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (f) void handleFoto(f);
+                }}
+              />
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  disabled={scanning}
+                  onClick={() => fileRef.current?.click()}
+                  className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-teal-500/40 bg-teal-500/10 p-4 text-center text-teal-700 shadow-xs transition-all hover:bg-teal-500/15 active:scale-95 disabled:opacity-60 dark:text-teal-300"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-500/20 text-2xl">{scanning ? <Loader2 className="h-6 w-6 animate-spin" /> : "📸"}</span>
+                  <span className="text-sm font-extrabold">{scanning ? "Membaca..." : "Foto Struk"}</span>
+                  <span className="text-[10px] leading-snug text-muted-foreground">Ruby baca pesanan, pajak, dan diskon</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={scanning}
+                  onClick={() => setMode("manual")}
+                  className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-indigo-500/40 bg-indigo-500/10 p-4 text-center text-indigo-700 shadow-xs transition-all hover:bg-indigo-500/15 active:scale-95 disabled:opacity-60 dark:text-indigo-300"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/20 text-2xl">✍️</span>
+                  <span className="text-sm font-extrabold">Input Manual</span>
+                  <span className="text-[10px] leading-snug text-muted-foreground">Ketik sendiri pesanan dan harganya</span>
+                </button>
+              </div>
+              {scanMsg && <p role="alert" className="rounded-2xl bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-700 dark:text-amber-300">{scanMsg}</p>}
+            </FormCard>
+          </div>
+        ) : (
+        <>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">
+            {mode === "foto" ? "Struk terbaca. Cek item, tambah nama teman, lalu pilih siapa makan apa." : "Pilih siapa makan apa. Diskon, pajak & service ikut porsi masing-masing."}
+          </p>
+          <button type="button" onClick={() => setMode("pilih")} className="shrink-0 cursor-pointer text-xs font-bold text-teal-600 hover:underline dark:text-teal-400">Ganti cara</button>
         </div>
         <section className="space-y-3 rounded-3xl border border-border/70 bg-card p-4">
           <div className="space-y-1.5">
@@ -324,18 +415,18 @@ export default function SplitBillPage() {
 
           <div className="space-y-1.5">
             <Label htmlFor="sb-payer" className="text-xs">Yang bayar duluan</Label>
-            <select
+            <Select
               id="sb-payer"
               value={draft.payerId}
               onChange={(e) => update({ payerId: e.target.value })}
-              className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
+             
             >
               {draft.people.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
                 </option>
               ))}
-            </select>
+            </Select>
             {payer && (
               <ul className="space-y-0.5 pt-1 text-[11px] text-muted-foreground">
                 {result.shares
@@ -361,21 +452,21 @@ export default function SplitBillPage() {
           {myShare > 0 && wallets.length > 0 && (
             <div className="space-y-2 rounded-2xl border border-border/70 bg-card p-3">
               <p className="text-xs font-semibold">Catat bagianku ({formatRupiah(myShare)}) sebagai pengeluaran</p>
-              <select
+              <Select
                 value={walletId}
                 onChange={(e) => {
                   setWalletId(e.target.value);
                   setRecordState("idle");
                 }}
                 aria-label="Dompet untuk mencatat"
-                className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
+               
               >
                 {wallets.map((w) => (
                   <option key={w.id} value={w.id}>
                     {w.name}
                   </option>
                 ))}
-              </select>
+              </Select>
               <Button type="button" variant="outline" onClick={recordMyShare} disabled={recordState === "saving" || recordState === "done"} className="w-full rounded-xl">
                 {recordState === "saving" ? "Menyimpan…" : recordState === "done" ? "Sudah dicatat ✓" : "Catat ke Riwayat"}
               </Button>
@@ -387,6 +478,8 @@ export default function SplitBillPage() {
             Mulai tagihan baru
           </button>
         </section>
+        </>
+        )}
       </div>
     </div>
   );

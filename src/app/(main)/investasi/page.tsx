@@ -14,6 +14,8 @@ import { rankSnapshots, summarizePortfolio, type SortKey } from "@/lib/konsultan
 import { addHolding, deleteHolding, getHoldings, getSnapshots, updateHoldingPrice, type HoldingRow, type SnapshotRow } from "@/lib/data/invest";
 import { formatRupiah } from "@/lib/utils";
 import { useConfirm } from "@/components/ui/use-confirm";
+import { Select } from "@/components/ui/select";
+import { PageHero } from "@/components/ui/form-kit";
 
 type Tab = "kalkulator" | "portofolio" | "pasar";
 const SHOW_PASAR = process.env.NEXT_PUBLIC_INFO_PASAR === "on" || process.env.NODE_ENV !== "production";
@@ -27,6 +29,7 @@ export default function InvestasiPage() {
     <div className="pb-24">
       <TopHeader title="Investasi" />
       <div className="px-4 pt-2">
+        <PageHero emoji="📈" title="Investasi" desc="Pantau aset dan acuan pasar dengan sumber resmi." tone="emerald" className="mb-4" />
         <div role="tablist" aria-label="Bagian investasi" className="mb-4 grid gap-1 rounded-2xl bg-muted p-1" style={{ gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))` }}>
           {TABS.map((t) => (
             <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`rounded-xl py-2 text-xs font-semibold ${tab === t.id ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{t.label}</button>
@@ -54,11 +57,11 @@ function Kalkulator() {
     <div className="space-y-4 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
       <p className="text-xs text-muted-foreground">Simulasi sederhana, bukan janji keuntungan.</p>
       <div className="grid gap-3">
-        <label className="space-y-1 text-sm">Uang awal<MoneyInput value={initial} onChange={setInitial} aria-label="Uang awal" placeholder="0" suffix="Rp" /></label>
-        <label className="space-y-1 text-sm">Setoran tiap bulan<MoneyInput value={monthly} onChange={setMonthly} aria-label="Setoran tiap bulan" suffix="Rp" /></label>
+        <label className="block space-y-1 text-xs font-semibold">Uang awal<MoneyInput value={initial} onChange={setInitial} aria-label="Uang awal" placeholder="0" suffix="Rp" /></label>
+        <label className="block space-y-1 text-xs font-semibold">Setoran tiap bulan<MoneyInput value={monthly} onChange={setMonthly} aria-label="Setoran tiap bulan" suffix="Rp" /></label>
         <div className="grid grid-cols-2 gap-3">
-          <label className="space-y-1 text-sm">Perkiraan return per tahun (%)<Input inputMode="decimal" aria-label="Return per tahun" value={ret} onChange={(e) => setRet(e.target.value.replace(/[^\d.,-]/g, ""))} /></label>
-          <label className="space-y-1 text-sm">Lama (tahun)<Input inputMode="numeric" aria-label="Lama tahun" value={years} onChange={(e) => setYears(e.target.value.replace(/\D/g, "").slice(0, 2))} /></label>
+          <label className="block space-y-1 text-xs font-semibold">Perkiraan return per tahun (%)<Input inputMode="decimal" aria-label="Return per tahun" value={ret} onChange={(e) => setRet(e.target.value.replace(/[^\d.,-]/g, ""))} /></label>
+          <label className="block space-y-1 text-xs font-semibold">Lama (tahun)<Input inputMode="numeric" aria-label="Lama tahun" value={years} onChange={(e) => setYears(e.target.value.replace(/\D/g, "").slice(0, 2))} /></label>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2 text-center">
@@ -104,7 +107,7 @@ function Portofolio() {
     <div className="space-y-4">
       {confirmDialog}
       <p className="text-xs text-muted-foreground">Isi sendiri aset investasimu. Harga terbaru diperbarui manual karena aplikasi belum tersambung ke broker atau Bibit.</p>
-      {err && <p role="alert" className="rounded-2xl bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300">{err}</p>}
+      {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
       {list && (
         <div className="grid grid-cols-3 gap-2 text-center">
           <Stat label="Modal" value={formatRupiah(sum.cost)} /><Stat label="Nilai sekarang" value={formatRupiah(sum.value)} strong /><Stat label="Untung/rugi" value={`${formatRupiah(sum.pnl)} (${pct(sum.pnlPct)})`} neg={sum.pnl < 0} />
@@ -112,7 +115,7 @@ function Portofolio() {
       )}
       {sum.missingPrice > 0 && <p className="text-xs text-muted-foreground">{sum.missingPrice} aset belum diisi harga terbaru, jadi nilainya sementara dianggap sama dengan modal.</p>}
       {list === null && !err && <div className="h-20 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
-      {list && list.length === 0 && <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">Belum ada aset. Tambahkan yang pertama di bawah.</p>}
+      {list && list.length === 0 && <p className="rounded-3xl border border-dashed border-border/70 p-5 text-center text-xs text-muted-foreground">Belum ada aset. Tambahkan yang pertama di bawah.</p>}
       <ul className="space-y-2">
         {sum.rows.map((r) => (
           <li key={r.id} className="rounded-2xl p-3 border border-border/70 bg-card shadow-xs">
@@ -128,9 +131,9 @@ function Portofolio() {
       <form onSubmit={submit} className="space-y-3 rounded-2xl p-3 border border-border/70 bg-card shadow-xs" aria-label="Tambah aset">
         <p className="font-semibold">Tambah aset</p>
         <Input aria-label="Nama aset" placeholder="Nama, misal Insight Money atau BBCA" value={f.name} maxLength={80} onChange={(e) => setF({ ...f, name: e.target.value })} />
-        <select aria-label="Jenis aset" className="h-9 w-full rounded-lg border bg-background px-2 text-sm" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value as HoldingRow["kind"] })}>
+        <Select aria-label="Jenis aset" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value as HoldingRow["kind"] })}>
           <option value="reksa_dana">Reksa dana</option><option value="saham">Saham</option><option value="emas">Emas</option><option value="lainnya">Lainnya</option>
-        </select>
+        </Select>
         <div className="grid grid-cols-2 gap-2">
           <Input aria-label="Jumlah unit" inputMode="decimal" placeholder="Jumlah unit/lembar" value={f.units} onChange={(e) => setF({ ...f, units: e.target.value.replace(/[^\d.,]/g, "") })} />
           <MoneyInput aria-label="Harga beli rata-rata" value={f.avg} onChange={(n) => setF({ ...f, avg: n })} placeholder="Harga beli/unit" decimals />

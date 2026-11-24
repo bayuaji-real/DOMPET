@@ -13,6 +13,7 @@ import {
   type TimelineGoal,
   type TimelinePayday,
 } from "@/lib/savings-timeline";
+import { Select } from "@/components/ui/select";
 
 const GOAL_COLORS = ["#ef4444", "#3b82f6", "#f59e0b", "#14b8a6", "#8b5cf6", "#ec4899"];
 const BULAN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
@@ -206,7 +207,7 @@ export function SavingsTimeline({ goals, todayStr }: Props) {
       {/* Pilih bulan: dropdown (tanpa geser samping) */}
       <div className="flex items-center gap-2">
         <label htmlFor="tl-bulan" className="text-xs font-semibold text-muted-foreground">Bulan</label>
-        <select
+        <Select
           id="tl-bulan"
           value={showAll ? "all" : activeKey ?? ""}
           onChange={(e) => {
@@ -217,7 +218,7 @@ export function SavingsTimeline({ goals, todayStr }: Props) {
               setSelected(e.target.value);
             }
           }}
-          className="h-9 flex-1 cursor-pointer rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground"
+          className="flex-1" size="sm"
         >
           {months.map((m) => {
             const [y, mo] = m.key.split("-").map(Number);
@@ -229,7 +230,7 @@ export function SavingsTimeline({ goals, todayStr }: Props) {
             );
           })}
           <option value="all">Semua bulan</option>
-        </select>
+        </Select>
       </div>
 
       {/* Panel bulan */}

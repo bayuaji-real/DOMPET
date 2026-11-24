@@ -14,6 +14,8 @@ import { todayJakarta } from "@/lib/data/sample-mode";
 import { nextDateForDay } from "@/lib/dates";
 import { notify } from "@/lib/notify";
 import { formatRupiah } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
+import { PageHero } from "@/components/ui/form-kit";
 
 const dmy = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
 
@@ -42,10 +44,11 @@ export default function BerulangPage() {
       <TopHeader title="Transaksi Berulang" />
       {dialog}
       <div className="space-y-4 px-4 pt-2">
+        <PageHero emoji="🔁" title="Transaksi Berulang" desc="Tagihan dan pemasukan rutin, tinggal tekan Catat." tone="sky" />
         <p className="text-sm text-muted-foreground">Tagihan atau pemasukan yang datang tiap bulan (listrik, cicilan, gaji). Saat jatuh tempo, tinggal tekan Catat sekarang.</p>
-        {err && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{err}</p>}
+        {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
         {list === null && !err && <div className="h-20 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
-        {list && list.length === 0 && <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">Belum ada transaksi berulang. Tambahkan yang pertama di bawah.</p>}
+        {list && list.length === 0 && <p className="rounded-3xl border border-dashed border-border/70 p-5 text-center text-xs text-muted-foreground">Belum ada transaksi berulang. Tambahkan yang pertama di bawah.</p>}
         <ul className="space-y-2">
           {(list ?? []).map((r) => {
             const due = r.next_date <= today;
@@ -79,8 +82,8 @@ export default function BerulangPage() {
           <Input aria-label="Nama" placeholder="Nama, misal Listrik atau Gaji" maxLength={60} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />
           <MoneyInput aria-label="Nominal" value={f.amount} onChange={(n) => setF({ ...f, amount: n })} suffix="Rp" placeholder="Nominal" />
           <label className="block text-xs">Tanggal tiap bulan (1 sampai 31)<Input aria-label="Tanggal tiap bulan" inputMode="numeric" value={f.day} onChange={(e) => setF({ ...f, day: e.target.value.replace(/\D/g, "").slice(0, 2) })} /></label>
-          <select aria-label="Dompet" className="h-9 w-full rounded-lg border bg-background px-2 text-sm" value={f.wallet} onChange={(e) => setF({ ...f, wallet: e.target.value })}>{wallets.map((w) => (<option key={w.id} value={w.id}>{w.name}</option>))}</select>
-          <select aria-label="Kategori" className="h-9 w-full rounded-lg border bg-background px-2 text-sm" value={f.cat} onChange={(e) => setF({ ...f, cat: e.target.value })}><option value="">Tanpa kategori</option>{catsFor.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}</select>
+          <Select aria-label="Dompet" value={f.wallet} onChange={(e) => setF({ ...f, wallet: e.target.value })}>{wallets.map((w) => (<option key={w.id} value={w.id}>{w.name}</option>))}</Select>
+          <Select aria-label="Kategori" value={f.cat} onChange={(e) => setF({ ...f, cat: e.target.value })}><option value="">Tanpa kategori</option>{catsFor.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}</Select>
           <Button type="submit" className="w-full" disabled={!valid}>Tambahkan</Button>
           {!valid && f.note && <p className="text-xs text-muted-foreground">Isi nominal dan tanggal 1 sampai 31 dulu.</p>}
         </form>

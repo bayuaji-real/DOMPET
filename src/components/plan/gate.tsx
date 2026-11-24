@@ -9,7 +9,7 @@ import { FEATURE_LABEL, FEATURE_MIN_PLAN, PLAN_LABEL, type FeatureKey } from "@/
 /** Tampilkan anak jika paket cukup; kalau tidak, tampilkan ajakan ramah ke halaman Paket. */
 export function Gate({ feature, children }: { feature: FeatureKey; children: React.ReactNode }) {
   const { can, loading } = useEntitlement();
-  if (loading) return <div className="h-24 animate-pulse rounded-xl bg-muted" aria-busy="true" />;
+  if (loading) return <div className="h-24 animate-pulse rounded-3xl bg-muted" aria-busy="true" />;
   if (can(feature)) return <>{children}</>;
   return (
     <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed p-6 text-center">

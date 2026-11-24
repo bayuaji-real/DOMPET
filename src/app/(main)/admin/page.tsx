@@ -13,10 +13,10 @@ import { getSnapshots, type SnapshotRow } from "@/lib/data/invest";
 import { MfaChallenge } from "@/components/security/mfa";
 import { AdminAcuanSection } from "./acuan-section";
 import { apiAlert } from "@/lib/admin-alert";
+import { Select } from "@/components/ui/select";
 
 type Tab = "api" | "pengguna" | "permintaan" | "pasar" | "catatan";
 const TABS: { id: Tab; label: string }[] = [{ id: "api", label: "API" }, { id: "pengguna", label: "Pengguna" }, { id: "permintaan", label: "Minta" }, { id: "pasar", label: "Pasar" }, { id: "catatan", label: "Catatan" }];
-const selectCls = "h-9 w-full rounded-lg border border-input bg-background px-2 text-sm";
 const FEATURE_LABEL: Record<string, string> = { tabungan: "Tabungan", konsultasi: "Chat Ruby", struk: "Scan struk", suara: "Suara", insight: "Insight", rencana: "Rencana", impor: "Impor" };
 const fmtDate = (s: string | null) => (s ? s.slice(0, 10) : "-");
 
@@ -32,7 +32,7 @@ export default function AdminPage() {
       <TopHeader title="Admin" />
       <div className="space-y-4 px-4 pt-2">
         {role === undefined && <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
-        {role === null && <p role="alert" className="rounded-2xl bg-red-500/10 p-4 text-xs text-red-700 dark:text-red-300">Halaman ini hanya untuk admin.</p>}
+        {role === null && <p role="alert" className="rounded-2xl bg-rose-500/10 p-4 text-xs font-semibold text-rose-700 dark:text-rose-300">Halaman ini hanya untuk admin.</p>}
         {role && locked && <MfaChallenge onDone={reload} title="Admin wajib memakai kode MFA. Masukkan kode dari aplikasi authenticator." />}
         {role && !locked && (
           <>
@@ -60,7 +60,7 @@ function useLoad<T>(fn: () => Promise<T>) {
   React.useEffect(() => { load(); }, [load]);
   return { data, err, load };
 }
-const Err = ({ t }: { t: string }) => (t ? <p role="alert" className="rounded-2xl bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300">{t}</p> : null);
+const Err = ({ t }: { t: string }) => (t ? <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{t}</p> : null);
 const Skel = () => <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" />;
 async function act(fn: () => Promise<unknown>, ok: string, after: () => void) {
   try { await fn(); notify(ok); after(); } catch (e) { notify(A.adminErrorText(e)); }
@@ -92,8 +92,8 @@ function ApiTab({ isSuper }: { isSuper: boolean }) {
         <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
           <p className="text-sm font-semibold">Catat top-up terakhir</p>
           <label className="block space-y-1 text-xs">Nilai top-up (sisa saldo saat dicatat)<MoneyInput value={f.budget} onChange={(n) => setF({ ...f, budget: n })} aria-label="Nilai top-up" suffix="Rp" /></label>
-          <div className="grid grid-cols-2 gap-2"><label className="space-y-1 text-xs">Berlaku sejak<Input type="date" aria-label="Berlaku sejak" value={f.since} onChange={(e) => setF({ ...f, since: e.target.value })} /></label><label className="space-y-1 text-xs">Peringatkan di (%)<Input inputMode="numeric" aria-label="Ambang peringatan" value={f.warn} onChange={(e) => setF({ ...f, warn: e.target.value.replace(/\D/g, "").slice(0, 2) })} /></label></div>
-          <Button className="w-full" disabled={f.budget <= 0} onClick={() => act(() => A.setApiBudget(f.budget, new Date(f.since + "T00:00:00+07:00").toISOString(), Number(f.warn) || 70), "Tersimpan", load)}>Simpan</Button>
+          <div className="grid grid-cols-2 gap-2"><label className="block space-y-1 text-xs font-semibold">Berlaku sejak<Input type="date" aria-label="Berlaku sejak" value={f.since} onChange={(e) => setF({ ...f, since: e.target.value })} /></label><label className="block space-y-1 text-xs font-semibold">Peringatkan di (%)<Input inputMode="numeric" aria-label="Ambang peringatan" value={f.warn} onChange={(e) => setF({ ...f, warn: e.target.value.replace(/\D/g, "").slice(0, 2) })} /></label></div>
+          <Button className="h-10 w-full rounded-2xl text-xs" disabled={f.budget <= 0} onClick={() => act(() => A.setApiBudget(f.budget, new Date(f.since + "T00:00:00+07:00").toISOString(), Number(f.warn) || 70), "Tersimpan", load)}>Simpan</Button>
         </div>
       ) : <p className="text-xs text-muted-foreground">Hanya Superadmin yang bisa mengubah nilai top-up.</p>}
     </div>
@@ -119,11 +119,11 @@ function UsersTab({ isSuper }: { isSuper: boolean }) {
             <p className="text-xs text-muted-foreground">Daftar {fmtDate(u.created_at)} · login terakhir {fmtDate(u.last_sign_in_at)} · AI bulan ini {u.ai_used}</p>
             <p className="text-xs">Paket: <b>{u.plan}</b> ({u.source === "paid" ? `aktif${u.plan_expires_at ? ` sampai ${fmtDate(u.plan_expires_at)}` : ", tanpa batas"}` : u.source === "trial" ? `uji coba sampai ${fmtDate(u.trial_ends_at)}` : "gratis"})</p></div>
           <div className="flex gap-2">
-            <select aria-label={`Paket ${u.email}`} className={selectCls} value="" onChange={async (e) => { const v = e.target.value; if (!v) return; const [plan, d] = v.split(":"); const days = d ? Number(d) : null; if (await ask(`Ubah paket ${u.email} menjadi ${plan}${days ? ` selama ${days} hari` : plan === "free" ? "" : " tanpa batas waktu"}?`, "Ubah")) void act(() => A.setPlan(u.user_id, plan, days), "Paket diubah", load); }}>
+            <Select aria-label={`Paket ${u.email}`} value="" onChange={async (e) => { const v = e.target.value; if (!v) return; const [plan, d] = v.split(":"); const days = d ? Number(d) : null; if (await ask(`Ubah paket ${u.email} menjadi ${plan}${days ? ` selama ${days} hari` : plan === "free" ? "" : " tanpa batas waktu"}?`, "Ubah")) void act(() => A.setPlan(u.user_id, plan, days), "Paket diubah", load); }}>
               <option value="">Ubah paket...</option><option value="pro">Pro tanpa batas</option><option value="pro:30">Pro 30 hari</option><option value="premium">Premium tanpa batas</option><option value="premium:30">Premium 30 hari</option><option value="free">Kembalikan ke Gratis</option>
-            </select>
-            {isSuper && <select aria-label={`Peran ${u.email}`} className={selectCls} value="" onChange={async (e) => { const v = e.target.value; if (!v) return; if (await ask(`Ubah peran ${u.email} menjadi ${v === "none" ? "pengguna biasa" : v}?`, "Ubah")) void act(() => A.setRole(u.user_id, v), "Peran diubah", load); }}>
-              <option value="">Ubah peran...</option><option value="admin">Admin</option><option value="superadmin">Superadmin</option><option value="none">Pengguna biasa</option></select>}
+            </Select>
+            {isSuper && <Select aria-label={`Peran ${u.email}`} value="" onChange={async (e) => { const v = e.target.value; if (!v) return; if (await ask(`Ubah peran ${u.email} menjadi ${v === "none" ? "pengguna biasa" : v}?`, "Ubah")) void act(() => A.setRole(u.user_id, v), "Peran diubah", load); }}>
+              <option value="">Ubah peran...</option><option value="admin">Admin</option><option value="superadmin">Superadmin</option><option value="none">Pengguna biasa</option></Select>}
           </div>
         </li>))}
         {list.length === 0 && <li className="rounded-2xl border border-dashed p-3 text-center text-xs text-muted-foreground">Tidak ada pengguna yang cocok.</li>}</ul>
@@ -136,7 +136,7 @@ function RequestsTab() {
   const [ask, dialog] = useConfirm();
   if (err) return <Err t={err} />;
   if (!data) return <Skel />;
-  if (data.length === 0) return <p className="rounded-2xl border border-dashed p-4 text-center text-xs text-muted-foreground">Belum ada permintaan berlangganan.</p>;
+  if (data.length === 0) return <p className="rounded-3xl border border-dashed border-border/70 p-5 text-center text-xs text-muted-foreground">Belum ada permintaan berlangganan.</p>;
   return (
     <ul className="space-y-2">{dialog}{data.map((r) => (
       <li key={r.id} className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
@@ -160,7 +160,7 @@ function MarketTab() {
   const num = (t: string) => (t.trim() === "" ? null : Number(t.replace(",", ".")));
   const bad = (t: string) => { const n = num(t); return n !== null && !Number.isFinite(n); };
   const valid = f.name.trim() && /^https:\/\//.test(f.source_url) && ![f.ret_1m, f.ret_ytd, f.ret_1y, f.aum].some(bad);
-  const field = (k: "ret_1m" | "ret_ytd" | "ret_1y" | "aum", label: string) => (<label className="space-y-1 text-xs">{label}<Input inputMode="decimal" aria-label={label} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value.replace(/[^\d.,-]/g, "") })} /></label>);
+  const field = (k: "ret_1m" | "ret_ytd" | "ret_1y" | "aum", label: string) => (<label className="block space-y-1 text-xs font-semibold">{label}<Input inputMode="decimal" aria-label={label} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value.replace(/[^\d.,-]/g, "") })} /></label>);
   return (
     <div className="space-y-3">
       {dialog}
@@ -169,8 +169,8 @@ function MarketTab() {
         <p className="text-sm font-semibold">{f.id ? "Ubah data" : "Tambah data"}</p>
         <Input aria-label="Nama produk" placeholder="Nama produk atau kategori" maxLength={80} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
         <div className="grid grid-cols-2 gap-2">
-          <select aria-label="Kategori" className={selectCls} value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}><option value="pasar_uang">Pasar uang</option><option value="pendapatan_tetap">Pendapatan tetap</option><option value="campuran">Campuran</option><option value="saham">Saham</option></select>
-          <select aria-label="Risiko" className={selectCls} value={f.risk} onChange={(e) => setF({ ...f, risk: e.target.value })}><option value="rendah">Risiko rendah</option><option value="sedang">Risiko sedang</option><option value="tinggi">Risiko tinggi</option></select>
+          <Select aria-label="Kategori" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}><option value="pasar_uang">Pasar uang</option><option value="pendapatan_tetap">Pendapatan tetap</option><option value="campuran">Campuran</option><option value="saham">Saham</option></Select>
+          <Select aria-label="Risiko" value={f.risk} onChange={(e) => setF({ ...f, risk: e.target.value })}><option value="rendah">Risiko rendah</option><option value="sedang">Risiko sedang</option><option value="tinggi">Risiko tinggi</option></Select>
         </div>
         <div className="grid grid-cols-2 gap-2">{field("ret_1m", "Return 1 bulan (%)")}{field("ret_ytd", "Return tahun berjalan (%)")}{field("ret_1y", "Return 1 tahun (%)")}{field("aum", "Dana kelolaan (Rp)")}</div>
         <label className="block space-y-1 text-xs">Tanggal data<Input type="date" aria-label="Tanggal data" value={f.as_of} onChange={(e) => setF({ ...f, as_of: e.target.value })} /></label>
@@ -190,7 +190,7 @@ function AuditTab() {
   const { data, err } = useLoad(A.listAudit);
   if (err) return <Err t={err} />;
   if (!data) return <Skel />;
-  if (data.length === 0) return <p className="rounded-2xl border border-dashed p-4 text-center text-xs text-muted-foreground">Belum ada aktivitas admin.</p>;
+  if (data.length === 0) return <p className="rounded-3xl border border-dashed border-border/70 p-5 text-center text-xs text-muted-foreground">Belum ada aktivitas admin.</p>;
   return <ul className="space-y-1">{data.map((a) => (<li key={a.id} className="rounded-lg bg-muted p-2 text-xs"><b>{a.action}</b> oleh {a.actor_email ?? "-"}{a.target_email ? ` untuk ${a.target_email}` : ""}{a.detail ? ` (${a.detail})` : ""} · {a.created_at.slice(0, 16).replace("T", " ")}</li>))}</ul>;
 }
 

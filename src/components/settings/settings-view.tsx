@@ -88,6 +88,7 @@ import { PwaInstallModal } from "@/components/pwa-install-modal";
 import { compressImage } from "@/lib/image-compression";
 import { AvatarCropModal } from "@/components/profile/avatar-crop-modal";
 import { useFullscreen } from "@/lib/use-fullscreen";
+import { Select } from "@/components/ui/select";
 
 type SettingsSection =
   | null
@@ -1253,10 +1254,10 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
 
               <div className="space-y-1">
                 <Label className="text-xs font-semibold">Dompet Utama Transaksi</Label>
-                <select
+                <Select
                   value={defaultWalletId}
                   onChange={(e) => setDefaultWalletId(e.target.value)}
-                  className="w-full h-10 rounded-xl border border-border/80 bg-background px-3 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  size="sm"
                 >
                   <option value="">-- Pilih Dompet Default --</option>
                   {wallets.map((w) => (
@@ -1264,7 +1265,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
                       {w.name} ({formatRupiah(w.balance, { absolute: true })})
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
 
@@ -1525,17 +1526,17 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
 
               <div className="space-y-1">
                 <Label className="text-xs font-semibold">Dompet Pembayar</Label>
-                <select
+                <Select
                   value={newRecWallet}
                   onChange={(e) => setNewRecWallet(e.target.value)}
-                  className="w-full h-10 rounded-xl border border-border/80 bg-background px-3 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  size="sm"
                 >
                   {wallets.map((w) => (
                     <option key={w.id} value={w.id}>
                       {w.name} ({formatRupiah(w.balance, { absolute: true })})
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <Button

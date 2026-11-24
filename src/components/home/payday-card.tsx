@@ -25,6 +25,7 @@ import {
 import type { WalletBalance } from "@/lib/data/wallets";
 import type { GoalProgress } from "@/lib/data/goals";
 import { USE_SAMPLE_DATA, todayJakarta } from "@/lib/data/sample-mode";
+import { Select } from "@/components/ui/select";
 
 interface PaydayCardProps {
   schedule: PaydaySchedule | null;
@@ -251,17 +252,17 @@ export function PaydayCard({
                 <WalletIcon icon={selectedWallet.icon} color={selectedWallet.color} size={14} />
               </div>
             )}
-            <select
+            <Select
               value={selectedWalletId}
               onChange={(e) => setSelectedWalletId(e.target.value)}
-              className="w-full bg-transparent text-xs font-bold text-foreground focus:outline-none cursor-pointer"
+             
             >
               {wallets.map((w) => (
                 <option key={w.id} value={w.id} className="bg-card text-foreground">
                   {w.name} ({formatRupiah(w.balance)})
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </div>
       </div>

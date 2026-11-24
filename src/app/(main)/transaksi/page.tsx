@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/sheet";
 import { getReceiptSignedUrl } from "@/lib/storage";
 import { USE_SAMPLE_DATA, todayJakarta } from "@/lib/data/sample-mode";
+import { Select } from "@/components/ui/select";
 
 interface TrxItem {
   id: string;
@@ -502,21 +503,21 @@ export default function TransaksiPage() {
               </label>
               <label className="space-y-1 text-[11px] font-semibold text-muted-foreground">
                 Dompet
-                <select value={walletFilter} onChange={(e) => setWalletFilter(e.target.value)} className="h-9 w-full rounded-xl border border-border/60 bg-muted/40 px-2 text-xs text-foreground">
+                <Select value={walletFilter} onChange={(e) => setWalletFilter(e.target.value)} size="sm">
                   <option value="">Semua dompet</option>
                   {walletList.map((w) => (
                     <option key={w.id} value={w.id}>{w.name}</option>
                   ))}
-                </select>
+                </Select>
               </label>
               <label className="space-y-1 text-[11px] font-semibold text-muted-foreground">
                 Kategori
-                <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="h-9 w-full rounded-xl border border-border/60 bg-muted/40 px-2 text-xs text-foreground">
+                <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} size="sm">
                   <option value="">Semua kategori</option>
                   {categoryList.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
-                </select>
+                </Select>
               </label>
               <button
                 type="button"

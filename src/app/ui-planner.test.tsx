@@ -32,7 +32,7 @@ describe("Planner UI", () => {
   it("tombol buat planner mati sampai nama diisi, lalu membuat acara", async () => {
     const u = userEvent.setup();
     render(<PlannerPage />);
-    const btn = await screen.findByRole("button", { name: "Buat planner" });
+    const btn = await screen.findByRole("button", { name: /Buat planner/ });
     expect((btn as HTMLButtonElement).disabled).toBe(true);
     await u.type(screen.getByLabelText("Nama acara"), "Nikah Uji");
     await u.click(btn);
@@ -53,7 +53,8 @@ describe("Planner UI", () => {
     expect(addItem.mock.calls[0][0]).toMatchObject({ name: "Katering", planned_cost: 10_000_000, status: "tinjau", kind: "vendor" });
     expect(await screen.findByText("Katering")).toBeTruthy();
     await u.click(screen.getByRole("tab", { name: "Bayar" }));
-    await u.selectOptions(screen.getByLabelText("Untuk item"), "i1");
+    await u.click(screen.getByLabelText("Untuk item"));
+    await u.click(await screen.findByRole("option", { name: /Katering/ }));
     await u.type(screen.getByLabelText("Jumlah dibayar"), "10000000");
     await u.click(screen.getByRole("button", { name: "Simpan pembayaran" }));
     await waitFor(() => expect(addPayment).toHaveBeenCalled());
@@ -70,7 +71,7 @@ describe("Planner UI", () => {
     events = [ev];
     const u = userEvent.setup();
     render(<PlannerPage />);
-    await u.click(await screen.findByRole("button", { name: "Buat kode undangan" }));
+    await u.click(await screen.findByRole("button", { name: /Buat kode undangan/ }));
     expect((await screen.findByLabelText("Kode undangan planner")).textContent).toBe("ABCD2345");
   });
   it("target Tabungan bisa ditautkan dan menampilkan progres", async () => {

@@ -6,6 +6,7 @@ import { Disclaimer } from "@/components/plan/disclaimer";
 import { Gate } from "@/components/plan/gate";
 import { Skor } from "@/components/konsultan/panels";
 import { getFinanceSnapshot, type FinanceSnapshot } from "@/lib/data/finance-snapshot";
+import { PageHero } from "@/components/ui/form-kit";
 
 export default function Page() {
   const [snap, setSnap] = React.useState<FinanceSnapshot | null>(null);
@@ -15,10 +16,11 @@ export default function Page() {
     <div className="pb-24">
       <TopHeader title="Kesehatan Finansial" />
       <div className="space-y-4 px-4 pt-2">
+        <PageHero emoji="💚" title="Kesehatan Finansial" desc="Skor kondisi keuanganmu." tone="teal" />
         <Disclaimer />
-        {err && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{err}</p>}
+        {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
         <Gate feature="skor_kesehatan">
-          {!snap && !err ? <div className="h-32 animate-pulse rounded-xl bg-muted" aria-busy="true" /> : snap && <Skor s={snap} />}
+          {!snap && !err ? <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" /> : snap && <Skor s={snap} />}
         </Gate>
       </div>
     </div>

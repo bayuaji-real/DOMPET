@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/lib/notify";
 import * as A from "@/lib/data/admin";
+import { Select } from "@/components/ui/select";
 
-const selectCls = "h-9 w-full rounded-lg border border-input bg-background px-2 text-sm";
 const empty = { code: "", name: "", value: "", unit: "persen", as_of: "", source_name: "", source_url: "", note: "" };
 
 /** Form admin untuk acuan pasar (BI-Rate, LPS, SUN, SBN, IHSG, kurs, inflasi). */
@@ -30,7 +30,7 @@ export function AdminAcuanSection() {
       <p className="text-xs text-muted-foreground">Contoh kode: bi_rate, lps_tbp_umum, sun_10y, sr025_kupon, ihsg_ytd. Isi dari situs resmi (bi.go.id, lps.go.id, djppr.kemenkeu.go.id, idx.co.id).</p>
       <div className="grid grid-cols-2 gap-2">
         <Input aria-label="Kode acuan" placeholder="kode_huruf_kecil" value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.trim().toLowerCase() })} />
-        <select aria-label="Satuan" className={selectCls} value={f.unit} onChange={(e) => setF({ ...f, unit: e.target.value })}><option value="persen">Persen</option><option value="poin">Poin</option><option value="rupiah">Rupiah</option></select>
+        <Select aria-label="Satuan" value={f.unit} onChange={(e) => setF({ ...f, unit: e.target.value })}><option value="persen">Persen</option><option value="poin">Poin</option><option value="rupiah">Rupiah</option></Select>
       </div>
       <Input aria-label="Nama acuan" placeholder="Nama acuan" maxLength={80} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
       <div className="grid grid-cols-2 gap-2">
@@ -40,7 +40,7 @@ export function AdminAcuanSection() {
       <Input aria-label="Nama sumber" placeholder="Nama sumber, mis. Bank Indonesia" value={f.source_name} onChange={(e) => setF({ ...f, source_name: e.target.value })} />
       <Input aria-label="Alamat sumber acuan" placeholder="https:// alamat halaman resmi" value={f.source_url} onChange={(e) => setF({ ...f, source_url: e.target.value.trim() })} />
       <Input aria-label="Catatan acuan" placeholder="Catatan (boleh kosong)" maxLength={120} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />
-      <Button className="w-full" disabled={!valid || busy} onClick={save}>Simpan acuan</Button>
+      <Button className="h-10 w-full rounded-2xl text-xs" disabled={!valid || busy} onClick={save}>Simpan acuan</Button>
       <ul className="space-y-1">
         {(rows ?? []).map((b) => (
           <li key={b.code} className="flex items-center justify-between gap-2 rounded-lg bg-muted p-2 text-xs">

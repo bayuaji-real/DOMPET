@@ -22,6 +22,7 @@ import {
   isSpendableWallet,
   type WalletBalance,
 } from "@/lib/data/wallets";
+import { Select } from "@/components/ui/select";
 
 const TYPE_LABEL: Record<string, string> = {
   bank: "Rekening Bank",
@@ -233,16 +234,16 @@ function WalletDetailSheetInner({
             ) : (
               <div className="space-y-1">
                 <Label htmlFor="wallet-move" className="text-xs">Pindahkan ke</Label>
-                <select
+                <Select
                   id="wallet-move"
                   value={moveTo}
                   onChange={(e) => setMoveToChoice(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-border/60 bg-muted/40 px-3 text-sm text-foreground focus:outline-none"
+                 
                 >
                   {targets.map((t) => (
                     <option key={t.id} value={t.id}>{t.name}</option>
                   ))}
-                </select>
+                </Select>
               </div>
             )}
             <div className="flex gap-2">

@@ -7,6 +7,7 @@ import { MoneyInput } from "@/components/konsultan/money-input";
 import { Gate } from "@/components/plan/gate";
 import { allocateThr, zakatMaal, zakatPenghasilan } from "@/lib/konsultan/zakat";
 import { formatRupiah } from "@/lib/utils";
+import { PageHero } from "@/components/ui/form-kit";
 
 export default function ThrZakatPage() {
   const [gold, setGold] = React.useState(0);
@@ -17,12 +18,13 @@ export default function ThrZakatPage() {
     <div className="pb-24">
       <TopHeader title="THR & Zakat" />
       <div className="space-y-6 px-4 pt-2">
+        <PageHero emoji="🕌" title="THR & Zakat" desc="Hitung zakat dan bagi THR dengan rapi." tone="emerald" />
         <section aria-label="Kalkulator zakat" className="space-y-3">
           <h2 className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Kalkulator zakat</h2>
           <p className="text-sm text-muted-foreground">Isi harga emas per gram hari ini (cek di sumber resmi, misal BAZNAS atau toko emas). Aplikasi tidak menebak harga emas.</p>
-          <label className="space-y-1 text-sm">Harga emas per gram<MoneyInput value={gold} onChange={setGold} aria-label="Harga emas per gram" suffix="Rp" /></label>
-          <label className="space-y-1 text-sm">Penghasilan per bulan<MoneyInput value={income} onChange={setIncome} aria-label="Penghasilan per bulan" suffix="Rp" /></label>
-          <label className="space-y-1 text-sm">Total harta yang sudah dimiliki 1 tahun<MoneyInput value={wealth} onChange={setWealth} aria-label="Total harta" suffix="Rp" /></label>
+          <label className="block space-y-1 text-xs font-semibold">Harga emas per gram<MoneyInput value={gold} onChange={setGold} aria-label="Harga emas per gram" suffix="Rp" /></label>
+          <label className="block space-y-1 text-xs font-semibold">Penghasilan per bulan<MoneyInput value={income} onChange={setIncome} aria-label="Penghasilan per bulan" suffix="Rp" /></label>
+          <label className="block space-y-1 text-xs font-semibold">Total harta yang sudah dimiliki 1 tahun<MoneyInput value={wealth} onChange={setWealth} aria-label="Total harta" suffix="Rp" /></label>
           {gold <= 0 ? <p className="text-sm text-muted-foreground">Isi harga emas dulu untuk melihat nisab.</p> : (
             <div className="space-y-2">
               <div className="rounded-2xl p-3 border border-border/70 bg-card shadow-xs"><p className="font-semibold">Zakat penghasilan</p><p className="text-sm">Nisab per bulan {formatRupiah(Math.round(zp.nisab))}. {income <= 0 ? "Isi penghasilan." : zp.wajib ? `Zakat 2,5% = ${formatRupiah(zp.zakat)} per bulan.` : "Penghasilanmu belum mencapai nisab."}</p></div>
@@ -43,11 +45,11 @@ function Thr() {
   const n = (t: string) => Math.min(Math.max(Number(t.replace(",", ".")) || 0, 0), 100);
   const s = allocateThr(amount, { zakat: n(p.zakat), mudik: n(p.mudik), angpao: n(p.angpao), tabung: n(p.tabung) });
   const totalPct = n(p.zakat) + n(p.mudik) + n(p.angpao) + n(p.tabung);
-  const field = (k: keyof typeof p, label: string) => (<label className="space-y-1 text-xs">{label} (%)<Input aria-label={`${label} persen`} inputMode="decimal" value={p[k]} onChange={(e) => setP({ ...p, [k]: e.target.value.replace(/[^\d.,]/g, "") })} /></label>);
+  const field = (k: keyof typeof p, label: string) => (<label className="block space-y-1 text-xs font-semibold">{label} (%)<Input aria-label={`${label} persen`} inputMode="decimal" value={p[k]} onChange={(e) => setP({ ...p, [k]: e.target.value.replace(/[^\d.,]/g, "") })} /></label>);
   return (
     <section aria-label="Mode THR" className="space-y-3">
       <h2 className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Bagi THR</h2>
-      <label className="space-y-1 text-sm">Jumlah THR<MoneyInput value={amount} onChange={setAmount} aria-label="Jumlah THR" suffix="Rp" /></label>
+      <label className="block space-y-1 text-xs font-semibold">Jumlah THR<MoneyInput value={amount} onChange={setAmount} aria-label="Jumlah THR" suffix="Rp" /></label>
       <div className="grid grid-cols-2 gap-2">{field("zakat", "Zakat/sedekah")}{field("mudik", "Mudik & hari raya")}{field("angpao", "Angpao & hadiah")}{field("tabung", "Tabungan")}</div>
       {totalPct > 100 && <p role="alert" className="text-sm text-amber-600">Total lebih dari 100%, tabungan otomatis dikurangi.</p>}
       {amount <= 0 ? <p className="text-sm text-muted-foreground">Isi jumlah THR untuk melihat pembagiannya.</p> : (

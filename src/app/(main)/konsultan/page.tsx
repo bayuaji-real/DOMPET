@@ -17,6 +17,7 @@ import { formatRupiah } from "@/lib/utils";
 import { Skor, Proyeksi } from "@/components/konsultan/panels";
 import { useConfirm } from "@/components/ui/use-confirm";
 import type { FeatureKey } from "@/lib/plans";
+import { PageHero } from "@/components/ui/form-kit";
 
 type Tab = "skor" | "peringatan" | "cicilan" | "proyeksi" | "utang";
 const TABS: { id: Tab; label: string; feature: FeatureKey }[] = [
@@ -37,11 +38,12 @@ export default function KonsultanPage() {
     <div className="pb-24">
       <TopHeader title="Konsultan" />
       <div className="space-y-4 px-4 pt-2">
+        <PageHero emoji="🧠" title="Konsultan" desc="Skor, peringatan, cicilan, proyeksi, dan utangmu." tone="indigo" />
         <Disclaimer />
-        <div role="tablist" aria-label="Bagian konsultan" className="grid grid-cols-5 gap-1 rounded-xl bg-muted p-1">
-          {TABS.map((t) => (<button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`rounded-lg py-2 text-xs font-medium ${tab === t.id ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{t.label}</button>))}
+        <div role="tablist" aria-label="Bagian konsultan" className="grid grid-cols-5 gap-1 rounded-2xl bg-muted p-1">
+          {TABS.map((t) => (<button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`cursor-pointer rounded-xl py-2 text-xs font-bold transition-all active:scale-95 ${tab === t.id ? "bg-teal-600 text-white shadow-xs" : "text-muted-foreground hover:text-foreground"}`}>{t.label}</button>))}
         </div>
-        {err && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{err}</p>}
+        {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
         <Gate feature={cur.feature}>
           {!snap && !err ? <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" /> : snap && (
             <>
@@ -64,7 +66,7 @@ function Peringatan({ s }: { s: FinanceSnapshot }) {
   const day = Number(s.today.slice(8, 10));
   const dim = new Date(Number(s.today.slice(0, 4)), Number(s.today.slice(5, 7)), 0).getDate();
   const w = earlyWarnings(s.budgets, day, dim);
-  if (s.budgets.length === 0) return <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">Belum ada anggaran bulan ini. Atur anggaran di menu Analisis supaya peringatan bisa bekerja.</p>;
+  if (s.budgets.length === 0) return <p className="rounded-3xl border border-dashed border-border/70 p-5 text-center text-xs text-muted-foreground">Belum ada anggaran bulan ini. Atur anggaran di menu Analisis supaya peringatan bisa bekerja.</p>;
   if (w.length === 0) return <p className="rounded-lg bg-emerald-500/10 p-4 text-sm text-emerald-700 dark:text-emerald-300">Semua anggaran masih aman bulan ini. Bagus, pertahankan.</p>;
   const cls = { bahaya: "bg-red-500/10 text-red-700 dark:text-red-300", waspada: "bg-amber-500/10 text-amber-700 dark:text-amber-300", info: "bg-sky-500/10 text-sky-700 dark:text-sky-300" } as const;
   return <ul className="space-y-2">{w.map((x, i) => (<li key={i} className={`rounded-lg p-3 text-sm ${cls[x.level]}`}>{x.text}</li>))}</ul>;
@@ -87,11 +89,11 @@ function Cicilan() {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">Cek berapa sebenarnya biaya cicilan atau paylater sebelum kamu ambil. Angka berupa simulasi.</p>
-      <label className="space-y-1 text-sm">Harga barang<MoneyInput value={price} onChange={setPrice} aria-label="Harga barang" suffix="Rp" /></label>
+      <label className="block space-y-1 text-xs font-semibold">Harga barang<MoneyInput value={price} onChange={setPrice} aria-label="Harga barang" suffix="Rp" /></label>
       <div className="grid grid-cols-3 gap-2">
-        <label className="space-y-1 text-xs">Tenor (bulan)<Input inputMode="numeric" aria-label="Tenor bulan" value={months} onChange={(e) => setMonths(e.target.value.replace(/\D/g, "").slice(0, 3))} /></label>
-        <label className="space-y-1 text-xs">Bunga flat/thn (%)<Input inputMode="decimal" aria-label="Bunga flat per tahun" value={flat} onChange={(e) => setFlat(e.target.value.replace(/[^\d.,]/g, ""))} /></label>
-        <label className="space-y-1 text-xs">Biaya paylater/bln (%)<Input inputMode="decimal" aria-label="Biaya paylater per bulan" value={fee} onChange={(e) => setFee(e.target.value.replace(/[^\d.,]/g, ""))} /></label>
+        <label className="block space-y-1 text-xs font-semibold">Tenor (bulan)<Input inputMode="numeric" aria-label="Tenor bulan" value={months} onChange={(e) => setMonths(e.target.value.replace(/\D/g, "").slice(0, 3))} /></label>
+        <label className="block space-y-1 text-xs font-semibold">Bunga flat/thn (%)<Input inputMode="decimal" aria-label="Bunga flat per tahun" value={flat} onChange={(e) => setFlat(e.target.value.replace(/[^\d.,]/g, ""))} /></label>
+        <label className="block space-y-1 text-xs font-semibold">Biaya paylater/bln (%)<Input inputMode="decimal" aria-label="Biaya paylater per bulan" value={fee} onChange={(e) => setFee(e.target.value.replace(/[^\d.,]/g, ""))} /></label>
       </div>
       {price <= 0 ? <p className="text-sm text-muted-foreground">Isi harga barang dulu.</p> : (<>{row("Cicilan bunga flat", f)}{row("Paylater", p)}
         <p className="text-xs text-muted-foreground">Bandingannya, bunga menurun (anuitas) dengan angka yang sama: {formatRupiah(Math.round(a))} per bulan.</p></>)}
@@ -129,7 +131,7 @@ function Utang({ s }: { s: FinanceSnapshot }) {
       </form>
       {debts.length > 0 && (
         <div className="space-y-2">
-          <label className="space-y-1 text-sm">Dana untuk bayar utang per bulan (kosong = cicilan minimum {formatRupiah(minTotal)})<MoneyInput aria-label="Dana bayar utang per bulan" value={budget} onChange={setBudget} suffix="Rp" /></label>
+          <label className="block space-y-1 text-xs font-semibold">Dana untuk bayar utang per bulan (kosong = cicilan minimum {formatRupiah(minTotal)})<MoneyInput aria-label="Dana bayar utang per bulan" value={budget} onChange={setBudget} suffix="Rp" /></label>
           {!av.feasible ? <p role="alert" className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">{eff < minTotal ? "Dana per bulan kurang dari total cicilan minimum." : "Dengan dana ini utang belum bisa lunas dalam 50 tahun. Naikkan dana per bulan."}</p> : (
             <>
               <div className="rounded-lg p-3 ring-1 ring-primary"><p className="font-semibold">Bunga terbesar dulu (paling hemat)</p><p className="text-sm">Lunas dalam {fmtMonths(av.months)} · total bunga {formatRupiah(av.totalInterest)}</p><p className="text-xs text-muted-foreground">Urutan lunas: {av.order.join(" → ")}</p></div>

@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Gate } from "@/components/plan/gate";
 import { createGroup, joinGroup, listGroups, type GroupRow } from "@/lib/data/bersama";
+import { PageHero } from "@/components/ui/form-kit";
 
 export default function BersamaPage() {
-  return (<div className="pb-24"><TopHeader title="Dompet Bersama" /><div className="px-4 pt-2"><Gate feature="dompet_bersama"><Daftar /></Gate></div></div>);
+  return (<div className="pb-24"><TopHeader title="Dompet Bersama" /><div className="space-y-4 px-4 pt-2"><PageHero emoji="👫" title="Dompet Bersama" desc="Kelola uang berdua atau beramai-ramai." tone="sky" /><Gate feature="dompet_bersama"><Daftar /></Gate></div></div>);
 }
 
 function Daftar() {
@@ -26,9 +27,9 @@ function Daftar() {
   return (
     <div className="space-y-4">
       <p className="text-xs text-muted-foreground">Catat patungan, aplikasi hitung siapa bayar ke siapa. Terpisah dari dompet pribadimu.</p>
-      {err && <p role="alert" className="rounded-2xl bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300">{err}</p>}
+      {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
       {groups === null && !err && <div className="h-20 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
-      {groups && groups.length === 0 && <p className="rounded-2xl border border-dashed p-4 text-center text-xs text-muted-foreground">Belum ada grup. Buat grup baru atau gabung dengan kode dari temanmu.</p>}
+      {groups && groups.length === 0 && <p className="rounded-3xl border border-dashed border-border/70 p-5 text-center text-xs text-muted-foreground">Belum ada grup. Buat grup baru atau gabung dengan kode dari temanmu.</p>}
       <ul className="space-y-2">{(groups ?? []).map((g) => (<li key={g.id}><Link href={`/bersama/${g.id}`} className="flex items-center gap-3 rounded-2xl p-3 border border-border/70 bg-card shadow-xs"><Users className="size-5 text-teal-600" aria-hidden /><span className="font-medium">{g.name}</span></Link></li>))}</ul>
       <form className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs" aria-label="Buat grup" onSubmit={(e) => { e.preventDefault(); if (name.trim() && me.trim()) void run(() => createGroup(name.trim(), me.trim())); }}>
         <p className="font-semibold">Buat grup baru</p>

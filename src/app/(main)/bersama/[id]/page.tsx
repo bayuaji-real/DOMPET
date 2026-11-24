@@ -14,6 +14,7 @@ import { addExpense, addPayment, deleteExpense, deleteGroup, leaveGroup, loadGro
 import { netBalances, suggestTransfers } from "@/lib/konsultan/shared-balance";
 import { notify } from "@/lib/notify";
 import { formatRupiah } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
 
 type Data = Awaited<ReturnType<typeof loadGroup>>;
 
@@ -72,7 +73,7 @@ function Detail() {
         <Input aria-label="Untuk apa" placeholder="Untuk apa, misal Makan malam" maxLength={80} value={note} onChange={(e) => setNote(e.target.value)} />
         <MoneyInput aria-label="Jumlah pengeluaran" value={amount} onChange={setAmount} suffix="Rp" placeholder="Jumlah" />
         <label className="block text-sm">Dibayar oleh
-          <select aria-label="Dibayar oleh" className="mt-1 h-9 w-full rounded-lg border bg-background px-2" value={payer} onChange={(e) => setPayer(e.target.value)}>{d.members.map((m) => <option key={m.user_id} value={m.user_id}>{m.display_name}</option>)}</select></label>
+          <Select aria-label="Dibayar oleh" className="mt-1" value={payer} onChange={(e) => setPayer(e.target.value)}>{d.members.map((m) => <option key={m.user_id} value={m.user_id}>{m.display_name}</option>)}</Select></label>
         <fieldset className="text-sm"><legend className="mb-1">Dibagi rata ke</legend>
           <div className="flex flex-wrap gap-2">{d.members.map((m) => (<label key={m.user_id} className="flex items-center gap-1.5 rounded-lg bg-muted px-2 py-1"><input type="checkbox" checked={who.includes(m.user_id)} onChange={() => setWho(who.includes(m.user_id) ? who.filter((x) => x !== m.user_id) : [...who, m.user_id])} />{m.display_name}</label>))}</div></fieldset>
         <Button type="submit" className="w-full" disabled={!valid}>Simpan pengeluaran</Button>

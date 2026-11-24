@@ -54,6 +54,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
+import { Select } from "@/components/ui/select";
 
 // Tipe data lokal tabungan untuk UI & integrasi
 export interface GoalItem {
@@ -765,16 +766,16 @@ export default function TabunganPage() {
                   <form onSubmit={handleDepositSubmit} className="space-y-3.5">
                     <div className="space-y-1">
                       <Label className="text-xs">Sumber Dompet</Label>
-                      <select
+                      <Select
                         value={selectedWallet}
                         onChange={(e) => setSelectedWallet(e.target.value)}
-                        className="w-full h-10 rounded-xl border border-border/60 bg-muted/40 px-3 text-xs text-foreground focus:outline-none"
+                        size="sm"
                       >
                         <option value="" disabled>Pilih dompet</option>
                         {wallets.filter((w) => w.type !== "tabungan").map((w) => (
                           <option key={w.id} value={w.id}>{w.name}</option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
 
                     <div className="space-y-1">
@@ -864,16 +865,16 @@ export default function TabunganPage() {
                   <form onSubmit={handleWithdrawSubmit} className="space-y-3.5">
                     <div className="space-y-1">
                       <Label className="text-xs">Kirim ke Dompet</Label>
-                      <select
+                      <Select
                         value={selectedWallet}
                         onChange={(e) => setSelectedWallet(e.target.value)}
-                        className="w-full h-10 rounded-xl border border-border/60 bg-muted/40 px-3 text-xs text-foreground focus:outline-none"
+                        size="sm"
                       >
                         <option value="" disabled>Pilih dompet</option>
                         {wallets.filter((w) => w.type !== "tabungan").map((w) => (
                           <option key={w.id} value={w.id}>{w.name}</option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
 
                     <div className="space-y-1">
@@ -1252,15 +1253,15 @@ export default function TabunganPage() {
             <p className="text-xs text-muted-foreground">
               Uang terkumpul {formatRupiah(deleteTarget.current_amount)} tidak hilang. Pilih dompet tujuan untuk memindahkannya.
             </p>
-            <select
+            <Select
               value={deleteMoveTo}
               onChange={(e) => setDeleteMoveTo(e.target.value)}
-              className="h-10 w-full cursor-pointer rounded-xl border border-border bg-background px-3 text-xs"
+              size="sm"
             >
               {wallets.filter(isSpendableWallet).map((w) => (
                 <option key={w.id} value={w.id}>{w.name}</option>
               ))}
-            </select>
+            </Select>
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={() => setDeleteTarget(null)} className="h-9 flex-1 cursor-pointer rounded-xl text-xs">Batal</Button>
               <Button type="button" disabled={saving || !deleteMoveTo} onClick={handleConfirmDelete} className="h-9 flex-1 cursor-pointer rounded-xl bg-rose-600 text-xs font-bold text-white hover:bg-rose-500">
@@ -1400,10 +1401,10 @@ export default function TabunganPage() {
 
               <div className="space-y-1">
                 <Label className="text-xs">Tempat Penyimpanan</Label>
-                <select
+                <Select
                   value={formStorage}
                   onChange={(e) => setFormStorage(e.target.value)}
-                  className="w-full h-10 rounded-xl border border-border/60 bg-muted/40 px-3 text-xs text-foreground focus:outline-none"
+                  size="sm"
                 >
                   {formStorage && !["RDPU Bibit","BCA Utama (Tabungan)","Bank Jago Kantong","Emas Digital","Tunai Celengan"].includes(formStorage) && (
                     <option value={formStorage}>{formStorage}</option>
@@ -1413,7 +1414,7 @@ export default function TabunganPage() {
                   <option value="Bank Jago Kantong">Bank Jago Kantong</option>
                   <option value="Emas Digital">Emas Digital</option>
                   <option value="Tunai Celengan">Tunai Celengan</option>
-                </select>
+                </Select>
               </div>
 
               <div className="space-y-1">
