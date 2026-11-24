@@ -73,7 +73,7 @@ export default function PaketPage() {
         <section className="rounded-3xl border border-border/80 bg-card p-5 shadow-xs" aria-label="Yang kamu dapat dari Pro">
           <div className="flex flex-col items-center gap-2.5 border-b border-border/80 pb-4">
             <IconBox tone="amber" className="size-14 rounded-[20px] text-3xl"><span aria-hidden>👑</span></IconBox>
-            <h1 className="text-xl font-extrabold">Upgrade ke Pro</h1>
+            <h1 className="text-xl font-extrabold">{pro ? "Pro aktif" : "Upgrade ke Pro"}</h1>
           </div>
           <ul className="mt-4 space-y-3">
             {MANFAAT.map((m) => (

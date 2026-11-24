@@ -3,10 +3,14 @@
 import { nextDateForDay } from "@/lib/dates";
 import { todayJakarta } from "@/lib/data/sample-mode";
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { TopHeader } from "@/components/layout/top-header";
 import { formatRupiah, cn, triggerHapticFeedback } from "@/lib/utils";
 import {
+  TrendingUp,
+  ShieldCheck,
+  Crown,
   Settings,
   User,
   Calendar,
@@ -17,8 +21,6 @@ import {
   FileSpreadsheet,
   FileJson,
   Shield,
-  Eye,
-  EyeOff,
   LogOut,
   ChevronRight,
   ArrowLeft,
@@ -33,7 +35,6 @@ import {
   Sparkles,
   Smile,
   X,
-  KeyRound,
   Smartphone,
   Maximize,
   Minimize,
@@ -93,14 +94,13 @@ import { Select } from "@/components/ui/select";
 type SettingsSection =
   | null
   | "profile"
-  | "password"
   | "payday"
   | "categories"
   | "recurring"
   | "backup"
   | "about";
 
-export function SettingsView({ top }: { top?: React.ReactNode }) {
+export function SettingsView({ top }: { top?: React.ReactNode | ((slots: { second: React.ReactNode }) => React.ReactNode) }) {
   const router = useRouter();
   const { theme, setTheme, resolvedTheme } = useTheme();
 
@@ -149,13 +149,6 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
   const [newCatEmoji, setNewCatEmoji] = React.useState("🍔");
   const [isAddingCat, setIsAddingCat] = React.useState(false);
 
-  // Account / Password state
-  const [newPassword, setNewPassword] = React.useState("");
-  const [confirmPassword, setConfirmPassword] = React.useState("");
-  const [showNewPassword, setShowNewPassword] = React.useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
-  const [isUpdatingPassword, setIsUpdatingPassword] = React.useState(false);
-  const [passwordError, setPasswordError] = React.useState<string | null>(null);
 
   // Recurring state
   const [newRecNote, setNewRecNote] = React.useState("");
@@ -348,55 +341,6 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
     }
   };
 
-  // Handler Update Kata Sandi
-  const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordError(null);
-
-    if (newPassword.length < 8) {
-      setPasswordError("Kata sandi minimal 8 karakter.");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setPasswordError("Konfirmasi kata sandi tidak cocok. Pastikan keduanya sama.");
-      return;
-    }
-
-    setIsUpdatingPassword(true);
-    triggerHapticFeedback();
-
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-
-      if (error) {
-        if (
-          error.message.includes("Auth session missing") ||
-          error.message.includes("Invalid token")
-        ) {
-          // Demo mode / mock tanpa session Supabase aktif
-          showToast("Kata sandi berhasil diperbarui (Mode Demo)!");
-          setNewPassword("");
-          setConfirmPassword("");
-          setActiveSection(null);
-        } else {
-          setPasswordError(error.message);
-        }
-      } else {
-        showToast("Kata sandi akun berhasil diperbarui!");
-        setNewPassword("");
-        setConfirmPassword("");
-        setActiveSection(null);
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Terjadi kesalahan sistem";
-      setPasswordError(msg);
-    } finally {
-      setIsUpdatingPassword(false);
-    }
-  };
-
   // Dialog konfirmasi di dalam aplikasi (pengganti confirm bawaan browser)
   const [confirmState, setConfirmState] = React.useState<{ text: string; yes: string; resolve: (v: boolean) => void } | null>(null);
   const askConfirm = (text: string, yes = "Ya, hapus") =>
@@ -551,6 +495,102 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
 
   const isDarkMode = resolvedTheme === "dark";
 
+  // Grup Finansial & Kategori dirender di slot ke-2 daftar fitur (lihat prop top), bukan di bagian pengaturan.
+  const financeGroup = (
+    <div className="space-y-1.5">
+      <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-2">
+        Finansial & Kategori
+      </p>
+      <div className="divide-y divide-border/50 rounded-3xl border border-border/70 bg-card shadow-xs overflow-hidden">
+        {/* Investasi (bukan Pro): kalkulator, portofolio, info pasar */}
+        <Link
+          href="/investasi"
+          className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0">
+              <TrendingUp className="h-4.5 w-4.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-foreground">Investasi</p>
+              <p className="text-[10px] text-muted-foreground truncate">Kalkulator, portofolio & info pasar</p>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+        </Link>
+
+        {/* Opsi 1: Jadwal Gajian & Biaya Hidup */}
+        <button
+          type="button"
+          onClick={() => {
+            triggerHapticFeedback();
+            setActiveSection("payday");
+          }}
+          className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-teal-500/15 text-teal-600 dark:text-teal-400 shrink-0">
+              <Calendar className="h-4.5 w-4.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-foreground">Jadwal Gajian & Biaya Hidup</p>
+              <p className="text-[10px] text-muted-foreground truncate">
+                Tanggal gajian, estimasi gaji, & pos biaya hidup pokok
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+        </button>
+
+        {/* Opsi 2: Kelola Kategori */}
+        <button
+          type="button"
+          onClick={() => {
+            triggerHapticFeedback();
+            setActiveSection("categories");
+          }}
+          className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shrink-0">
+              <Tag className="h-4.5 w-4.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-foreground">Kategori Transaksi</p>
+              <p className="text-[10px] text-muted-foreground truncate">
+                Atur pos pengeluaran & pemasukan ({categories.length} aktif)
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+        </button>
+
+        {/* Opsi 3: Langganan & Tagihan Rutin */}
+        <button
+          type="button"
+          onClick={() => {
+            triggerHapticFeedback();
+            setActiveSection("recurring");
+          }}
+          className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0">
+              <Repeat className="h-4.5 w-4.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-foreground">Tagihan & Langganan Rutin</p>
+              <p className="text-[10px] text-muted-foreground truncate">
+                Pengingat otomatis Claude Pro, Netflix, Wifi ({recurringList.length} aktif)
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col flex-1 pb-4 pt-safe">
       {toastMsg && (
@@ -640,84 +680,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
               </div>
             </div>
 
-            {top}
-
-            {/* GROUP 1: FINANSIAL & PREFERENSI */}
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-2">
-                Finansial & Kategori
-              </p>
-              <div className="divide-y divide-border/50 rounded-3xl border border-border/70 bg-card shadow-xs overflow-hidden">
-                {/* Opsi 1: Jadwal Gajian & Biaya Hidup */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHapticFeedback();
-                    setActiveSection("payday");
-                  }}
-                  className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-teal-500/15 text-teal-600 dark:text-teal-400 shrink-0">
-                      <Calendar className="h-4.5 w-4.5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-foreground">Jadwal Gajian & Biaya Hidup</p>
-                      <p className="text-[10px] text-muted-foreground truncate">
-                        Tanggal gajian, estimasi gaji, & pos biaya hidup pokok
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                </button>
-
-                {/* Opsi 2: Kelola Kategori */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHapticFeedback();
-                    setActiveSection("categories");
-                  }}
-                  className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shrink-0">
-                      <Tag className="h-4.5 w-4.5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-foreground">Kategori Transaksi</p>
-                      <p className="text-[10px] text-muted-foreground truncate">
-                        Atur pos pengeluaran & pemasukan ({categories.length} aktif)
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                </button>
-
-                {/* Opsi 3: Langganan & Tagihan Rutin */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHapticFeedback();
-                    setActiveSection("recurring");
-                  }}
-                  className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0">
-                      <Repeat className="h-4.5 w-4.5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-foreground">Tagihan & Langganan Rutin</p>
-                      <p className="text-[10px] text-muted-foreground truncate">
-                        Pengingat otomatis Claude Pro, Netflix, Wifi ({recurringList.length} aktif)
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                </button>
-              </div>
-            </div>
+            {typeof top === "function" ? top({ second: financeGroup }) : top}
 
             {/* GROUP 2: TAMPILAN & AKUN */}
             <div className="space-y-1.5">
@@ -773,31 +736,39 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
                   </button>
                 </div>
 
-                {/* Opsi 5: Ganti Kata Sandi */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    triggerHapticFeedback();
-                    setPasswordError(null);
-                    setNewPassword("");
-                    setConfirmPassword("");
-                    setActiveSection("password");
-                  }}
+                {/* Keamanan */}
+                <Link
+                  href="/keamanan"
                   className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-teal-500/15 text-teal-600 dark:text-teal-400 shrink-0">
-                      <KeyRound className="h-4.5 w-4.5" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-500/15 text-slate-600 dark:text-slate-400 shrink-0">
+                      <ShieldCheck className="h-4.5 w-4.5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-foreground">Ganti Kata Sandi</p>
-                      <p className="text-[10px] text-muted-foreground truncate">
-                        Perbarui kata sandi login akun Dompetku
-                      </p>
+                      <p className="text-xs font-bold text-foreground">Keamanan</p>
+                      <p className="text-[10px] text-muted-foreground truncate">Kata sandi, PIN, MFA, notifikasi, dan hapus akun</p>
                     </div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
-                </button>
+                </Link>
+
+                {/* Paket & Uji Coba */}
+                <Link
+                  href="/paket"
+                  className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 shrink-0">
+                      <Crown className="h-4.5 w-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-foreground">Paket & Uji Coba</p>
+                      <p className="text-[10px] text-muted-foreground truncate">Gratis atau Pro. Coba Pro gratis 7 hari</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                </Link>
               </div>
             </div>
 
@@ -1077,98 +1048,6 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
                 className="flex-1 h-10 text-xs rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold"
               >
                 {isSavingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan Profil"}
-              </Button>
-            </div>
-          </form>
-        )}
-
-        {/* --------------------------------------------------------------- */}
-        {/* VIEW 1.5: SUB-SETTING GANTI KATA SANDI                          */}
-        {/* --------------------------------------------------------------- */}
-        {activeSection === "password" && (
-          <form
-            onSubmit={handleUpdatePassword}
-            className="rounded-3xl border border-border/80 bg-card p-5 space-y-4 shadow-xs animate-in fade-in"
-          >
-            <div className="border-b border-border/50 pb-2">
-              <h3 className="text-sm font-extrabold text-foreground">Ganti Kata Sandi</h3>
-              <p className="text-[11px] text-muted-foreground">
-                Perbarui kata sandi untuk melindungi keamanan akun Dompetku kamu
-              </p>
-            </div>
-
-            {passwordError && (
-              <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive animate-in fade-in">
-                {passwordError}
-              </div>
-            )}
-
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold">Kata Sandi Baru</Label>
-                <div className="relative">
-                  <Input
-                    type={showNewPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Minimal 6 karakter"
-                    required
-                    className="h-10 text-xs rounded-xl pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 cursor-pointer"
-                    tabIndex={-1}
-                  >
-                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold">Konfirmasi Kata Sandi Baru</Label>
-                <div className="relative">
-                  <Input
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Ketik ulang kata sandi baru"
-                    required
-                    className="h-10 text-xs rounded-xl pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 cursor-pointer"
-                    tabIndex={-1}
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2 flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setPasswordError(null);
-                  setNewPassword("");
-                  setConfirmPassword("");
-                  setActiveSection(null);
-                }}
-                className="flex-1 h-10 text-xs rounded-xl"
-              >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                disabled={isUpdatingPassword || !newPassword || !confirmPassword}
-                className="flex-1 h-10 text-xs rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold"
-              >
-                {isUpdatingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan Kata Sandi"}
               </Button>
             </div>
           </form>

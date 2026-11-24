@@ -8,7 +8,7 @@ import { MORE_GROUPS } from "@/lib/nav-items";
 import { ProBadge } from "@/components/plan/pro-badge";
 import { SettingsView } from "@/components/settings/settings-view";
 
-function FeatureGroups() {
+function FeatureGroups({ second }: { second?: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = React.useState(false);
   React.useEffect(() => { getMyAdminRole().then((r) => setIsAdmin(r !== null)); }, []);
   return (
@@ -20,8 +20,9 @@ function FeatureGroups() {
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </Link>
       )}
-      {MORE_GROUPS.map((group) => (
-        <section key={group.title} aria-label={group.title} className="space-y-1.5">
+      {MORE_GROUPS.map((group, idx) => (
+        <React.Fragment key={group.title}>
+        <section aria-label={group.title} className="space-y-1.5">
           <h2 className="px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{group.title}</h2>
           <div className="divide-y divide-border/50 overflow-hidden rounded-3xl border border-border/70 bg-card shadow-xs">
             {group.items.map((item) => {
@@ -43,6 +44,8 @@ function FeatureGroups() {
             })}
           </div>
         </section>
+        {idx === MORE_GROUPS.length - 1 && second}
+        </React.Fragment>
       ))}
     </>
   );
@@ -50,5 +53,5 @@ function FeatureGroups() {
 
 // More = fitur tambahan + semua opsi Pengaturan (menu Pengaturan terpisah sudah tidak ada).
 export default function MorePage() {
-  return <SettingsView top={<FeatureGroups />} />;
+  return <SettingsView top={({ second }) => <FeatureGroups second={second} />} />;
 }

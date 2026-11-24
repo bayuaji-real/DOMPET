@@ -7,6 +7,7 @@ import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MfaCard } from "@/components/security/mfa";
+import { PasswordCard } from "@/components/security/password-card";
 import { PushCard } from "@/components/settings/push-card";
 import { createClient } from "@/lib/supabase/client";
 import { PIN_KEY, PIN_TRIES_KEY, makeStoredPin, validPinFormat } from "@/lib/konsultan/pin";
@@ -46,7 +47,7 @@ export default function KeamananPage() {
     <div className="pb-24">
       <TopHeader title="Keamanan" />
       <div className="space-y-4 px-4 pt-2">
-        <PageHero title="Keamanan" desc="PIN, verifikasi, dan cadangan datamu." />
+        <PageHero title="Keamanan" desc="Kata sandi, PIN, verifikasi, dan notifikasi." />
         <section aria-label="PIN aplikasi" className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
           <h2 className="flex items-center gap-2.5 border-b border-border/50 pb-2.5 text-sm font-extrabold"><IconBox tone="neon"><ShieldCheck className="size-[18px]" aria-hidden /></IconBox> PIN aplikasi</h2>
           <p className="text-xs text-muted-foreground">Kunci layar di perangkat ini. Tidak menggantikan login.</p>
@@ -58,6 +59,8 @@ export default function KeamananPage() {
           </form>
           {hasPin && <Button variant="outline" className="h-10 w-full rounded-2xl text-xs" onClick={removePin}>Matikan PIN</Button>}
         </section>
+
+        <PasswordCard />
 
         <MfaCard />
 

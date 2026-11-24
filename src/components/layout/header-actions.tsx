@@ -8,7 +8,6 @@ import { formatRupiah } from "@/lib/utils";
 import { todayJakarta } from "@/lib/data/sample-mode";
 import { getTodayPaydaySchedule } from "@/lib/data/payday";
 import { getDueRecurringTransactions } from "@/lib/data/recurring";
-import { getSavingsGoals } from "@/lib/data/goals";
 import { getMyPaymentRequest } from "@/lib/data/payment";
 import { disablePush, enablePush, isPushOn, pushSupported, type PushResult } from "@/lib/push/client";
 
@@ -88,9 +87,6 @@ interface Notice {
   tone: "info" | "warn";
 }
 
-const daysBetween = (a: string, b: string) =>
-  Math.round((Date.parse(b) - Date.parse(a)) / 86_400_000);
-
 export function NotificationBell() {
   const [open, setOpen] = React.useState(false);
   const [items, setItems] = React.useState<Notice[]>([]);
@@ -118,14 +114,13 @@ export function NotificationBell() {
     let cancelled = false;
     const load = async () => {
       const today = todayJakarta();
-      const [pay, due, goals, payReq] = await Promise.allSettled([
+      const [pay, due, payReq] = await Promise.allSettled([
         getTodayPaydaySchedule(today),
         getDueRecurringTransactions(today),
-        getSavingsGoals(),
         getMyPaymentRequest(),
       ]);
       const list: Notice[] = [];
-      if (payReq.status === "fulfilled" && payReq.value) {
+      if (payReq.status === "fulfilled" && payReq.value && Date.now() - Date.parse(payReq.value.createdAt) < 7 * 86_400_000) {
         const r = payReq.value;
         const base = { href: r.status === "ditolak" ? "/paket/bayar" : "/paket", id: `bayar-${r.id}-${r.status}` };
         if (r.status === "dikonfirmasi") list.push({ ...base, title: "Pembayaran dikonfirmasi", detail: `Pro ${r.months} bulan sudah aktif.`, tone: "info" });
@@ -152,22 +147,6 @@ export function NotificationBell() {
           });
         }
       }
-      if (goals.status === "fulfilled") {
-        for (const g of goals.value) {
-          if (g.status !== "aktif" || !g.deadline) continue;
-          const left = daysBetween(today, g.deadline);
-          const remaining = Number(g.remaining ?? 0);
-          if (remaining > 0 && left <= 45) {
-            list.push({
-              id: `goal-${g.id}`,
-              title: left < 0 ? `${g.name} lewat tenggat` : `${g.name}: ${left} hari lagi`,
-              detail: `Masih kurang ${formatRupiah(remaining)}`,
-              href: "/tabungan",
-              tone: left < 0 || left <= 14 ? "warn" : "info",
-            });
-          }
-        }
-      }
       if (!cancelled) setItems(list);
     };
     load();
@@ -181,7 +160,7 @@ export function NotificationBell() {
   }, []);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="sm:relative">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -198,7 +177,7 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 z-50 w-72 overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
+        <div className="absolute inset-x-3 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-border bg-card shadow-xl sm:inset-x-auto sm:right-0 sm:top-11 sm:mt-0 sm:w-72">
           <div className="flex items-center justify-between border-b border-border/60 px-4 py-2.5">
             <p className="text-xs font-extrabold text-foreground">Notifikasi</p>
             {unread.length > 0 && (

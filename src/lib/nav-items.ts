@@ -3,7 +3,7 @@ import {
   PieChart,
   ReceiptText,
   Sparkles,
-    Gauge, Scale, ShoppingBag, TrendingUp, FileUp, CalendarDays, Moon, Crown, HeartPulse, LineChart, Repeat, Users, BellRing, ShieldCheck, Heart, Wallet, LifeBuoy, Landmark, PiggyBank, Flame,
+    Gauge, Scale, ShoppingBag, FileUp, CalendarDays, Moon, HeartPulse, LineChart, Repeat, Users, BellRing, Heart, Wallet, LifeBuoy, Landmark, PiggyBank, Flame,
     type LucideIcon,
 } from "lucide-react";
 
@@ -58,7 +58,6 @@ export const MORE_GROUPS: MoreGroup[] = [
       { label: "Dana pensiunku", description: "Berapa yang perlu disisihkan", href: "/dana-pensiunku", icon: Landmark, tone: "bg-amber-500/15 text-amber-600 dark:text-amber-400", pro: true },
       { label: "Dana lain", description: "Kesehatan, pendidikan, rumah, dan lainnya", href: "/dana-lain", icon: PiggyBank, tone: "bg-teal-500/15 text-teal-600 dark:text-teal-400", pro: true },
       { label: "Financial Freedom", description: "Dana untuk hidup dari hasil investasi", href: "/financial-freedom", icon: Flame, tone: "bg-orange-500/15 text-orange-600 dark:text-orange-400", pro: true },
-      { label: "Investasi", description: "Kalkulator, portofolio & info pasar", href: "/investasi", icon: TrendingUp, tone: "bg-teal-500/15 text-teal-600 dark:text-teal-400" },
     ],
   },
   {
@@ -68,13 +67,6 @@ export const MORE_GROUPS: MoreGroup[] = [
       { label: "Dompet Bersama", description: "Patungan dengan teman atau pasangan", href: "/bersama", icon: Users, tone: "bg-blue-500/15 text-blue-600 dark:text-blue-400", pro: true },
       { label: "Planner Acara", description: "Lamaran, nikah, dan acara: vendor, tamu, budget", href: "/planner", icon: Heart, tone: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
       { label: "THR & Zakat", description: "Bagi THR dan hitung zakat", href: "/thr-zakat", icon: Moon, tone: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },
-    ],
-  },
-  {
-    title: "Akun",
-    items: [
-      { label: "Keamanan", description: "PIN, MFA, notifikasi, dan hapus akun", href: "/keamanan", icon: ShieldCheck, tone: "bg-slate-500/15 text-slate-600 dark:text-slate-400" },
-      { label: "Paket & Uji Coba", description: "Gratis atau Pro. Coba Pro gratis 7 hari", href: "/paket", icon: Crown, tone: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400" },
     ],
   },
 ];
