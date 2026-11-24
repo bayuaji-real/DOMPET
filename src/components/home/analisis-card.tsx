@@ -174,7 +174,8 @@ export function AnalisisCard({ walletId = null, walletName, wallet = null, month
   const dailyExpenses = filtering ? derived?.dailyExpenses ?? [] : data?.dailyExpenses ?? [];
   // Status kesehatan dihitung untuk semua dompet, jadi disembunyikan saat satu dompet dipilih.
   const health = filtering ? undefined : data?.financialHealth;
-  const cashflow = React.useMemo(() => dailyCashflow(monthTxs, walletId ?? null), [monthTxs, walletId]);
+  // Jam sekarang hanya boleh dibaca di perangkat (bukan saat halaman dibangun di server), jadi tunggu mounted.
+  const cashflow = React.useMemo(() => (mounted ? dailyCashflow(monthTxs, walletId ?? null) : []), [mounted, monthTxs, walletId]);
   const hasFlow = cashflow.some((d) => d.masuk > 0 || d.keluar > 0);
   const top = categories[0];
   const hasData = !!s && (s.totalIncome > 0 || s.totalExpense > 0);
