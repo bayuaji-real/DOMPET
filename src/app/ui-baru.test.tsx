@@ -107,21 +107,27 @@ describe("Paket", () => {
     expect(screen.queryAllByRole("button", { name: /coba gratis/i }).length).toBe(0);
     expect(screen.getAllByText(/sudah pernah kamu pakai/).length).toBe(1);
   });
-  it("4 kartu: Basic + Pro 1, 6, 12 bulan, tombol pilih membawa durasi", async () => {
-    entRaw = { plan: "free", source: "free", trial_available: { premium: false, pro: true } }; render(<PaketPage />);
-    expect(screen.getByLabelText("Paket Basic")).toBeTruthy();
-    expect(await screen.findByLabelText("Pro 12 bulan")).toBeTruthy();
-    expect(screen.getByLabelText("Pro 6 bulan")).toBeTruthy();
-    expect(screen.getByLabelText("Pro 1 bulan")).toBeTruthy();
-    expect(screen.getByRole("link", { name: /Pilih 12 bulan/ }).getAttribute("href")).toBe("/paket/bayar?bulan=12");
+  it("3 pilihan Pro tanpa kartu Basic, tombol beli membawa durasi terpilih", async () => {
+    entRaw = { plan: "free", source: "free", trial_available: { premium: false, pro: true } }; const us = userEvent.setup(); render(<PaketPage />);
+    expect(screen.queryByLabelText("Paket Basic")).toBeNull();
+    expect(await screen.findByRole("radio", { name: "Pro 12 bulan" })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "Pro 6 bulan" })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "Pro 1 bulan" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Beli Pro 12 bulan sekarang/ }).getAttribute("href")).toBe("/paket/bayar?bulan=12");
+    await us.click(screen.getByRole("radio", { name: "Pro 6 bulan" }));
+    expect(screen.getByRole("link", { name: /Beli Pro 6 bulan sekarang/ }).getAttribute("href")).toBe("/paket/bayar?bulan=6");
+    expect(screen.getByText(/Cuma Rp271 per hari/)).toBeTruthy();
     expect(screen.getByText("Paling hemat")).toBeTruthy();
   });
-  it("tanpa kartu header lama dan tanpa kata cicip", () => {
+  it("copy benefit dari Owner, tanpa header lama, tanpa kata cicip dan tanpa catatan QRIS", () => {
     entRaw = { plan: "free", source: "free", trial_available: { premium: false, pro: true } }; render(<PaketPage />);
     expect(screen.queryByText("Paket & Uji Coba")).toBeNull();
     expect(screen.queryByText("Paketmu sekarang")).toBeNull();
     expect(document.body.textContent).not.toMatch(/cicip/i);
-    expect(document.body.textContent).toContain("Gratis penggunaan AI Ruby");
+    expect(document.body.textContent).not.toMatch(/QRIS/);
+    expect(screen.getByText("Upgrade ke Pro")).toBeTruthy();
+    expect(screen.getByText("Free split bill pakai foto struk anti ribet")).toBeTruthy();
+    expect(screen.getByText("Dan masih banyak lagi")).toBeTruthy();
   });
   it("sedang uji coba: menampilkan sisa hari dan kuota", () => {
     entRaw = { plan: "pro", source: "trial", trial_ends_at: new Date(Date.now() + 3 * 86_400_000).toISOString(), ai_limit: 100, ai_used: 40, trial_available: { premium: false, pro: false } };
