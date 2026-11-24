@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { serviceClient } from "@/lib/supabase/service";
 import { configurePush, sendPush } from "@/lib/push/send";
-import { apiPush, limitPushes, type PlannedPush } from "@/lib/push/alerts";
+import { apiPush, billPushes, limitPushes, proExpiryPush, type PlannedPush } from "@/lib/push/alerts";
 import { limitStatuses, neededRange, type Limit, type Tx } from "@/lib/konsultan/spend-limit";
 import type { ApiUsage } from "@/lib/data/admin";
 
@@ -42,7 +42,17 @@ export async function GET(req: Request) {
     for (const [uid, ls] of byUser) for (const p of limitPushes(limitStatuses(ls, txByUser.get(uid) ?? [], today))) planned.push({ userId: uid, p });
   }
 
-  // 3) Buang yang sudah pernah dikirim, lalu kirim.
+  // 3) Tagihan berulang jatuh tempo hari ini atau besok.
+  const tomorrow = new Date(Date.parse(today + "T00:00:00Z") + 86_400_000).toISOString().slice(0, 10);
+  const { data: bills } = await sb.from("recurring_transactions").select("id,user_id,note,amount,next_date").eq("is_active", true).eq("type", "expense").gte("next_date", today).lte("next_date", tomorrow).limit(5000);
+  for (const b of billPushes((bills ?? []).map((r) => ({ id: r.id, user_id: r.user_id, note: r.note, amount: Number(r.amount), next_date: r.next_date })), today)) planned.push(b);
+
+  // 4) Masa Pro berbayar hampir habis atau masa coba berakhir besok.
+  const soon = new Date(Date.now() + 4 * 86_400_000).toISOString();
+  const { data: subs2 } = await sb.from("user_subscriptions").select("user_id,plan,plan_expires_at,trial_plan,trial_ends_at").or(`plan_expires_at.lte.${soon},trial_ends_at.lte.${soon}`).limit(5000);
+  for (const s2 of subs2 ?? []) { const p = proExpiryPush(s2, Date.now()); if (p) planned.push({ userId: s2.user_id, p }); }
+
+  // 5) Buang yang sudah pernah dikirim, lalu kirim.
   let sent = 0, skipped = 0, removed = 0, failed = 0;
   for (const { userId, p } of planned) {
     const { error } = await sb.from("push_log").insert({ user_id: userId, kind: p.kind, dedupe_key: p.key });

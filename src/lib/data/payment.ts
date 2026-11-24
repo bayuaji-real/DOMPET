@@ -54,8 +54,10 @@ const rpc = async <T,>(p: PromiseLike<{ data: T | null; error: { message: string
   const { data, error } = await p; if (error) throw new Error(error.message); return data as T;
 };
 export const listPayments = () => rpc(c().rpc("admin_list_payments")) as Promise<AdminPayment[]>;
-export const confirmPayment = (id: string) => rpc(c().rpc("admin_confirm_payment", { p_id: id }));
-export const rejectPayment = (id: string, reason: string | null) => rpc(c().rpc("admin_reject_payment", { p_id: id, p_reason: reason }));
+/** Beri tahu pengguna (push) sesudah keputusan admin. Gagal tidak menggagalkan keputusan. */
+const notifyUser = (id: string) => { void fetch("/api/payment/notify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) }).catch(() => {}); };
+export const confirmPayment = async (id: string) => { const r = await rpc(c().rpc("admin_confirm_payment", { p_id: id })); notifyUser(id); return r; };
+export const rejectPayment = async (id: string, reason: string | null) => { const r = await rpc(c().rpc("admin_reject_payment", { p_id: id, p_reason: reason })); notifyUser(id); return r; };
 /** Tautan sementara (5 menit) untuk melihat bukti. Hanya admin yang boleh, dijaga aturan storage. */
 export async function proofUrl(path: string): Promise<string | null> {
   const { data } = await c().storage.from("payment-proofs").createSignedUrl(path, 300);

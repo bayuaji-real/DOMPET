@@ -10,6 +10,8 @@ function assertAmountInRange(amount: number) {
   if (amount > MAX_AMOUNT) throw new Error(MAX_AMOUNT_MESSAGE);
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export type Transaction = Database["public"]["Tables"]["transactions"]["Row"];
 
 export interface GetTransactionsOptions {
@@ -33,6 +35,8 @@ export async function getTransactions(
     .order("created_at", { ascending: false });
 
   if (options.walletId) {
+    // Filter .or() merakit teks: pastikan hanya UUID agar tidak bisa disisipi sintaks filter lain.
+    if (!UUID_RE.test(options.walletId)) throw new Error("ID dompet tidak valid.");
     query = query.or(`wallet_id.eq.${options.walletId},to_wallet_id.eq.${options.walletId}`);
   }
 

@@ -1,11 +1,22 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ProBadge } from "./pro-badge";
 import { AnalisisTerkunci } from "@/components/home/analisis-terkunci";
 import { parseEntitlement, cicipHabisMessage, canUse } from "@/lib/plans";
 
+let planNow: "free" | "pro" = "free";
+vi.mock("@/hooks/use-entitlement", async () => {
+  const { canUse, parseEntitlement: pe } = await import("@/lib/plans");
+  return { useEntitlement: () => { const ent = pe({ plan: planNow, source: planNow === "pro" ? "paid" : "free" }); return { ent, loading: false, reload: async () => {}, can: (f: never) => canUse(ent.plan, f) }; } };
+});
+
 describe("Basic/Pro: tampilan dan aturan", () => {
+  it("lencana Pro tidak tampil untuk akun Pro", () => {
+    planNow = "pro"; const { container } = render(<ProBadge />); planNow = "free";
+    expect(container.textContent).toBe("");
+    expect(screen.queryByLabelText("Fitur Pro")).toBeNull();
+  });
   it("lencana Pro hanya mahkota, tanpa gembok", () => {
     const { container } = render(<ProBadge />);
     expect(screen.getByLabelText("Fitur Pro")).toBeTruthy();

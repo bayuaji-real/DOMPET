@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Disclaimer } from "@/components/plan/disclaimer";
 import { Gate } from "@/components/plan/gate";
+import { useEntitlement } from "@/hooks/use-entitlement";
 import { MoneyInput } from "@/components/konsultan/money-input";
 import { simulateInvestment } from "@/lib/konsultan/invest-calc";
 import { AcuanSection } from "@/components/market/acuan-section";
@@ -25,12 +26,14 @@ const tone = (n: number | null) => (n == null ? "" : n < 0 ? "text-red-600 dark:
 
 export default function InvestasiPage() {
   const [tab, setTab] = React.useState<Tab>("kalkulator");
+  const { can, loading } = useEntitlement();
+  const lockedTab: Record<Tab, boolean> = { kalkulator: false, portofolio: !loading && !can("portofolio"), pasar: !loading && !can("info_pasar") };
   return (
     <div className="pb-24">
       <TopHeader title="Investasi" />
       <div className="px-4 pt-2">
         <PageHero title="Investasi" desc="Pantau aset dan acuan pasar dengan sumber resmi." className="mb-4" />
-        <div className="mb-4"><Tabs value={tab} onChange={setTab} label="Bagian investasi" options={TABS.map((t) => ({ value: t.id, label: t.label, icon: t.icon }))} /></div>
+        <div className="mb-4"><Tabs value={tab} onChange={setTab} label="Bagian investasi" options={TABS.map((t) => ({ value: t.id, label: t.label, icon: t.icon, locked: lockedTab[t.id] }))} /></div>
         {tab === "kalkulator" && <Kalkulator />}
         {tab === "portofolio" && <Gate feature="portofolio" redirect><Portofolio /></Gate>}
         {SHOW_PASAR && tab === "pasar" && <Gate feature="info_pasar" redirect><Pasar /></Gate>}

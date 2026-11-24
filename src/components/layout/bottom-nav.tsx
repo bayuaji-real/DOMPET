@@ -687,11 +687,6 @@ export function BottomNav() {
                     )}
                   >
                     <Icon className="h-6 w-6" />
-                    {ent.plan === "pro" && (
-                      <span aria-label="Pro" className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border border-amber-400/60 bg-background text-[11px] leading-none shadow">
-                        <span aria-hidden>👑</span>
-                      </span>
-                    )}
                     {sisaTanya && <SisaChip n={sisaTanya.n} large />}
                   </span>
                   <span className={cn("text-[9.5px] font-bold leading-tight", isActive ? "text-teal-600 dark:text-teal-400" : "text-muted-foreground")}>

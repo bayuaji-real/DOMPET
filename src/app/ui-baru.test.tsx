@@ -66,15 +66,19 @@ describe("Investasi: kalkulator", () => {
     expect(items[0].textContent).toContain("Dana B");
     expect(screen.getByText(/Sumber resmi sesuai tautan/)).toBeTruthy();
   });
-  it("paket Gratis: kalkulator terbuka, Portofolio dan Info Pasar langsung ke halaman Paket", async () => {
-    entRaw = { plan: "free" }; nav.replace.mockClear(); const u = userEvent.setup(); render(<InvestasiPage />);
+  it("paket Gratis: kalkulator terbuka, tab Portofolio dan Info Pasar mati dan bertanda mahkota", async () => {
+    entRaw = { plan: "free" }; nav.replace.mockClear(); render(<InvestasiPage />);
     expect(screen.getByText("Perkiraan nilai akhir")).toBeTruthy();
+    const porto = screen.getByRole("tab", { name: "Portofolio (khusus Pro)" }) as HTMLButtonElement;
+    const pasar = screen.getByRole("tab", { name: "Info Pasar (khusus Pro)" }) as HTMLButtonElement;
+    expect(porto.disabled).toBe(true); expect(pasar.disabled).toBe(true);
+    expect(porto.textContent).toContain("👑");
+    expect((screen.getByRole("tab", { name: "Kalkulator" }) as HTMLButtonElement).disabled).toBe(false);
     expect(nav.replace).not.toHaveBeenCalled();
-    await u.click(screen.getByRole("tab", { name: "Portofolio" }));
-    await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/paket"));
-    nav.replace.mockClear();
-    await u.click(screen.getByRole("tab", { name: "Info Pasar" }));
-    await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/paket"));
+  });
+  it("akun Pro: semua tab Investasi aktif tanpa mahkota", () => {
+    entRaw = { plan: "pro", source: "paid" }; render(<InvestasiPage />);
+    for (const n of ["Portofolio", "Info Pasar"]) { const t = screen.getByRole("tab", { name: n }) as HTMLButtonElement; expect(t.disabled).toBe(false); expect(t.textContent).not.toContain("👑"); }
   });
   it("Portofolio: tombol simpan nonaktif sampai formulir lengkap", async () => {
     const u = userEvent.setup(); render(<InvestasiPage />);

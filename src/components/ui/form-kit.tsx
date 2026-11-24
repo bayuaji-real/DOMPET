@@ -72,7 +72,7 @@ const ACTIVE: Record<string, string> = {
   indigo: "bg-indigo-500 text-white shadow-md shadow-indigo-500/30",
 };
 
-type SegOption<T extends string> = { value: T; label: string; tone?: keyof typeof ACTIVE; icon?: React.ReactNode };
+type SegOption<T extends string> = { value: T; label: string; tone?: keyof typeof ACTIVE; icon?: React.ReactNode; /** Khusus Pro dan paket pengguna belum cukup: tab tidak bisa diklik, bertanda mahkota. */ locked?: boolean };
 
 /** Tombol pilihan berdampingan (seperti Pengeluaran / Pemasukan di Catat Transaksi). Satu terpilih, berwarna, boleh berikon. */
 export function Segmented<T extends string>({ value, onChange, options, label }: { value: T; onChange: (v: T) => void; options: SegOption<T>[]; label?: string }) {
@@ -104,11 +104,14 @@ export function Tabs<T extends string>({ value, onChange, options, label }: { va
           type="button"
           role="tab"
           aria-selected={value === o.value}
+          disabled={o.locked}
+          aria-label={o.locked ? `${o.label} (khusus Pro)` : undefined}
           onClick={() => onChange(o.value)}
-          className={cn("flex cursor-pointer items-center justify-center rounded-xl font-bold transition-all active:scale-95", options.length > 3 ? "flex-col gap-0.5 py-1.5 text-[11px]" : "gap-1.5 py-2 text-xs", value === o.value ? ACTIVE[o.tone ?? "neon"] : "text-muted-foreground hover:text-foreground")}
+          className={cn("relative flex items-center justify-center rounded-xl font-bold transition-all", o.locked ? "cursor-not-allowed text-muted-foreground/60" : "cursor-pointer active:scale-95", options.length > 3 ? "flex-col gap-0.5 py-1.5 text-[11px]" : "gap-1.5 py-2 text-xs", value === o.value ? ACTIVE[o.tone ?? "neon"] : o.locked ? "" : "text-muted-foreground hover:text-foreground")}
         >
-          {o.icon && <span aria-hidden className="text-sm leading-none">{o.icon}</span>}
+          {o.icon && <span aria-hidden className={cn("text-sm leading-none", o.locked && "opacity-50")}>{o.icon}</span>}
           {o.label}
+          {o.locked && <span aria-hidden className="absolute -right-0.5 -top-1.5 rounded-full border border-amber-400/50 bg-background px-1 text-[9px] leading-4">👑</span>}
         </button>
       ))}
     </div>

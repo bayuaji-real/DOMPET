@@ -9,6 +9,55 @@ import { todayJakarta } from "@/lib/data/sample-mode";
 import { getTodayPaydaySchedule } from "@/lib/data/payday";
 import { getDueRecurringTransactions } from "@/lib/data/recurring";
 import { getSavingsGoals } from "@/lib/data/goals";
+import { getMyPaymentRequest } from "@/lib/data/payment";
+import { disablePush, enablePush, isPushOn, pushSupported, type PushResult } from "@/lib/push/client";
+
+const PUSH_TEXT: Record<PushResult, string> = {
+  ok: "Notifikasi aktif di perangkat ini.",
+  ditolak: "Izin ditolak. Izinkan notifikasi untuk Dompetku di pengaturan browser atau HP, lalu coba lagi.",
+  tidak_didukung: "Perangkat ini belum mendukung notifikasi. Di iPhone, pasang Dompetku ke layar utama dulu.",
+  kunci_kosong: "Notifikasi belum disiapkan di server. Hubungi admin.",
+  gagal: "Belum berhasil mengaktifkan. Coba lagi sebentar.",
+};
+
+/** Baris saklar notifikasi push di dalam panel lonceng. */
+function PushToggleRow() {
+  const [on, setOn] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
+  const [msg, setMsg] = React.useState<string | null>(null);
+  const supported = pushSupported();
+  React.useEffect(() => { isPushOn().then(setOn).catch(() => setOn(false)); }, []);
+  const toggle = async () => {
+    setBusy(true); setMsg(null);
+    try {
+      if (on) { await disablePush(); setOn(false); setMsg("Notifikasi dimatikan di perangkat ini."); }
+      else { const r = await enablePush(); setOn(r === "ok"); setMsg(PUSH_TEXT[r]); }
+    } finally { setBusy(false); }
+  };
+  return (
+    <div className="border-t border-border/60 px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-bold text-foreground">Notifikasi di perangkat ini</p>
+          <p className="text-[11px] text-muted-foreground">Tagihan, pembayaran, masa Pro, batas pengeluaran.</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-label="Nyalakan notifikasi"
+          disabled={busy || !supported}
+          onClick={toggle}
+          className={`relative h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${on ? "border-teal-500 bg-teal-500" : "border-border bg-muted"}`}
+        >
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? "left-[22px]" : "left-0.5"}`} />
+        </button>
+      </div>
+      {!supported && <p className="mt-2 text-[11px] text-amber-700 dark:text-amber-300">{PUSH_TEXT.tidak_didukung}</p>}
+      {msg && <p role="status" className="mt-2 rounded-xl bg-muted px-2.5 py-1.5 text-[11px]">{msg}</p>}
+    </div>
+  );
+}
 
 /** Tutup popover saat klik di luar atau tekan Esc. */
 function useDismiss(open: boolean, onClose: () => void) {
@@ -69,12 +118,20 @@ export function NotificationBell() {
     let cancelled = false;
     const load = async () => {
       const today = todayJakarta();
-      const [pay, due, goals] = await Promise.allSettled([
+      const [pay, due, goals, payReq] = await Promise.allSettled([
         getTodayPaydaySchedule(today),
         getDueRecurringTransactions(today),
         getSavingsGoals(),
+        getMyPaymentRequest(),
       ]);
       const list: Notice[] = [];
+      if (payReq.status === "fulfilled" && payReq.value) {
+        const r = payReq.value;
+        const base = { href: r.status === "ditolak" ? "/paket/bayar" : "/paket", id: `bayar-${r.id}-${r.status}` };
+        if (r.status === "dikonfirmasi") list.push({ ...base, title: "Pembayaran dikonfirmasi", detail: `Pro ${r.months} bulan sudah aktif.`, tone: "info" });
+        else if (r.status === "ditolak") list.push({ ...base, title: "Pembayaran belum bisa dikonfirmasi", detail: r.lastNote || "Buka halaman bayar untuk mencoba lagi.", tone: "warn" });
+        else if (r.status === "menunggu_cek" || r.status === "pro_sementara") list.push({ ...base, title: "Pembayaranmu sedang dicek", detail: "Kami kabari begitu selesai.", tone: "info" });
+      }
       if (pay.status === "fulfilled" && pay.value) {
         list.push({
           id: "payday",
@@ -177,6 +234,7 @@ export function NotificationBell() {
               ))}
             </ul>
           )}
+          <PushToggleRow />
         </div>
       )}
     </div>

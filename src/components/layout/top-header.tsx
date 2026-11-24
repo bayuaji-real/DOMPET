@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { HelpCenterButton } from "./header-actions";
+import { HelpCenterButton, NotificationBell } from "./header-actions";
 import { ThemeSlider } from "@/components/theme-slider";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
 import { useEntitlement } from "@/hooks/use-entitlement";
@@ -117,6 +117,7 @@ function TopHeaderInner({ title }: TopHeaderProps) {
 
       {/* Kanan: Pusat Bantuan & tema */}
       <div className="flex shrink-0 items-center gap-2">
+        <NotificationBell />
         <HelpCenterButton />
         <ThemeSlider />
       </div>
