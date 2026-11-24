@@ -4,12 +4,12 @@
   "description": "Catatan keuangan pribadi simpel dan cerdas untuk HP",
   "start_url": "/",
   "display": "fullscreen",
-  "background_color": "#09090b",
+  "background_color": "#ffffff",
   "theme_color": "#0d9488",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icons/icon-maskable-dark-512.png",
+      "src": "/icons/icon-maskable-light-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

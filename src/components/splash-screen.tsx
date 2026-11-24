@@ -3,7 +3,8 @@
 import * as React from "react";
 
 /**
- * Layar pembuka di dalam aplikasi: logo asli (transparan, tanpa kotak) di atas warna latar aplikasi.
+ * Layar pembuka di dalam aplikasi: logo asli (transparan, tanpa kotak) di atas latar putih, diam tanpa animasi,
+ * ukurannya sama dengan layar pembuka bawaan Android supaya peralihannya tidak terlihat.
  * Bertahan selama aplikasi masih menunggu server/halaman selesai dimuat (minimal 0,7 detik agar tidak
  * berkedip, maksimal 6 detik supaya tidak pernah menahan pengguna), lalu memudar.
  * Aplikasi di belakangnya tetap memuat seperti biasa.
@@ -52,8 +53,9 @@ export function SplashScreen() {
   return (
     <div
       aria-hidden="true"
-      className="dompet-splash bg-slate-100 dark:bg-zinc-950"
+      className="dompet-splash"
       style={{
+        backgroundColor: "#ffffff",
         position: "fixed",
         inset: 0,
         zIndex: 9999,
@@ -65,31 +67,14 @@ export function SplashScreen() {
         pointerEvents: phase === "fade" ? "none" : "auto",
       }}
     >
-      <style>{`
-        @keyframes dompet-logo-in {
-          0% { transform: scale(0.88); opacity: 0; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes dompet-logo-pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-        }
-        .dompet-splash .logo {
-          animation: dompet-logo-in 350ms ease-out both, dompet-logo-pulse 1600ms ease-in-out 450ms infinite;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .dompet-splash .logo { animation: none; }
-        }
-      `}</style>
       {/* Logo transparan: tidak ada kotak atau warna latar di belakangnya */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        className="logo"
         src="/icons/splash-logo-512.png"
         alt=""
-        width={176}
-        height={176}
-        style={{ background: "transparent" }}
+        width={512}
+        height={512}
+        style={{ background: "transparent", width: "60vw", maxWidth: 320, height: "auto" }}
         draggable={false}
       />
     </div>
