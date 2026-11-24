@@ -17,6 +17,8 @@ import {
 import { TopHeader } from "@/components/layout/top-header";
 import { formatRupiah, formatTanggalWIB, cn } from "@/lib/utils";
 import { AnalisisCard } from "./analisis-card";
+import { AnalisisTerkunci } from "./analisis-terkunci";
+import { useEntitlement } from "@/hooks/use-entitlement";
 import { TotalSaldoCarousel } from "./total-saldo-carousel";
 import { WalletDetailSheet } from "@/components/wallet/wallet-detail-sheet";
 import { PaydayCard } from "./payday-card";
@@ -61,6 +63,8 @@ export function BerandaClient({
 
   // State Data
   const [wallets, setWallets] = React.useState<WalletBalance[]>(initialWallets);
+  const { ent, loading: entLoading } = useEntitlement();
+  const entPlan = ent.plan;
   const [transactions, setTransactions] = React.useState<Transaction[]>(
     initialTransactions
   );
@@ -194,12 +198,18 @@ export function BerandaClient({
         )}
 
         {/* Menu grid ala Livin' (FeatureMenu) disembunyikan dulu sampai fitur tambahan banyak */}
-        <AnalisisCard
-          walletId={filterWalletId}
-          walletName={wallets.find((w) => w.id === filterWalletId)?.name}
-          wallet={wallets.find((w) => w.id === filterWalletId) ?? null}
-          monthTxs={monthTxs}
-        />
+        {entLoading ? (
+          <div className="h-40 animate-pulse rounded-3xl bg-muted/50" aria-busy="true" />
+        ) : entPlan === "free" ? (
+          <AnalisisTerkunci />
+        ) : (
+          <AnalisisCard
+            walletId={filterWalletId}
+            walletName={wallets.find((w) => w.id === filterWalletId)?.name}
+            wallet={wallets.find((w) => w.id === filterWalletId) ?? null}
+            monthTxs={monthTxs}
+          />
+        )}
 
         {/* 5. Transaksi Terbaru */}
         <div className="space-y-3 pt-1">

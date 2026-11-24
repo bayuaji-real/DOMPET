@@ -1,0 +1,32 @@
+// @vitest-environment jsdom
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { ProBadge } from "./pro-badge";
+import { AnalisisTerkunci } from "@/components/home/analisis-terkunci";
+import { parseEntitlement, cicipHabisMessage, canUse } from "@/lib/plans";
+
+describe("Basic/Pro: tampilan dan aturan", () => {
+  it("lencana Pro terkunci memuat mahkota dan gembok", () => {
+    render(<ProBadge locked />);
+    expect(screen.getByLabelText("Fitur Pro, terkunci")).toBeTruthy();
+  });
+  it("kartu Analisis Basic: tautan ke Paket, tanpa angka asli", () => {
+    render(<AnalisisTerkunci />);
+    const link = screen.getByRole("link", { name: /terkunci/ });
+    expect(link.getAttribute("href")).toBe("/paket");
+  });
+  it("cicip dibaca dari database dan angka aneh jadi 0", () => {
+    const e = parseEntitlement({ plan: "free", cicip: { struk: { limit: 2, used: 1, remaining: 1, per: "hari" }, suara: { limit: "x", remaining: -5 } } });
+    expect(e.cicip.struk).toEqual({ limit: 2, used: 1, remaining: 1, per: "hari" });
+    expect(e.cicip.suara.remaining).toBe(0);
+  });
+  it("pesan jatah habis ramah, harian dan seumur akun", () => {
+    expect(cicipHabisMessage("struk", "hari")).toMatch(/besok/);
+    expect(cicipHabisMessage("tabungan", "akun")).toMatch(/Pro/);
+  });
+  it("Rencana lunasi utang dan Impor CSV masuk Basic, Simulator cicilan tetap Pro", () => {
+    expect(canUse("free", "lunasi_utang")).toBe(true);
+    expect(canUse("free", "impor_csv")).toBe(true);
+    expect(canUse("free", "simulator_cicilan")).toBe(false);
+  });
+});

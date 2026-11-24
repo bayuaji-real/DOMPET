@@ -14,6 +14,8 @@ export interface MoreItem {
   icon: LucideIcon;
   /** kelas warna kotak ikon */
   tone: string;
+  /** fitur yang seluruhnya Pro: tampil dengan lencana mahkota */
+  pro?: boolean;
 }
 
 export interface MoreGroup {
@@ -40,8 +42,8 @@ export const MORE_GROUPS: MoreGroup[] = [
     title: "Analisis & laporan",
     items: [
       { label: "Analisis Keuangan", description: "Arus kas, kategori, anggaran & insight Ruby", href: "/analisis", icon: PieChart, tone: "bg-violet-500/15 text-violet-600 dark:text-violet-400" },
-      { label: "Kesehatan Finansial", description: "Skor 0-100 dan cara menaikkannya", href: "/kesehatan-finansial", icon: HeartPulse, tone: "bg-pink-500/15 text-pink-600 dark:text-pink-400" },
-      { label: "Prediksi Cashflow", description: "Perkiraan saldo 3 bulan ke depan", href: "/prediksi-cashflow", icon: LineChart, tone: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400" },
+      { label: "Kesehatan Finansial", description: "Skor 0-100 dan cara menaikkannya", href: "/kesehatan-finansial", icon: HeartPulse, tone: "bg-pink-500/15 text-pink-600 dark:text-pink-400", pro: true },
+      { label: "Prediksi Cashflow", description: "Perkiraan saldo 3 bulan ke depan", href: "/prediksi-cashflow", icon: LineChart, tone: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400", pro: true },
       { label: "Laporan Mingguan", description: "Ringkasan 7 hari terakhir", href: "/laporan-mingguan", icon: CalendarDays, tone: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
     ],
   },
@@ -62,7 +64,7 @@ export const MORE_GROUPS: MoreGroup[] = [
     title: "Bersama & acara",
     items: [
       { label: "Split Bill", description: "Bagi tagihan adil, termasuk ongkir & pajak", href: "/split-bill", icon: ReceiptText, tone: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
-      { label: "Dompet Bersama", description: "Patungan dengan teman atau pasangan", href: "/bersama", icon: Users, tone: "bg-blue-500/15 text-blue-600 dark:text-blue-400" },
+      { label: "Dompet Bersama", description: "Patungan dengan teman atau pasangan", href: "/bersama", icon: Users, tone: "bg-blue-500/15 text-blue-600 dark:text-blue-400", pro: true },
       { label: "Planner Acara", description: "Lamaran, nikah, dan acara: vendor, tamu, budget", href: "/planner", icon: Heart, tone: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
       { label: "THR & Zakat", description: "Bagi THR dan hitung zakat", href: "/thr-zakat", icon: Moon, tone: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },
     ],

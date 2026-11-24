@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { estimateCostIdr, usageOf, type UsageInfo } from "@/lib/ai/gemini";
 import { createClient } from "@/lib/supabase/server";
-import { AI_LOG_FEATURE, QUOTA_MESSAGE, parseEntitlement, upgradeMessage, canUse, type AiFeatureKey } from "@/lib/plans";
+import { AI_LOG_FEATURE, QUOTA_MESSAGE, cicipHabisMessage, parseEntitlement, upgradeMessage, canUse, type AiFeatureKey } from "@/lib/plans";
 
 type Guard = { ok: true; userId: string } | { ok: false; response: NextResponse };
 
@@ -10,7 +10,7 @@ type Guard = { ok: true; userId: string } | { ok: false; response: NextResponse 
  * Gratis -> 402 (butuh paket). Kuota bulan ini habis -> 429. Mode demo lokal (bukan production) dilewati.
  * Jika pengecekan gagal, kita TOLAK (aman untuk biaya), bukan lolos.
  */
-export async function guardAi(feature: AiFeatureKey, userId: string): Promise<Guard> {
+export async function guardAi(feature: AiFeatureKey, userId: string, logFeature?: string, tanpaCicip = false): Promise<Guard> {
   if (userId === "demo-user" && process.env.NODE_ENV !== "production") return { ok: true, userId };
   try {
     const supabase = await createClient();
@@ -18,9 +18,16 @@ export async function guardAi(feature: AiFeatureKey, userId: string): Promise<Gu
     if (error) throw error;
     const ent = parseEntitlement(data);
     if (!canUse(ent.plan, feature)) {
+      // Basic boleh mencicipi fitur Ruby sesuai jatah (dihitung dari ai_usage_logs di database).
+      if (ent.plan === "free" && !tanpaCicip) {
+        const key = logFeature ?? AI_LOG_FEATURE[feature];
+        const c = ent.cicip[key];
+        if (c && c.remaining > 0) return { ok: true, userId };
+        if (c) return { ok: false, response: NextResponse.json({ success: false, code: "JATAH_HABIS", error: cicipHabisMessage(key, c.per) }, { status: 402 }) };
+      }
       return { ok: false, response: NextResponse.json({ success: false, code: "BUTUH_PAKET", error: upgradeMessage(feature) }, { status: 402 }) };
     }
-    if (ent.aiRemaining <= 0) {
+    if (ent.plan !== "free" && ent.aiRemaining <= 0) {
       return { ok: false, response: NextResponse.json({ success: false, code: "KUOTA_HABIS", error: QUOTA_MESSAGE }, { status: 429 }) };
     }
     return { ok: true, userId };

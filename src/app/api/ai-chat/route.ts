@@ -97,9 +97,6 @@ ${COMMON_RULES}`;
 export async function POST(request: NextRequest) {
   const auth = await verifyServerAuth(request);
   if (!auth.authenticated && auth.response) return auth.response;
-  const guard = await guardAi("ai_chat", auth.userId);
-  if (!guard.ok) return guard.response;
-
   let parsed;
   try {
     parsed = aiChatSchema.safeParse(await request.json());
@@ -110,6 +107,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Pesan terlalu panjang atau tidak valid." }, { status: 400 });
   }
   const { mode, messages } = parsed.data;
+  // Jenis jatah cicip Basic mengikuti mode: tabungan, rencana, atau tanya biasa.
+  const cicipKey = mode === "savings" ? "tabungan" : mode === "plan" ? "rencana" : "konsultasi";
+  const guard = await guardAi("ai_chat", auth.userId, cicipKey);
+  if (!guard.ok) return guard.response;
   if (messages[messages.length - 1].role !== "user") {
     return NextResponse.json({ success: false, error: "Pesan terakhir harus dari pengguna." }, { status: 400 });
   }
@@ -185,7 +186,7 @@ export async function POST(request: NextRequest) {
     const costIdr = estimateCostIdr(usage);
     // Catat token dan biaya (kegagalan mencatat tidak boleh menggagalkan jawaban)
     const { error: logErr } = await supabase.from("ai_usage_logs").insert({
-      feature: mode === "savings" ? "tabungan" : "konsultasi",
+      feature: cicipKey,
       model: usage.model,
       input_tokens: usage.inputTokens,
       output_tokens: usage.outputTokens,

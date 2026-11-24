@@ -134,10 +134,10 @@ describe("Cicilan & Utang", () => {
     expect(screen.getByText("Paylater")).toBeTruthy();
     expect(screen.getAllByText(/Setara bunga sekitar/).length).toBe(2);
   });
-  it("Gratis: Cicilan dan Utang terkunci, paket Pro disebut", async () => {
+  it("Basic: Simulator cicilan terkunci (Pro), tab Utang terbuka", async () => {
     entRaw = { plan: "free", source: "free", ai_limit: 0, ai_used: 0 }; const u = userEvent.setup(); render(<CicilanUtangPage />);
     expect(await screen.findByText(/paket Pro/)).toBeTruthy();
-    await u.click(screen.getByRole("tab", { name: "Utang" })); expect(screen.getByText(/paket Pro/)).toBeTruthy();
+    await u.click(screen.getByRole("tab", { name: "Utang" })); expect(screen.queryByText(/Tersedia di paket Pro/)).toBeNull();
   });
   it("Utang kosong: ada pesan dan form", async () => {
     const u = userEvent.setup(); render(<CicilanUtangPage />);

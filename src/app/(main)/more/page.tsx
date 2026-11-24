@@ -5,10 +5,14 @@ import * as React from "react";
 import { ChevronRight, ShieldAlert } from "lucide-react";
 import { getMyAdminRole } from "@/lib/data/admin";
 import { MORE_GROUPS } from "@/lib/nav-items";
+import { ProBadge } from "@/components/plan/pro-badge";
+import { useEntitlement } from "@/hooks/use-entitlement";
 import { SettingsView } from "@/components/settings/settings-view";
 
 function FeatureGroups() {
   const [isAdmin, setIsAdmin] = React.useState(false);
+  const { ent, loading } = useEntitlement();
+  const basic = !loading && ent.plan === "free";
   React.useEffect(() => { getMyAdminRole().then((r) => setIsAdmin(r !== null)); }, []);
   return (
     <>
@@ -32,7 +36,7 @@ function FeatureGroups() {
                       <Icon className="h-[18px] w-[18px]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-foreground">{item.label}</p>
+                      <p className="flex items-center gap-1.5 text-xs font-bold text-foreground">{item.label}{item.pro && <ProBadge locked={basic} />}</p>
                       <p className="truncate text-[10px] text-muted-foreground">{item.description}</p>
                     </div>
                   </div>

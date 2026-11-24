@@ -183,7 +183,7 @@ export default function SplitBillPage() {
       const compressed = await compressImage(file, 1600, 0.8);
       const res = await fetch("/api/scan-receipt", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-scan-source": "split-bill" },
         body: JSON.stringify({ imageBase64: compressed.base64, mimeType: "image/jpeg" }),
       });
       if (!res.ok) {

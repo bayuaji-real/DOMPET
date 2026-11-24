@@ -7,11 +7,11 @@ import Link from "next/link";
 import { TopHeader } from "@/components/layout/top-header";
 import { useEntitlement } from "@/hooks/use-entitlement";
 import { startTrial } from "@/lib/data/entitlement";
-import { PLAN_LABEL, TRIAL_DAYS, trialDaysLeft, type Plan } from "@/lib/plans";
+import { CICIP_LABEL, PLAN_LABEL, TRIAL_DAYS, trialDaysLeft, type Plan } from "@/lib/plans";
 
 const TIERS: { plan: Plan; harga: string; tagline: string; fitur: string[] }[] = [
-  { plan: "free", harga: "Gratis", tagline: "Catat manual, tanpa Ruby", fitur: ["Catat pemasukan & pengeluaran", "Dompet, tabungan, split bill", "Kalkulator investasi & zakat", "Laporan mingguan"] },
-  { plan: "pro", harga: "Mulai Rp15.000", tagline: "Semua fitur, kuota Ruby besar", fitur: ["Semua fitur Premium", "Kuota Ruby jauh lebih besar", "Proyeksi arus kas 3 bulan", "Rencana lunasi utang", "Info pasar & peringkat return"] },
+  { plan: "free", harga: "Gratis", tagline: "Catat manual, cicip Ruby sedikit-sedikit", fitur: ["Catat pemasukan & pengeluaran", "Dompet, tabungan (3 target), split bill", "Rencana lunasi utang, impor CSV", "Kalkulator investasi & zakat, laporan mingguan", "Jatah cicip Ruby: foto struk dan catat suara 2x sehari"] },
+  { plan: "pro", harga: "Mulai Rp15.000", tagline: "Semua fitur, kuota Ruby besar", fitur: ["Semua fitur Basic tanpa batas jumlah", "Tanya Ruby, foto struk, catat suara tanpa jatah", "Insight, rencana keuangan, dan impor dengan Ruby", "Analisis, skor kesehatan, proyeksi arus kas 3 bulan", "Simulator cicilan, portofolio, info pasar, Dompet Bersama"] },
 ];
 
 export default function PaketPage() {
@@ -40,6 +40,21 @@ export default function PaketPage() {
           <p className="relative text-lg font-extrabold" data-testid="paket-aktif">{loading ? "..." : PLAN_LABEL[ent.plan]}{ent.source === "trial" && daysLeft > 0 ? ` (uji coba, sisa ${daysLeft} hari)` : ""}</p>
           {ent.plan !== "free" && <p className="relative mt-1 text-xs font-medium text-white/95">Kuota Ruby bulan ini: {ent.aiRemaining} dari {ent.aiLimit} tersisa.</p>}
         </div>
+
+        {ent.plan === "free" && Object.keys(ent.cicip).length > 0 && (
+          <section className="rounded-3xl border border-border/80 bg-card p-4 shadow-xs" aria-label="Jatah cicip Ruby">
+            <h2 className="text-sm font-extrabold">Jatah cicip Ruby</h2>
+            <p className="text-[11px] text-muted-foreground">Coba fitur Ruby gratis, ada jatahnya. Pro tanpa jatah harian.</p>
+            <ul className="mt-2 space-y-1.5 text-xs">
+              {Object.entries(ent.cicip).map(([k, c]) => (
+                <li key={k} className="flex items-center justify-between gap-2">
+                  <span>{CICIP_LABEL[k] ?? k}</span>
+                  <span className={`font-bold tabular-nums ${c.remaining > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>{c.remaining > 0 ? `Sisa ${c.remaining}x${c.per === "hari" ? " hari ini" : ""}` : c.per === "hari" ? "Habis hari ini" : "Sudah terpakai"}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {msg && <Notice role="status" tone={msg.ok ? "emerald" : "rose"} emoji={msg.ok ? "🎉" : "⚠️"}>{msg.text}</Notice>}
 

@@ -92,7 +92,9 @@ export async function POST(req: NextRequest) {
       return auth.response;
     }
 
-    const guard = await guardAi("ai_struk", auth.userId);
+    // Foto struk di Split Bill khusus Pro (tanpa jatah cicip). Scan di Catat Transaksi boleh dicicip Basic.
+    const dariSplitBill = req.headers.get("x-scan-source") === "split-bill";
+    const guard = await guardAi("ai_struk", auth.userId, undefined, dariSplitBill);
     if (!guard.ok) return guard.response;
 
     const body = await req.json();

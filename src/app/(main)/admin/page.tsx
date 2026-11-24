@@ -104,7 +104,7 @@ function ApiTab({ isSuper }: { isSuper: boolean }) {
 }
 
 const PLAN_PILL: Record<string, { label: string; tone: PillTone; icon: string }> = {
-  free: { label: "Gratis", tone: "slate", icon: "🌱" },
+  free: { label: "Basic", tone: "slate", icon: "🌱" },
   premium: { label: "Premium", tone: "violet", icon: "⭐" },
   pro: { label: "Pro", tone: "neon", icon: "👑" },
 };
@@ -134,7 +134,7 @@ function UsersTab({ isSuper }: { isSuper: boolean }) {
       {dialog}
       <div className="grid grid-cols-3 gap-1.5">
         <Pill tone="sky" className="justify-center" icon="👥">{data.length} total</Pill>
-        <Pill tone="slate" className="justify-center" icon="🌱">{byPlan("free")} Gratis</Pill>
+        <Pill tone="slate" className="justify-center" icon="🌱">{byPlan("free")} Basic</Pill>
         <Pill tone="neon" className="justify-center" icon="👑">{byPlan("pro")} Pro</Pill>
       </div>
       <Input aria-label="Cari email" placeholder="🔎 Cari email" className="h-10 rounded-xl" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -179,7 +179,7 @@ function UsersTab({ isSuper }: { isSuper: boolean }) {
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold">Ubah paket</p>
                 <div role="group" aria-label={`Paket ${user.email}`} className="flex flex-wrap gap-1.5">
-                  {([["Pro tanpa batas", "pro", null], ["Pro 30 hari", "pro", 30], ["Kembalikan ke Gratis", "free", null]] as const).map(([label, plan, days]) => (
+                  {([["Pro tanpa batas", "pro", null], ["Pro 30 hari", "pro", 30], ["Kembalikan ke Basic", "free", null]] as const).map(([label, plan, days]) => (
                     <button key={label} type="button" className={chipCls(false)} onClick={() => void changePlan(user, plan, days)}>{label}</button>))}
                 </div>
               </div>

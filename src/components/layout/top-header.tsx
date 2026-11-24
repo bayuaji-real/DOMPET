@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { HelpCenterButton } from "./header-actions";
 import { ThemeSlider } from "@/components/theme-slider";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
+import { useEntitlement } from "@/hooks/use-entitlement";
 
 interface TopHeaderProps {
   title?: string;
@@ -33,6 +34,8 @@ function TopHeaderInner({ title }: TopHeaderProps) {
     avatarBg: "#0d9488",
   });
   const [greeting, setGreeting] = React.useState<string>("Halo");
+  const { ent, loading: entLoading } = useEntitlement();
+  const isPro = !entLoading && ent.plan === "pro";
 
   React.useEffect(() => {
     const now = new Date();
@@ -106,6 +109,7 @@ function TopHeaderInner({ title }: TopHeaderProps) {
             </p>
             <h1 className="truncate text-sm font-extrabold leading-tight tracking-tight text-foreground">
               {displayName}
+              {isPro && <span role="img" aria-label="Pengguna Pro" className="ml-1">👑</span>}
             </h1>
           </div>
         </Link>

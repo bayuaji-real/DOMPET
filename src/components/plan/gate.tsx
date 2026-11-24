@@ -16,7 +16,7 @@ export function Gate({ feature, children }: { feature: FeatureKey; children: Rea
       <Lock className="size-6 text-muted-foreground" aria-hidden />
       <div>
         <p className="font-semibold">{FEATURE_LABEL[feature]}</p>
-        <p className="mt-1 text-sm text-muted-foreground">Tersedia di paket {PLAN_LABEL[FEATURE_MIN_PLAN[feature]]} ke atas. Kamu bisa coba gratis 7 hari.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Tersedia di paket {PLAN_LABEL[FEATURE_MIN_PLAN[feature]]}. Kamu bisa coba Pro gratis 7 hari.</p>
       </div>
       <Button render={<Link href="/paket" />}>Lihat paket</Button>
     </div>

@@ -7,7 +7,7 @@
 export type Plan = "free" | "premium" | "pro";
 
 export const PLAN_RANK: Record<Plan, number> = { free: 0, premium: 1, pro: 2 };
-export const PLAN_LABEL: Record<Plan, string> = { free: "Gratis", premium: "Premium", pro: "Pro" };
+export const PLAN_LABEL: Record<Plan, string> = { free: "Basic", premium: "Pro", pro: "Pro" };
 export const TRIAL_DAYS = 7;
 
 export type FeatureKey =
@@ -24,9 +24,9 @@ export type FeatureKey =
 export const FEATURE_MIN_PLAN: Record<FeatureKey, Plan> = {
   ai_chat: "pro", ai_struk: "pro", ai_suara: "pro", ai_insight: "pro", ai_rencana: "pro", ai_impor: "pro",
   skor_kesehatan: "pro", peringatan_dini: "pro", simulator_cicilan: "pro", mode_thr: "pro",
-  proyeksi_arus_kas: "pro", lunasi_utang: "pro",
+  proyeksi_arus_kas: "pro", lunasi_utang: "free",
   kalkulator_investasi: "free", portofolio: "pro", info_pasar: "pro",
-  laporan_mingguan: "free", kalkulator_zakat: "free", impor_csv: "pro", impor_ai: "pro", dompet_bersama: "pro", pengingat: "free",
+  laporan_mingguan: "free", kalkulator_zakat: "free", impor_csv: "free", impor_ai: "pro", dompet_bersama: "pro", pengingat: "free",
 };
 
 export const FEATURE_LABEL: Record<FeatureKey, string> = {
@@ -45,6 +45,11 @@ export const AI_LOG_FEATURE: Record<AiFeatureKey, "tabungan" | "konsultasi" | "s
   ai_chat: "konsultasi", ai_struk: "struk", ai_suara: "suara", ai_insight: "insight", ai_rencana: "rencana", ai_impor: "impor",
 };
 
+/** Jatah cicip fitur Ruby untuk Basic. Kunci = jenis di ai_usage_logs (struk, suara, konsultasi, tabungan, insight, rencana, impor). */
+export type CicipItem = { limit: number; used: number; remaining: number; per: "hari" | "akun" };
+export type Cicip = Record<string, CicipItem>;
+export const CICIP_LABEL: Record<string, string> = { struk: "Foto struk", suara: "Catat suara", konsultasi: "Tanya Ruby", tabungan: "Buat Tabungan dengan Ruby", insight: "Insight dari Ruby", rencana: "Rencana Keuangan Ruby", impor: "Impor dengan Ruby" };
+
 export interface Entitlement {
   plan: Plan;
   source: "paid" | "trial" | "free";
@@ -54,6 +59,7 @@ export interface Entitlement {
   aiUsed: number;
   aiLimit: number;
   aiRemaining: number;
+  cicip: Cicip;
 }
 
 export function canUse(plan: Plan, feature: FeatureKey): boolean {
@@ -71,6 +77,13 @@ export function parseEntitlement(raw: unknown): Entitlement {
   const source = r.source === "paid" || r.source === "trial" ? r.source : "free";
   const ta = (r.trial_available && typeof r.trial_available === "object" ? r.trial_available : {}) as Record<string, unknown>;
   const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v >= 0 ? Math.floor(v) : 0);
+  const cicip: Cicip = {};
+  if (r.cicip && typeof r.cicip === "object") {
+    for (const [k, v] of Object.entries(r.cicip as Record<string, unknown>)) {
+      const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
+      cicip[k] = { limit: num(o.limit), used: num(o.used), remaining: num(o.remaining), per: o.per === "hari" ? "hari" : "akun" };
+    }
+  }
   const aiLimit = num(r.ai_limit);
   const aiUsed = num(r.ai_used);
   return {
@@ -82,6 +95,7 @@ export function parseEntitlement(raw: unknown): Entitlement {
     aiUsed,
     aiLimit,
     aiRemaining: Math.max(aiLimit - aiUsed, 0),
+    cicip,
   };
 }
 
@@ -96,10 +110,18 @@ export function trialDaysLeft(trialEndsAt: string | null, now: Date = new Date()
 /** Pesan ramah ketika fitur butuh paket lebih tinggi. */
 export function upgradeMessage(feature: FeatureKey): string {
   const need = PLAN_LABEL[FEATURE_MIN_PLAN[feature]];
-  return `${FEATURE_LABEL[feature]} ada di paket ${need} ke atas. Coba gratis 7 hari di halaman Paket.`;
+  return `${FEATURE_LABEL[feature]} ada di paket ${need} ke atas. Coba Pro gratis 7 hari di halaman Paket.`;
 }
 
 export const QUOTA_MESSAGE = "Kuota Ruby bulan ini sudah habis. Kuota kembali penuh di awal bulan, atau naik ke paket Pro untuk kuota lebih besar.";
+
+/** Pesan ketika jatah cicip Basic habis. */
+export function cicipHabisMessage(key: string, per: "hari" | "akun"): string {
+  const nama = CICIP_LABEL[key] ?? "Fitur Ruby";
+  return per === "hari"
+    ? `Jatah cicip ${nama} hari ini sudah habis. Coba lagi besok, atau naik ke Pro untuk tanpa batas.`
+    : `Jatah cicip ${nama} sudah terpakai. Naik ke Pro untuk memakainya sepuasnya.`;
+}
 
 /** Teks pemetaan galat fungsi database ke bahasa awam. */
 export function trialErrorMessage(raw: string | undefined | null): string {
