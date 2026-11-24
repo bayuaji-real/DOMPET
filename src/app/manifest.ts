@@ -17,6 +17,8 @@ export default function manifest(): MetadataRoute.Manifest {
       // lega (splash-logo), supaya tampil sebagai logo tanpa kotak. Jangan menambah ikon maskable di ukuran 192/384.
       { src: "/icons/splash-logo-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icons/splash-logo-384.png", sizes: "384x384", type: "image/png", purpose: "any" },
+      // Ikon "any" 512 sama besar dengan ikon maskable 512 supaya Android tidak memilih kotak teal untuk layar pembuka.
+      { src: "/icons/splash-logo-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
     ],
   };
 }
