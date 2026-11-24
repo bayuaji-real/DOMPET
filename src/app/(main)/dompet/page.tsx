@@ -279,7 +279,7 @@ export default function DompetPage() {
       />
 
       {toastMessage && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 rounded-2xl bg-teal-600 text-white px-4 py-2 text-xs font-bold shadow-xl animate-in fade-in slide-in-from-top-2">
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-4 py-2 text-xs font-bold shadow-xl animate-in fade-in slide-in-from-top-2">
           {toastMessage}
         </div>
       )}
@@ -318,7 +318,7 @@ export default function DompetPage() {
                 setAddStep(1);
                 setShowAddModal(true);
               }}
-              className="flex-1 py-2.5 px-3 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-md shadow-teal-600/20 flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+              className="flex-1 py-2.5 px-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white text-xs font-bold shadow-md shadow-teal-600/20 flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               Tambah Dompet
@@ -394,7 +394,7 @@ export default function DompetPage() {
                   setAddStep(1);
                   setShowAddModal(true);
                 }}
-                className="rounded-xl bg-teal-600 text-white hover:bg-teal-700 text-xs font-bold"
+                className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white hover:from-emerald-700 hover:to-teal-600 text-xs font-bold"
               >
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
                 Tambah Sekarang
@@ -534,7 +534,7 @@ export default function DompetPage() {
                       className={cn(
                         "px-2.5 py-1 rounded-lg font-semibold whitespace-nowrap transition-all",
                         presetTab === t.id
-                          ? "bg-teal-600 text-white"
+                          ? "bg-gradient-to-r from-emerald-600 to-teal-500 text-white"
                           : "bg-muted text-muted-foreground hover:text-foreground"
                       )}
                     >
@@ -641,7 +641,7 @@ export default function DompetPage() {
                   <Button
                     type="submit"
                     disabled={isSubmitting || !walletName.trim()}
-                    className="flex-1 h-10 text-xs rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold"
+                    className="flex-1 h-10 text-xs rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold"
                   >
                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan Dompet"}
                   </Button>
@@ -732,7 +732,7 @@ export default function DompetPage() {
                 <Button
                   type="submit"
                   disabled={isTransferring}
-                  className="flex-1 h-10 text-xs rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold"
+                  className="flex-1 h-10 text-xs rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold"
                 >
                   {isTransferring ? <Loader2 className="h-4 w-4 animate-spin" /> : "Kirim Sekarang"}
                 </Button>

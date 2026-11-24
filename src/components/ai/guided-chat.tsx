@@ -83,7 +83,7 @@ export function GuidedChat({ flow, prefill }: { flow: Flow; prefill?: () => Prom
       <p className="bg-background px-3 pt-1.5 text-center text-[10px] leading-tight text-muted-foreground">{flow.footer}</p>
       <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex shrink-0 items-center gap-2 border-t border-border/60 bg-background px-3 py-2.5">
         <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={100} aria-label={`Pesan ${flow.title}`} placeholder={step?.placeholder ?? "Ketuk Hitung lagi"} disabled={done} className="h-10 flex-1 rounded-full border border-border bg-muted/40 px-4 text-xs outline-none focus:ring-2 focus:ring-teal-500/40 disabled:opacity-50" />
-        <button type="submit" disabled={done || !input.trim()} aria-label="Kirim" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-teal-600 text-white shadow-sm disabled:opacity-40"><Send className="h-4 w-4" /></button>
+        <button type="submit" disabled={done || !input.trim()} aria-label="Kirim" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-sm disabled:opacity-40"><Send className="h-4 w-4" /></button>
       </form>
     </div>
   );

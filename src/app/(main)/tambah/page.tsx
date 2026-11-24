@@ -192,7 +192,7 @@ export default function TambahTransaksiPage() {
             }}
             className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-all cursor-pointer ${
               tipe === "PEMASUKAN"
-                ? "bg-teal-600 text-white shadow-sm"
+                ? "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -387,7 +387,7 @@ export default function TambahTransaksiPage() {
                   tipe === "PENGELUARAN"
                     ? "bg-rose-600 hover:bg-rose-700 shadow-rose-600/20"
                     : tipe === "PEMASUKAN"
-                      ? "bg-teal-600 hover:bg-teal-700 shadow-teal-600/20"
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 shadow-teal-600/20"
                       : "bg-sky-600 hover:bg-sky-700 shadow-sky-600/20"
                 }`}
               >

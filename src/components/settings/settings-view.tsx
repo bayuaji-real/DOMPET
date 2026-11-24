@@ -554,7 +554,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
   return (
     <div className="flex flex-col flex-1 pb-4 pt-safe">
       {toastMsg && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 rounded-2xl bg-teal-600 text-white px-4 py-2 text-xs font-bold shadow-xl animate-in fade-in slide-in-from-top-2">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-4 py-2 text-xs font-bold shadow-xl animate-in fade-in slide-in-from-top-2">
           {toastMsg}
         </div>
       )}
@@ -633,7 +633,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
                     setAvatarUploadPreview(null);
                     setActiveSection("profile");
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
                 >
                   Edit Profil
                 </button>
@@ -765,7 +765,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
                     className={cn(
                       "px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs",
                       isFullscreen
-                        ? "bg-teal-600 text-white"
+                        ? "bg-gradient-to-r from-emerald-600 to-teal-500 text-white"
                         : "bg-muted text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -938,7 +938,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-teal-600 text-white flex items-center justify-center shadow-md hover:bg-teal-700 transition-transform active:scale-90 cursor-pointer"
+                  className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md hover:from-emerald-700 hover:to-teal-600 transition-transform active:scale-90 cursor-pointer"
                   title="Pilih foto dari perangkat"
                 >
                   <Camera className="h-3.5 w-3.5" />
@@ -1074,7 +1074,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
               <Button
                 type="submit"
                 disabled={isSavingProfile || !editName.trim()}
-                className="flex-1 h-10 text-xs rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold"
+                className="flex-1 h-10 text-xs rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold"
               >
                 {isSavingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan Profil"}
               </Button>
@@ -1166,7 +1166,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
               <Button
                 type="submit"
                 disabled={isUpdatingPassword || !newPassword || !confirmPassword}
-                className="flex-1 h-10 text-xs rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold"
+                className="flex-1 h-10 text-xs rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold"
               >
                 {isUpdatingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan Kata Sandi"}
               </Button>
@@ -1281,7 +1281,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
               <Button
                 type="submit"
                 disabled={isSavingGeneral}
-                className="flex-1 h-10 text-xs rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold"
+                className="flex-1 h-10 text-xs rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold"
               >
                 {isSavingGeneral ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan Jadwal"}
               </Button>
@@ -1331,7 +1331,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
                   className={cn(
                     "py-2 rounded-xl text-xs font-bold transition-all cursor-pointer",
                     newCatType === "income"
-                      ? "bg-teal-600 text-white shadow-xs"
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-xs"
                       : "bg-muted text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -1411,7 +1411,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
               <Button
                 type="submit"
                 disabled={isAddingCat || !newCatName.trim()}
-                className="w-full h-10 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs cursor-pointer"
+                className="w-full h-10 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold text-xs cursor-pointer"
               >
                 {isAddingCat ? <Loader2 className="h-4 w-4 animate-spin" /> : "Tambah Kategori"}
               </Button>
@@ -1542,7 +1542,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
               <Button
                 type="submit"
                 disabled={isAddingRec || !newRecNote.trim()}
-                className="w-full h-10 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs"
+                className="w-full h-10 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold text-xs"
               >
                 {isAddingRec ? <Loader2 className="h-4 w-4 animate-spin" /> : "Daftarkan Tagihan"}
               </Button>
@@ -1612,7 +1612,7 @@ export function SettingsView({ top }: { top?: React.ReactNode }) {
                   type="button"
                   onClick={handleExportCSV}
                   disabled={isExportingCSV}
-                  className="w-full h-10 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs"
+                  className="w-full h-10 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold text-xs"
                 >
                   {isExportingCSV ? <Loader2 className="h-4 w-4 animate-spin" /> : "Unduh CSV Transaksi"}
                 </Button>

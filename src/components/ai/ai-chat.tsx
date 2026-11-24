@@ -284,7 +284,7 @@ export function AiChat({ mode, intro, placeholder, suggestions, showMenu, render
           type="submit"
           disabled={loading || !input.trim()}
           aria-label="Kirim"
-          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-teal-600 text-white shadow-sm disabled:opacity-40"
+          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-sm disabled:opacity-40"
         >
           <Send className="h-4 w-4" />
         </button>

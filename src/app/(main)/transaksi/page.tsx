@@ -433,7 +433,7 @@ export default function TransaksiPage() {
               aria-label={`Filter transaksi: ${activeFilterLabel}`}
               className={`flex h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition-colors cursor-pointer ${
                 filterType !== "all"
-                  ? "border-teal-500/40 bg-teal-500/15 text-teal-600 dark:text-teal-400"
+                  ? "border-emerald-400 bg-emerald-400/20 text-emerald-700 shadow-[0_0_12px_rgba(52,211,153,0.4)] dark:text-emerald-300"
                   : "border-border/60 bg-card text-foreground hover:bg-muted/50"
               }`}
             >
@@ -524,7 +524,7 @@ export default function TransaksiPage() {
               <button
                 type="button"
                 onClick={() => { setDateFrom(""); setDateTo(""); setWalletFilter(""); setCategoryFilter(""); setFilterType("all"); setSearchQuery(""); }}
-                className="col-span-2 h-9 cursor-pointer rounded-xl border border-border/60 text-xs font-bold text-foreground hover:bg-muted/50"
+                className="col-span-2 h-9 cursor-pointer rounded-2xl border border-emerald-400/60 bg-emerald-400/10 text-xs font-bold text-emerald-700 transition-all hover:bg-emerald-400/20 active:scale-95 dark:text-emerald-300"
               >
                 Reset semua filter
               </button>
@@ -577,7 +577,7 @@ export default function TransaksiPage() {
               </div>
               <Link
                 href="/tambah"
-                className="inline-flex items-center justify-center rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold px-4 py-2.5 shadow-sm transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white text-xs font-semibold px-4 py-2.5 shadow-sm transition-colors cursor-pointer"
               >
                 Catat Transaksi Sekarang
               </Link>
@@ -670,7 +670,7 @@ export default function TransaksiPage() {
                       triggerHapticFeedback();
                       setVisibleCount((prev) => prev + 8);
                     }}
-                    className="w-full py-2.5 rounded-xl border border-border/80 bg-card hover:bg-muted/60 text-xs font-bold text-foreground shadow-xs transition-colors cursor-pointer"
+                    className="w-full py-2.5 rounded-2xl border border-emerald-400/60 bg-emerald-400/10 hover:bg-emerald-400/20 text-xs font-bold text-emerald-700 dark:text-emerald-300 shadow-xs transition-all active:scale-95 cursor-pointer"
                   >
                     Muat Lebih Banyak ({filteredTransactions.length - visibleCount} tersisa)
                   </button>

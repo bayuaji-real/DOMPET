@@ -336,7 +336,7 @@ export default function TabunganPage() {
               size="sm"
               disabled={saving}
               onClick={() => createFromProposal(pr, { deadline: f.earliestRealisticDate, planned: Math.floor(f.freeMonthly / 10000) * 10000 })}
-              className="h-8 cursor-pointer rounded-xl bg-teal-600 text-xs font-bold text-white hover:bg-teal-500"
+              className="h-8 cursor-pointer rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 text-xs font-bold text-white hover:from-emerald-700 hover:to-teal-600"
             >
               Buat dengan tanggal realistis
             </Button>
@@ -348,7 +348,7 @@ export default function TabunganPage() {
               variant={blocked ? "outline" : "default"}
               disabled={saving}
               onClick={() => createFromProposal(pr)}
-              className={`h-8 flex-1 cursor-pointer rounded-xl text-xs font-bold ${blocked ? "" : "bg-teal-600 text-white hover:bg-teal-500"}`}
+              className={`h-8 flex-1 cursor-pointer rounded-xl text-xs font-bold ${blocked ? "" : "bg-gradient-to-r from-emerald-600 to-teal-500 text-white hover:from-emerald-700 hover:to-teal-600"}`}
             >
               {saving ? "Menyimpan..." : blocked ? "Tetap buat sesuai rencanaku" : "Buat Tabungan"}
             </Button>
@@ -824,7 +824,7 @@ export default function TabunganPage() {
                       <Button
                         type="submit"
                         disabled={saving}
-                        className="flex-1 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="flex-1 h-10 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         {saving ? (
                           <>
@@ -1022,7 +1022,7 @@ export default function TabunganPage() {
 
                     <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-teal-600 dark:bg-teal-500 transition-all duration-500"
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 transition-all duration-500"
                         style={{
                           width: `${Math.min(100, selectedProjection.percent)}%`,
                         }}
@@ -1163,7 +1163,7 @@ export default function TabunganPage() {
                         setActionNote("");
                         setActiveDetailView("deposit");
                       }}
-                      className="h-11 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs gap-1.5 shadow-md shadow-teal-600/20 cursor-pointer"
+                      className="h-11 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold text-xs gap-1.5 shadow-md shadow-teal-600/20 cursor-pointer"
                     >
                       <ArrowDownLeft className="h-4 w-4" /> Setor Uang
                     </Button>
@@ -1439,7 +1439,7 @@ export default function TabunganPage() {
                 <Button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="flex-1 h-10 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   {saving ? (
                     <>

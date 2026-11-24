@@ -169,7 +169,7 @@ function WalletDetailSheetInner({
               </>
             ) : (
               <>
-                <Button type="button" onClick={() => setMode("edit")} className="h-11 w-full rounded-xl bg-teal-600 text-sm font-bold text-white hover:bg-teal-700">
+                <Button type="button" onClick={() => setMode("edit")} className="h-11 w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 text-sm font-bold text-white hover:from-emerald-700 hover:to-teal-600">
                   <Pencil className="mr-2 h-4 w-4" /> Ubah nama dan saldo
                 </Button>
                 {onTransfer && (
@@ -217,7 +217,7 @@ function WalletDetailSheetInner({
               <Button type="button" variant="outline" onClick={() => { setMode("view"); setError(null); }} className="h-11 flex-1 rounded-xl text-sm font-bold">
                 Batal
               </Button>
-              <Button type="submit" disabled={busy} className="h-11 flex-1 rounded-xl bg-teal-600 text-sm font-bold text-white hover:bg-teal-700">
+              <Button type="submit" disabled={busy} className="h-11 flex-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 text-sm font-bold text-white hover:from-emerald-700 hover:to-teal-600">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan"}
               </Button>
             </div>

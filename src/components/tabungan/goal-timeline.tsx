@@ -124,8 +124,8 @@ export function GoalTimeline({ goals, result, todayStr, colorOf }: Props) {
             type="button"
             aria-pressed={gran === g.id}
             onClick={() => setGran(g.id)}
-            className={`cursor-pointer rounded-lg py-1.5 text-xs font-bold transition-colors ${
-              gran === g.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+            className={`cursor-pointer rounded-xl py-1.5 text-xs font-bold transition-all active:scale-95 ${
+              gran === g.id ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/40 ring-1 ring-emerald-300/70" : "text-muted-foreground"
             }`}
           >
             {g.label}
