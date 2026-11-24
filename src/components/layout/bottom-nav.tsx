@@ -22,6 +22,8 @@ import {
   Square,
 } from "lucide-react";
 import { MORE_ACTIVE_PREFIXES } from "@/lib/nav-items";
+import { useEntitlement } from "@/hooks/use-entitlement";
+import { sisaLabel } from "@/lib/plans";
 import { cn, parseRupiahInput, formatRupiah } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { compressImage } from "@/lib/image-compression";
@@ -36,8 +38,28 @@ import { VoiceConfirmationSheet } from "@/components/transaction/voice-confirmat
 import type { ScanReceiptResult } from "@/app/api/scan-receipt/route";
 import type { ParsedVoiceTransaction } from "@/app/api/voice-transaction/route";
 
+/** Angka kecil sisa jatah cicip Ruby di pojok tombol (Basic). 0 = merah. */
+function SisaChip({ n, large = false }: { n: number; large?: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "absolute flex items-center justify-center rounded-full border-2 border-background text-[9px] font-extrabold leading-none text-white",
+        large ? "-right-1 -top-1 h-5 min-w-5 px-1" : "-right-1.5 -top-1.5 h-4 min-w-4 px-1",
+        n > 0 ? "bg-amber-500" : "bg-rose-500"
+      )}
+    >
+      {n}
+    </span>
+  );
+}
+
 export function BottomNav() {
   const pathname = usePathname();
+  const { ent, reload: reloadEnt } = useEntitlement();
+  const sisaStruk = ent.plan === "free" ? sisaLabel(ent.cicip.struk) : null;
+  const sisaSuara = ent.plan === "free" ? sisaLabel(ent.cicip.suara) : null;
+  const sisaTanya = ent.plan === "free" ? sisaLabel(ent.cicip.konsultasi) : null;
   const [inputText, setInputText] = React.useState("");
   const [isRecording, setIsRecording] = React.useState(false);
   const [isProcessing, setIsProcessing] = React.useState(false);
@@ -77,6 +99,11 @@ export function BottomNav() {
   const finishRef = React.useRef<(process: boolean, message?: string) => void>(() => undefined);
   // Popup ketik manual (latar buram)
   const [isManualOpen, setIsManualOpen] = React.useState(false);
+
+  // Sisa jatah cicip diperbarui setelah foto/suara selesai diproses.
+  React.useEffect(() => {
+    if (!isScanning && !isProcessing) void reloadEnt();
+  }, [isScanning, isProcessing, reloadEnt]);
 
   // Data dompet & kategori
   const [wallets, setWallets] = React.useState<{ id: string; name: string; icon?: string | null; color?: string | null }[]>([]);
@@ -528,11 +555,12 @@ export function BottomNav() {
             type="button"
             onClick={() => setIsPhotoSourceOpen(true)}
             disabled={isVoiceRecording || isProcessing}
-            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 transition-all hover:bg-teal-500/20 active:scale-95 disabled:opacity-50 dark:bg-teal-500/15 dark:text-teal-400"
-            title="Foto Struk Belanja"
-            aria-label="Foto Struk Belanja"
+            className="relative flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 transition-all hover:bg-teal-500/20 active:scale-95 disabled:opacity-50 dark:bg-teal-500/15 dark:text-teal-400"
+            title={sisaStruk ? `Foto Struk Belanja. ${sisaStruk.text}` : "Foto Struk Belanja"}
+            aria-label={sisaStruk ? `Foto Struk Belanja. ${sisaStruk.text}` : "Foto Struk Belanja"}
           >
             <Camera className="h-5 w-5" />
+            {sisaStruk && <SisaChip n={sisaStruk.n} />}
           </button>
 
           {/* Menekan bar membuka popup ketik manual */}
@@ -568,13 +596,14 @@ export function BottomNav() {
             onClick={handleMicClick}
             disabled={isProcessing}
             className={cn(
-              "flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl text-white shadow-sm transition-all active:scale-95 disabled:opacity-50",
+              "relative flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl text-white shadow-sm transition-all active:scale-95 disabled:opacity-50",
               isVoiceRecording ? "animate-pulse bg-rose-500 hover:bg-rose-600" : "bg-teal-600 hover:bg-teal-700"
             )}
-            title={isVoiceRecording ? "Selesai dan catat" : "Bicara untuk catat langsung"}
-            aria-label={isVoiceRecording ? "Selesai dan catat" : "Catat dengan suara"}
+            title={isVoiceRecording ? "Selesai dan catat" : sisaSuara ? `Bicara untuk catat langsung. ${sisaSuara.text}` : "Bicara untuk catat langsung"}
+            aria-label={isVoiceRecording ? "Selesai dan catat" : sisaSuara ? `Catat dengan suara. ${sisaSuara.text}` : "Catat dengan suara"}
           >
             {isVoiceRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-5 w-5" />}
+            {sisaSuara && !isVoiceRecording && <SisaChip n={sisaSuara.n} />}
           </button>
         </div>
       </div>
@@ -648,16 +677,22 @@ export function BottomNav() {
                 <Link
                   key={idx}
                   href={item.href || "/chat"}
-                  aria-label="Tanya Ruby"
+                  aria-label={sisaTanya ? `Tanya Ruby. ${sisaTanya.text}` : "Tanya Ruby"}
                   className="flex flex-1 flex-col items-center justify-center gap-0.5 min-w-0 cursor-pointer"
                 >
                   <span
                     className={cn(
-                      "-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-lg shadow-teal-600/40 ring-4 ring-background transition-transform active:scale-95",
+                      "relative -mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-lg shadow-teal-600/40 ring-4 ring-background transition-transform active:scale-95",
                       isActive && "scale-105"
                     )}
                   >
                     <Icon className="h-6 w-6" />
+                    {ent.plan === "pro" && (
+                      <span aria-label="Pro" className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border border-amber-400/60 bg-background text-[11px] leading-none shadow">
+                        <span aria-hidden>👑</span>
+                      </span>
+                    )}
+                    {sisaTanya && <SisaChip n={sisaTanya.n} large />}
                   </span>
                   <span className={cn("text-[9.5px] font-bold leading-tight", isActive ? "text-teal-600 dark:text-teal-400" : "text-muted-foreground")}>
                     {item.label}

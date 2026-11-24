@@ -13,6 +13,7 @@ import { getCategories, type Category } from "@/lib/data/categories";
 import { todayJakarta } from "@/lib/data/sample-mode";
 import { nextDateForDay } from "@/lib/dates";
 import { notify } from "@/lib/notify";
+import { batasBasicMessage } from "@/lib/plans";
 import { formatRupiah } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
 import { PageHero, Cta, FormCard, Field, IconBox, Pill, Notice, EmptyState, Segmented } from "@/components/ui/form-kit";
@@ -36,7 +37,7 @@ export default function BerulangPage() {
   const day = Math.min(Math.max(Number(f.day) || 0, 1), 31);
   const valid = f.note.trim().length > 0 && f.amount > 0 && f.wallet && Number(f.day) >= 1 && Number(f.day) <= 31;
   const catsFor = cats.filter((c) => c.type === f.type);
-  const act = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); await load(); notify(ok); } catch { notify("Belum berhasil. Coba lagi sebentar."); } };
+  const act = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); await load(); notify(ok); } catch (e) { notify(batasBasicMessage(e) ?? "Belum berhasil. Coba lagi sebentar."); } };
   const walletName = (id: string) => wallets.find((w) => w.id === id)?.name ?? "Dompet";
 
   return (

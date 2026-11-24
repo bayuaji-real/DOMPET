@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/konsultan/money-input";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { notify } from "@/lib/notify";
+import { batasBasicMessage } from "@/lib/plans";
 import { formatRupiah, formatTanggal } from "@/lib/utils";
 import { todayJakarta } from "@/lib/data/sample-mode";
 import * as P from "@/lib/data/planner";
@@ -89,7 +90,7 @@ function NewEvent({ onDone }: { onDone: () => void }) {
     if (!f.title.trim()) return;
     setBusy(true);
     try { await P.createEvent({ title: f.title.trim(), event_type: f.type, event_date: f.date || null, total_budget: f.budget, partner_a: f.a.trim() || null, partner_b: f.b.trim() || null }); onDone(); }
-    catch { notify("Belum bisa membuat planner. Coba lagi sebentar."); } finally { setBusy(false); }
+    catch (e) { notify(batasBasicMessage(e) ?? "Belum bisa membuat planner. Coba lagi sebentar."); } finally { setBusy(false); }
   };
   return (
     <div className="space-y-4">

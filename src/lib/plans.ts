@@ -115,12 +115,32 @@ export function upgradeMessage(feature: FeatureKey): string {
 
 export const QUOTA_MESSAGE = "Kuota Ruby bulan ini sudah habis. Kuota kembali penuh di awal bulan, atau naik ke paket Pro untuk kuota lebih besar.";
 
+/** Label sisa jatah cicip, mis. "Sisa 1x hari ini". Null kalau jatah tidak ada. */
+export function sisaLabel(c: { limit: number; used: number; remaining: number; per: "hari" | "akun" } | undefined): { n: number; text: string } | null {
+  if (!c || c.limit <= 0) return null;
+  const n = Math.max(c.remaining, 0);
+  return { n, text: n > 0 ? `Sisa ${n}x ${c.per === "hari" ? "hari ini" : "jatah cicip"}` : c.per === "hari" ? "Jatah hari ini habis" : "Jatah cicip habis" };
+}
+
 /** Pesan ketika jatah cicip Basic habis. */
 export function cicipHabisMessage(key: string, per: "hari" | "akun"): string {
   const nama = CICIP_LABEL[key] ?? "Fitur Ruby";
   return per === "hari"
     ? `Jatah cicip ${nama} hari ini sudah habis. Coba lagi besok, atau naik ke Pro untuk tanpa batas.`
     : `Jatah cicip ${nama} sudah terpakai. Naik ke Pro untuk memakainya sepuasnya.`;
+}
+
+/** Batas jumlah paket Basic (sama dengan trigger database `_batas_basic`). */
+export const BATAS_BASIC = { TABUNGAN: 3, BERULANG: 5, PLANNER: 1 } as const;
+
+/** Pesan ramah kalau database menolak karena batas jumlah Basic. Null kalau galatnya bukan itu. */
+export function batasBasicMessage(err: unknown): string | null {
+  const raw = typeof err === "string" ? err : err && typeof err === "object" && "message" in err ? String((err as { message: unknown }).message) : "";
+  const m = /BATAS_BASIC_(TABUNGAN|BERULANG|PLANNER)/.exec(raw);
+  if (!m) return null;
+  const k = m[1] as keyof typeof BATAS_BASIC;
+  const nama = { TABUNGAN: "target tabungan", BERULANG: "transaksi berulang", PLANNER: "Planner Acara" }[k];
+  return `Paket Basic maksimal ${BATAS_BASIC[k]} ${nama}. Naik ke Pro untuk tanpa batas.`;
 }
 
 /** Teks pemetaan galat fungsi database ke bahasa awam. */

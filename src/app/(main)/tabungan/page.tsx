@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { notify } from "@/lib/notify";
+import { batasBasicMessage } from "@/lib/plans";
 import { TopHeader } from "@/components/layout/top-header";
 import { SavingsTimeline } from "@/components/tabungan/savings-timeline";
 import { formatRupiah, formatTanggalWIB } from "@/lib/utils";
@@ -284,7 +285,7 @@ export default function TabunganPage() {
       return true;
     } catch (err) {
       console.error(err);
-      notify("Gagal menyimpan ke database. Coba lagi.");
+      notify(batasBasicMessage(err) ?? "Gagal menyimpan ke database. Coba lagi.");
       return false;
     } finally {
       setSaving(false);
@@ -441,7 +442,7 @@ export default function TabunganPage() {
       await loadData();
     } catch (err) {
       console.error(err);
-      notify("Gagal menyimpan ke database. Coba lagi.");
+      notify(batasBasicMessage(err) ?? "Gagal menyimpan ke database. Coba lagi.");
     } finally {
       setSaving(false);
     }

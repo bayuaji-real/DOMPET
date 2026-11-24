@@ -54,3 +54,26 @@ describe("plans", () => {
     expect(trialErrorMessage("apa saja")).not.toMatch(/supabase|rpc|sql/i);
   });
 });
+
+describe("batasBasicMessage", () => {
+  it("memetakan galat batas Basic ke kalimat ramah", async () => {
+    const { batasBasicMessage } = await import("./plans");
+    expect(batasBasicMessage({ message: "BATAS_BASIC_TABUNGAN" })).toBe("Paket Basic maksimal 3 target tabungan. Naik ke Pro untuk tanpa batas.");
+    expect(batasBasicMessage(new Error("BATAS_BASIC_BERULANG"))).toContain("5 transaksi berulang");
+    expect(batasBasicMessage("BATAS_BASIC_PLANNER")).toContain("1 Planner Acara");
+  });
+  it("mengembalikan null untuk galat lain", async () => {
+    const { batasBasicMessage } = await import("./plans");
+    expect(batasBasicMessage(new Error("network"))).toBeNull();
+    expect(batasBasicMessage(null)).toBeNull();
+  });
+});
+
+describe("sisaLabel", () => {
+  it("menulis sisa jatah", async () => {
+    const { sisaLabel } = await import("./plans");
+    expect(sisaLabel({ limit: 2, used: 1, remaining: 1, per: "hari" })).toEqual({ n: 1, text: "Sisa 1x hari ini" });
+    expect(sisaLabel({ limit: 5, used: 5, remaining: 0, per: "akun" })).toEqual({ n: 0, text: "Jatah cicip habis" });
+    expect(sisaLabel(undefined)).toBeNull();
+  });
+});
