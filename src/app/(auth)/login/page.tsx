@@ -369,7 +369,7 @@ export default function LoginPage() {
         <div className="mt-5 flex items-center justify-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50 border border-border/40 text-[10px] text-muted-foreground font-medium backdrop-blur-sm">
             <Camera className="h-3 w-3 text-teal-500" />
-            <span>Scan Struk Ruby</span>
+            <span>Scan Struk AI</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50 border border-border/40 text-[10px] text-muted-foreground font-medium backdrop-blur-sm">
             <Mic className="h-3 w-3 text-teal-500" />

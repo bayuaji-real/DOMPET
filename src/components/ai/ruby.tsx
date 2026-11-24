@@ -2,7 +2,6 @@ import * as React from "react";
 
 /** Identitas asisten AI Dompetku. Foto Ruby sementara memakai logo aplikasi. */
 export const ASSISTANT_NAME = "Ruby Personal Finance Assistant";
-export const ASSISTANT_GREETING = "Halo aku Ruby your personal finance assistant";
 export const ASSISTANT_AVATAR = "/icons/icon-192.png";
 
 /** Foto bulat Ruby (logo di atas lingkaran putih). */

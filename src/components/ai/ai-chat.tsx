@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { CheckCheck, ChevronRight, Send } from "lucide-react";
 import type { AIChatResponse, SavingsProposal } from "@/app/api/ai-chat/route";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
-import { ASSISTANT_AVATAR, ASSISTANT_GREETING, ASSISTANT_NAME, RUBY_MENU } from "@/components/ai/ruby";
+import { ASSISTANT_AVATAR, ASSISTANT_NAME, RUBY_MENU } from "@/components/ai/ruby";
 
 export type { SavingsProposal };
 
@@ -176,7 +176,7 @@ function TypingBubble() {
 
 interface AiChatProps {
   mode: "savings" | "advisor" | "plan";
-  /** Pesan pembuka kedua dari Ruby (panduan apa yang harus ditulis). Sapaan "Halo aku Ruby..." sudah otomatis. */
+  /** Pesan pembuka dari Ruby (panduan apa yang harus ditulis). */
   intro: string;
   placeholder?: string;
   suggestions?: string[];
@@ -250,7 +250,6 @@ export function AiChat({ mode, intro, placeholder, suggestions, showMenu, render
 
   // Pesan pembuka dari Ruby (tidak dikirim ke server, hanya tampilan) + percakapan.
   const opening: Msg[] = [
-    { role: "model", text: ASSISTANT_GREETING, time: openedAt || undefined },
     { role: "model", text: intro, time: openedAt || undefined },
   ];
   const all = [...opening, ...messages];

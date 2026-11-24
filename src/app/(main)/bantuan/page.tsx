@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 import { compressImage } from "@/lib/image-compression";
 import { TopHeader } from "@/components/layout/top-header";
 import { Bubble, ReplyBubble, ReplyRow, nowLabel, type Msg } from "@/components/ai/ai-chat";
-import { ASSISTANT_GREETING } from "@/components/ai/ruby";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
 
 type Kind = "bug" | "usul";
@@ -115,8 +114,7 @@ export default function BantuanPage() {
     <div className="fixed inset-x-0 top-0 z-30 mx-auto flex max-w-[430px] flex-col bg-background" style={{ bottom: "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
       <TopHeader title="Hubungi Bantuan" subtitle="Lapor masalah atau usul fitur ke tim kami" />
       <div className="flex-1 overflow-y-auto bg-[#efeae2] px-3 py-3 dark:bg-[#0b141a]">
-        <Bubble msg={{ role: "model", text: ASSISTANT_GREETING, time: openedAt || undefined }} first profile={profile} />
-        <Bubble msg={{ role: "model", text: "Ada yang mau kamu laporkan atau usulkan? Pilih salah satu di bawah ya.", time: openedAt || undefined }} first={false} profile={profile} />
+        <Bubble msg={{ role: "model", text: "Ada yang mau kamu laporkan atau usulkan? Pilih salah satu di bawah ya.", time: openedAt || undefined }} first profile={profile} />
         {step === "kind" && (
           <ReplyBubble>
             <p className="mb-1.5">Mau apa hari ini?</p>
