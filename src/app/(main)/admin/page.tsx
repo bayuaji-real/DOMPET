@@ -14,11 +14,12 @@ import * as A from "@/lib/data/admin";
 import { getSnapshots, type SnapshotRow } from "@/lib/data/invest";
 import { MfaChallenge } from "@/components/security/mfa";
 import { AdminAcuanSection } from "./acuan-section";
+import { PaymentsTab } from "./payments-tab";
 import { apiAlert } from "@/lib/admin-alert";
 import { Select } from "@/components/ui/select";
 
-type Tab = "api" | "pengguna" | "permintaan" | "pasar" | "catatan";
-const TABS: { id: Tab; label: string; icon: string }[] = [{ id: "api", label: "API", icon: "⚡" }, { id: "pengguna", label: "Pengguna", icon: "👥" }, { id: "permintaan", label: "Minta", icon: "📨" }, { id: "pasar", label: "Pasar", icon: "📈" }, { id: "catatan", label: "Catatan", icon: "📝" }];
+type Tab = "api" | "pengguna" | "bayar" | "permintaan" | "pasar" | "catatan";
+const TABS: { id: Tab; label: string; icon: string }[] = [{ id: "api", label: "API", icon: "⚡" }, { id: "pengguna", label: "Pengguna", icon: "👥" }, { id: "bayar", label: "Bayar", icon: "💸" }, { id: "permintaan", label: "Minta", icon: "📨" }, { id: "pasar", label: "Pasar", icon: "📈" }, { id: "catatan", label: "Catatan", icon: "📝" }];
 const FEATURE_LABEL: Record<string, string> = { tabungan: "Tabungan", konsultasi: "Chat Ruby", struk: "Scan struk", suara: "Suara", insight: "Insight", rencana: "Rencana", impor: "Impor" };
 const fmtDate = (s: string | null) => (s ? s.slice(0, 10) : "-");
 
@@ -44,6 +45,7 @@ export default function AdminPage() {
             <Tabs value={tab} onChange={setTab} label="Bagian admin" options={TABS.map((t) => ({ value: t.id, label: t.label, icon: t.icon }))} />
             {tab === "api" && <ApiTab isSuper={role === "superadmin"} />}
             {tab === "pengguna" && <UsersTab isSuper={role === "superadmin"} />}
+            {tab === "bayar" && <PaymentsTab />}
             {tab === "permintaan" && <RequestsTab />}
             {tab === "pasar" && <div className="space-y-4"><AdminAcuanSection /><MarketTab /></div>}
             {tab === "catatan" && <AuditTab />}

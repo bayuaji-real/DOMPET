@@ -3,6 +3,7 @@
 import * as React from "react";
 import { PageHero, Cta, IconBox, Pill, Notice, AURORA, AuroraGlow } from "@/components/ui/form-kit";
 import { Check, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
 import { useEntitlement } from "@/hooks/use-entitlement";
@@ -12,7 +13,7 @@ import { PLAN_LABEL, TRIAL_DAYS, trialDaysLeft, type Plan } from "@/lib/plans";
 const TIERS: { plan: Plan; harga: string; tagline: string; fitur: string[] }[] = [
   { plan: "free", harga: "Gratis", tagline: "Catat manual, tanpa Ruby", fitur: ["Catat pemasukan & pengeluaran", "Dompet, tabungan, split bill", "Kalkulator investasi & zakat", "Laporan mingguan"] },
   { plan: "premium", harga: "Segera diumumkan", tagline: "Ruby dengan kuota terbatas", fitur: ["Semua fitur Gratis", "Tanya Ruby, foto struk, catat suara", "Insight & rencana keuangan Ruby", "Skor kesehatan, peringatan dini, simulator cicilan", "Impor mutasi bank, portofolio investasi"] },
-  { plan: "pro", harga: "Segera diumumkan", tagline: "Semua fitur, kuota Ruby besar", fitur: ["Semua fitur Premium", "Kuota Ruby jauh lebih besar", "Proyeksi arus kas 3 bulan", "Rencana lunasi utang", "Info pasar & peringkat return"] },
+  { plan: "pro", harga: "Mulai Rp15.000", tagline: "Semua fitur, kuota Ruby besar", fitur: ["Semua fitur Premium", "Kuota Ruby jauh lebih besar", "Proyeksi arus kas 3 bulan", "Rencana lunasi utang", "Info pasar & peringkat return"] },
 ];
 
 export default function PaketPage() {
@@ -69,14 +70,17 @@ export default function PaketPage() {
                   <Sparkles className="size-4" aria-hidden /> {busy === t.plan ? "Memulai..." : `Coba gratis ${TRIAL_DAYS} hari`}
                 </Cta>
               )}
-              {!current && t.plan !== "free" && (
-                <Button className="mt-2 h-10 w-full rounded-2xl border-emerald-400/60 text-xs font-bold" variant="outline" disabled={busy !== null} onClick={() => minta(t.plan as "premium" | "pro")}>Minta berlangganan</Button>
+              {t.plan === "pro" && (
+                <Link href="/paket/bayar" className="mt-2 flex h-11 w-full cursor-pointer items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 text-xs font-bold text-white shadow-md shadow-emerald-600/25 transition-all hover:from-emerald-700 hover:to-teal-600 active:scale-[0.98]"><span aria-hidden>👑</span>&nbsp;{current && ent.source === "paid" ? "Perpanjang Pro" : "Beli Pro"}</Link>
+              )}
+              {!current && t.plan === "premium" && (
+                <Button className="mt-2 h-10 w-full rounded-2xl border-emerald-400/60 text-xs font-bold" variant="outline" disabled={busy !== null} onClick={() => minta("premium")}>Minta berlangganan</Button>
               )}
               {!current && t.plan !== "free" && !canTrial && ent.source === "free" && <p className="mt-3 text-xs text-muted-foreground">Uji coba paket ini sudah kamu pakai.</p>}
             </section>
           );
         })}
-        <p className="text-xs text-muted-foreground">Pembayaran langganan belum dibuka: tekan Minta berlangganan dan kami hubungi kamu begitu siap. Setelah uji coba berakhir, akunmu kembali ke paket Gratis dan semua catatanmu tetap aman.</p>
+        <p className="text-xs text-muted-foreground">Pro dibayar lewat QRIS, sekali di muka tanpa perpanjangan otomatis. Setelah uji coba berakhir, akunmu kembali ke paket Gratis dan semua catatanmu tetap aman.</p>
       </div>
     </div>
   );

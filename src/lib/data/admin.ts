@@ -48,6 +48,7 @@ const MSG: Record<string, string> = {
   MFA_WAJIB: "Masukkan kode 6 angka dari aplikasi authenticator dulu.", MFA_BELUM_AKTIF: "Aktifkan MFA di menu Keamanan dan masukkan kodenya dulu, baru wajibkan untuk admin.", KODE_TIDAK_VALID: "Kode hanya boleh huruf kecil, angka, dan garis bawah (2 sampai 40 karakter).",
   BUKAN_ADMIN: "Kamu tidak punya akses untuk tindakan ini.", TIDAK_BISA_UBAH_DIRI_SENDIRI: "Peran akunmu sendiri tidak bisa diubah di sini.",
   SUMBER_WAJIB_HTTPS: "Alamat sumber harus diawali https://", TANGGAL_TIDAK_VALID: "Tanggal tidak valid.", HARI_TIDAK_VALID: "Jumlah hari harus 1 sampai 3650.",
+  PERMINTAAN_TIDAK_ADA: "Permintaan tidak ditemukan.", SUDAH_DIPROSES: "Permintaan ini sudah dikonfirmasi atau ditolak.", KEDALUWARSA_TANPA_BUKTI: "Permintaan sudah kedaluwarsa dan tidak ada bukti. Minta pengguna membuat permintaan baru.",
   ANGGARAN_TIDAK_VALID: "Nilai top-up tidak valid.", AMBANG_TIDAK_VALID: "Ambang peringatan harus 10 sampai 95 persen.",
 };
 export function adminErrorText(e: unknown): string {
