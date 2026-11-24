@@ -1,5 +1,6 @@
 import { setVapidDetails, sendNotification } from "web-push";
 import type { PushMsg } from "./alerts";
+import { isAllowedPushEndpoint } from "./endpoint";
 
 export type Sub = { endpoint: string; p256dh: string; auth: string };
 
@@ -13,6 +14,8 @@ export function configurePush(): boolean {
 
 /** "gone" artinya perangkat sudah tidak berlangganan (hapus dari database). */
 export async function sendPush(sub: Sub, msg: PushMsg): Promise<"ok" | "gone" | "error"> {
+  // Pertahanan berlapis: data lama yang alamatnya bukan layanan push resmi dianggap "gone" (dihapus), tidak dipanggil.
+  if (!isAllowedPushEndpoint(sub.endpoint)) return "gone";
   try {
     await sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, JSON.stringify(msg), { TTL: 60 * 60 * 12 });
     return "ok";
