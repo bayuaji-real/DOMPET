@@ -1,5 +1,6 @@
 import { connection } from "next/server";
 import { emptyAnalyticsData } from "@/lib/data/analytics";
+import { Gate } from "@/components/plan/gate";
 import { AnalisisClient } from "./analisis-client";
 
 export const instant = false;
@@ -9,5 +10,9 @@ export default async function AnalisisPage() {
   await connection();
   // Halaman terbuka seketika; data asli dimuat layar sekali lewat /api/analytics
   // (sebelumnya dihitung dua kali: di server lalu di layar).
-  return <AnalisisClient initialData={emptyAnalyticsData("month")} />;
+  return (
+    <Gate feature="analisis">
+      <AnalisisClient initialData={emptyAnalyticsData("month")} />
+    </Gate>
+  );
 }

@@ -14,7 +14,7 @@ export type FeatureKey =
   // AI (dijaga server)
   | "ai_chat" | "ai_struk" | "ai_suara" | "ai_insight" | "ai_rencana" | "ai_impor"
   // Konsultan (non-AI, dihitung di perangkat)
-  | "skor_kesehatan" | "peringatan_dini" | "simulator_cicilan" | "mode_thr"
+  | "analisis" | "skor_kesehatan" | "peringatan_dini" | "simulator_cicilan" | "mode_thr"
   | "proyeksi_arus_kas" | "lunasi_utang"
   // Investasi
   | "kalkulator_investasi" | "portofolio" | "info_pasar"
@@ -23,7 +23,7 @@ export type FeatureKey =
 
 export const FEATURE_MIN_PLAN: Record<FeatureKey, Plan> = {
   ai_chat: "pro", ai_struk: "pro", ai_suara: "pro", ai_insight: "pro", ai_rencana: "pro", ai_impor: "pro",
-  skor_kesehatan: "pro", peringatan_dini: "pro", simulator_cicilan: "pro", mode_thr: "pro",
+  analisis: "pro", skor_kesehatan: "pro", peringatan_dini: "pro", simulator_cicilan: "pro", mode_thr: "pro",
   proyeksi_arus_kas: "pro", lunasi_utang: "free",
   kalkulator_investasi: "free", portofolio: "pro", info_pasar: "pro",
   laporan_mingguan: "free", kalkulator_zakat: "free", impor_csv: "free", impor_ai: "pro", dompet_bersama: "pro", pengingat: "free",
@@ -32,7 +32,7 @@ export const FEATURE_MIN_PLAN: Record<FeatureKey, Plan> = {
 export const FEATURE_LABEL: Record<FeatureKey, string> = {
   ai_chat: "Tanya Ruby", ai_struk: "Foto struk", ai_suara: "Catat dengan suara", ai_insight: "Insight dari Ruby",
   ai_rencana: "Rencana Keuangan Ruby", ai_impor: "Impor mutasi dengan Ruby",
-  skor_kesehatan: "Skor kesehatan keuangan", peringatan_dini: "Peringatan dini", simulator_cicilan: "Simulator cicilan & paylater",
+  analisis: "Analisis keuangan", skor_kesehatan: "Skor kesehatan keuangan", peringatan_dini: "Peringatan dini", simulator_cicilan: "Simulator cicilan & paylater",
   mode_thr: "Mode THR & Lebaran", proyeksi_arus_kas: "Proyeksi arus kas 3 bulan", lunasi_utang: "Rencana lunasi utang",
   kalkulator_investasi: "Kalkulator investasi", portofolio: "Portofolio investasi", info_pasar: "Info pasar & peringkat return",
   laporan_mingguan: "Laporan mingguan", kalkulator_zakat: "Kalkulator zakat", impor_csv: "Impor mutasi CSV", impor_ai: "Impor teks/PDF dengan Ruby", dompet_bersama: "Dompet bersama", pengingat: "Pengingat"
@@ -45,9 +45,10 @@ export const AI_LOG_FEATURE: Record<AiFeatureKey, "tabungan" | "konsultasi" | "s
   ai_chat: "konsultasi", ai_struk: "struk", ai_suara: "suara", ai_insight: "insight", ai_rencana: "rencana", ai_impor: "impor",
 };
 
-/** Jatah cicip fitur Ruby untuk Basic. Kunci = jenis di ai_usage_logs (struk, suara, konsultasi, tabungan, insight, rencana, impor). */
+/** Gratis penggunaan AI Ruby untuk Basic (dulu disebut jatah cicip). Kunci = jenis di ai_usage_logs (struk, suara, konsultasi, tabungan, insight, rencana, impor). */
 export type CicipItem = { limit: number; used: number; remaining: number; per: "hari" | "akun" };
 export type Cicip = Record<string, CicipItem>;
+export const AI_GRATIS = "Gratis penggunaan AI Ruby";
 export const CICIP_LABEL: Record<string, string> = { struk: "Foto struk", suara: "Catat suara", konsultasi: "Tanya Ruby", tabungan: "Buat Tabungan dengan Ruby", insight: "Insight dari Ruby", rencana: "Rencana Keuangan Ruby", impor: "Impor dengan Ruby" };
 
 export interface Entitlement {
@@ -115,19 +116,20 @@ export function upgradeMessage(feature: FeatureKey): string {
 
 export const QUOTA_MESSAGE = "Kuota Ruby bulan ini sudah habis. Kuota kembali penuh di awal bulan, atau naik ke paket Pro untuk kuota lebih besar.";
 
-/** Label sisa jatah cicip, mis. "Sisa 1x hari ini". Null kalau jatah tidak ada. */
+/** Label sisa gratis penggunaan AI Ruby, mis. "Sisa 1x hari ini". Null kalau tidak ada. */
 export function sisaLabel(c: { limit: number; used: number; remaining: number; per: "hari" | "akun" } | undefined): { n: number; text: string } | null {
   if (!c || c.limit <= 0) return null;
   const n = Math.max(c.remaining, 0);
-  return { n, text: n > 0 ? `Sisa ${n}x ${c.per === "hari" ? "hari ini" : "jatah cicip"}` : c.per === "hari" ? "Jatah hari ini habis" : "Jatah cicip habis" };
+  const sisa = n > 0 ? `sisa ${n}x${c.per === "hari" ? " hari ini" : ""}` : c.per === "hari" ? "habis hari ini" : "sudah terpakai";
+  return { n, text: `${AI_GRATIS}: ${sisa}` };
 }
 
-/** Pesan ketika jatah cicip Basic habis. */
+/** Pesan ketika Gratis penggunaan AI Ruby habis. */
 export function cicipHabisMessage(key: string, per: "hari" | "akun"): string {
-  const nama = CICIP_LABEL[key] ?? "Fitur Ruby";
+  const nama = CICIP_LABEL[key] ?? "fitur Ruby";
   return per === "hari"
-    ? `Jatah cicip ${nama} hari ini sudah habis. Coba lagi besok, atau naik ke Pro untuk tanpa batas.`
-    : `Jatah cicip ${nama} sudah terpakai. Naik ke Pro untuk memakainya sepuasnya.`;
+    ? `${AI_GRATIS} untuk ${nama} hari ini sudah habis. Coba lagi besok, atau naik ke Pro untuk tanpa batas.`
+    : `${AI_GRATIS} untuk ${nama} sudah terpakai. Naik ke Pro untuk memakainya sepuasnya.`;
 }
 
 /** Batas jumlah paket Basic (sama dengan trigger database `_batas_basic`). */

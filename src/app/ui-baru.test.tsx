@@ -17,6 +17,7 @@ const startTrial = vi.fn<(plan: string) => Promise<unknown>>();
 vi.mock("@/lib/data/entitlement", () => ({ requestSubscription: async () => true, startTrial: (p: string) => startTrial(p), getEntitlement: async () => parseEntitlement(entRaw) }));
 
 const snap = { monthlyIncome: 10_000_000, monthlyExpense: 6_000_000, liquidSavings: 30_000_000, fixedBills: 0, budgets: [{ name: "Makan", limit: 1_000_000, spent: 1_200_000 }], txs: [], categoryNames: {}, today: "2026-11-24", hasData: true };
+vi.mock("@/lib/data/payment", () => ({ getPrices: async () => [{ months: 1, amount: 15000 }, { months: 6, amount: 50000 }, { months: 12, amount: 99000 }] }));
 vi.mock("@/lib/data/finance-snapshot", () => ({ getFinanceSnapshot: async () => snap }));
 vi.mock("@/lib/data/debts", () => ({ getDebts: async () => [], addDebt: vi.fn(), deleteDebt: vi.fn() }));
 const holdings: unknown[] = [];
@@ -90,7 +91,7 @@ describe("Paket", () => {
   it("Gratis dengan uji coba tersedia: tombol coba gratis memanggil startTrial", async () => {
     entRaw = { plan: "free", source: "free", trial_available: { premium: false, pro: true } }; startTrial.mockResolvedValue({ ok: true });
     const u = userEvent.setup(); render(<PaketPage />);
-    const btns = screen.getAllByRole("button", { name: /Coba gratis 7 hari/ }); expect(btns.length).toBe(1);
+    const btns = screen.getAllByRole("button", { name: /coba gratis 7 hari/i }); expect(btns.length).toBe(1);
     await u.click(btns[0]);
     await waitFor(() => expect(startTrial).toHaveBeenCalledWith("pro"));
     expect(await screen.findByRole("status")).toBeTruthy();
@@ -98,18 +99,34 @@ describe("Paket", () => {
   it("galat dari server ditampilkan dengan bahasa awam", async () => {
     entRaw = { plan: "free", source: "free", trial_available: { premium: false, pro: true } }; startTrial.mockResolvedValue({ ok: false, message: "Uji coba paket ini sudah pernah kamu pakai." });
     const u = userEvent.setup(); render(<PaketPage />);
-    await u.click(screen.getAllByRole("button", { name: /Coba gratis/ })[0]);
+    await u.click(screen.getAllByRole("button", { name: /coba gratis/i })[0]);
     expect((await screen.findByRole("status")).textContent).toMatch(/sudah pernah/);
   });
   it("uji coba sudah dipakai: tidak ada tombol, ada penjelasan", () => {
     entRaw = { plan: "free", source: "free", trial_available: { premium: false, pro: false } }; render(<PaketPage />);
-    expect(screen.queryAllByRole("button", { name: /Coba gratis/ }).length).toBe(0);
-    expect(screen.getAllByText(/sudah kamu pakai/).length).toBe(1);
+    expect(screen.queryAllByRole("button", { name: /coba gratis/i }).length).toBe(0);
+    expect(screen.getAllByText(/sudah pernah kamu pakai/).length).toBe(1);
+  });
+  it("4 kartu: Basic + Pro 1, 6, 12 bulan, tombol pilih membawa durasi", async () => {
+    entRaw = { plan: "free", source: "free", trial_available: { premium: false, pro: true } }; render(<PaketPage />);
+    expect(screen.getByLabelText("Paket Basic")).toBeTruthy();
+    expect(await screen.findByLabelText("Pro 12 bulan")).toBeTruthy();
+    expect(screen.getByLabelText("Pro 6 bulan")).toBeTruthy();
+    expect(screen.getByLabelText("Pro 1 bulan")).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Pilih 12 bulan/ }).getAttribute("href")).toBe("/paket/bayar?bulan=12");
+    expect(screen.getByText("Paling hemat")).toBeTruthy();
+  });
+  it("tanpa kartu header lama dan tanpa kata cicip", () => {
+    entRaw = { plan: "free", source: "free", trial_available: { premium: false, pro: true } }; render(<PaketPage />);
+    expect(screen.queryByText("Paket & Uji Coba")).toBeNull();
+    expect(screen.queryByText("Paketmu sekarang")).toBeNull();
+    expect(document.body.textContent).not.toMatch(/cicip/i);
+    expect(document.body.textContent).toContain("Gratis penggunaan AI Ruby");
   });
   it("sedang uji coba: menampilkan sisa hari dan kuota", () => {
     entRaw = { plan: "pro", source: "trial", trial_ends_at: new Date(Date.now() + 3 * 86_400_000).toISOString(), ai_limit: 100, ai_used: 40, trial_available: { premium: false, pro: false } };
     render(<PaketPage />);
-    expect(screen.getByTestId("paket-aktif").textContent).toMatch(/Pro \(uji coba, sisa 3 hari\)/);
+    expect(screen.getByTestId("paket-aktif").textContent).toMatch(/Pro \(coba gratis, sisa 3 hari\)/);
     expect(screen.getByText(/60 dari 100/)).toBeTruthy();
   });
 });

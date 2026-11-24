@@ -21,7 +21,7 @@ export function AnalisisTerkunci() {
             <p className="text-[11px] text-muted-foreground">Arus kas, kategori, dan insight Ruby</p>
           </div>
         </div>
-        <ProBadge locked />
+        <ProBadge />
       </div>
       <div aria-hidden className="mt-3 select-none blur-sm">
         <div className="flex items-center gap-3">
@@ -34,13 +34,13 @@ export function AnalisisTerkunci() {
           </ul>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-bold">
-          <div className="rounded-2xl bg-emerald-500/10 p-2">Masuk Rp0.000.000</div>
-          <div className="rounded-2xl bg-rose-500/10 p-2">Keluar Rp0.000.000</div>
+          <div className="rounded-2xl bg-emerald-500/10 p-2">Masuk Rp8.500.000</div>
+          <div className="rounded-2xl bg-rose-500/10 p-2">Keluar Rp6.200.000</div>
         </div>
       </div>
       <div className="absolute inset-x-0 bottom-0 top-14 flex flex-col items-center justify-center gap-1 bg-background/40">
-        <span className="text-3xl" aria-hidden>🔒</span>
-        <span className="rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 px-3 py-1 text-[11px] font-bold text-white shadow">👑 Buka dengan Pro</span>
+        <span className="text-3xl" aria-hidden>👑</span>
+        <span className="rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 px-3 py-1 text-[11px] font-bold text-white shadow">Buka dengan Pro</span>
       </div>
     </Link>
   );

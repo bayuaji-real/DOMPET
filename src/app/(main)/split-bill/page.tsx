@@ -22,6 +22,9 @@ import { compressImage } from "@/lib/image-compression";
 import { receiptToSplit } from "@/lib/split-bill-scan";
 import type { ScanReceiptResult } from "@/app/api/scan-receipt/route";
 import { PageHero } from "@/components/ui/form-kit";
+import { useEntitlement } from "@/hooks/use-entitlement";
+import { ProBadge } from "@/components/plan/pro-badge";
+import { upgradeMessage } from "@/lib/plans";
 
 const DRAFT_KEY = "dompet_split_bill_draft";
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -59,6 +62,8 @@ export default function SplitBillPage() {
   const [recordState, setRecordState] = React.useState<"idle" | "saving" | "done" | "error">("idle");
   // Layar pertama: pilih cara mengisi. Draf lama yang sudah berisi langsung dilanjutkan.
   const [mode, setMode] = React.useState<"pilih" | "manual" | "foto">("pilih");
+  const { can: bisaPakai, loading: entLoading } = useEntitlement();
+  const fotoTerkunci = !entLoading && !bisaPakai("ai_struk");
   const [scanning, setScanning] = React.useState(false);
   const [scanMsg, setScanMsg] = React.useState("");
   const fileRef = React.useRef<HTMLInputElement>(null);
@@ -236,12 +241,13 @@ export default function SplitBillPage() {
                 <button
                   type="button"
                   disabled={scanning}
-                  onClick={() => fileRef.current?.click()}
-                  className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-emerald-400/60 bg-emerald-400/10 p-4 text-center text-emerald-700 shadow-xs transition-all hover:bg-teal-500/15 active:scale-95 disabled:opacity-60 dark:text-teal-300"
+                  onClick={() => { if (fotoTerkunci) { setScanMsg(upgradeMessage("ai_struk")); return; } fileRef.current?.click(); }}
+                  className="relative flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-emerald-400/60 bg-emerald-400/10 p-4 text-center text-emerald-700 shadow-xs transition-all hover:bg-teal-500/15 active:scale-95 disabled:opacity-60 dark:text-teal-300"
                 >
                   <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-500/20 text-2xl">{scanning ? <Loader2 className="h-6 w-6 animate-spin" /> : "📸"}</span>
                   <span className="text-sm font-extrabold">{scanning ? "Membaca..." : "Foto Struk"}</span>
                   <span className="text-[10px] leading-snug text-muted-foreground">Ruby baca pesanan, pajak, dan diskon</span>
+                  {fotoTerkunci && <ProBadge className="absolute right-2 top-2" />}
                 </button>
                 <button
                   type="button"

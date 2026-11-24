@@ -56,6 +56,18 @@ export default function BayarProPage() {
     if (r.ok) { setReq(r.req); setChoosing(false); } else setMsg({ ok: false, text: r.message });
   };
 
+  // Dari halaman Paket: /paket/bayar?bulan=12 langsung membuat permintaan untuk durasi itu (sekali).
+  const autoRef = React.useRef(false);
+  React.useEffect(() => {
+    if (autoRef.current || prices === null || req === undefined) return;
+    const m = Number(new URLSearchParams(window.location.search).get("bulan"));
+    if (!m) return;
+    autoRef.current = true;
+    window.history.replaceState(null, "", "/paket/bayar");
+    const terbuka = req && ["menunggu", "pro_sementara", "menunggu_cek"].includes(req.status);
+    if (!terbuka && prices.some((p) => p.months === m)) queueMicrotask(() => { void pilih(m); });
+  }, [prices, req]);
+
   const salin = async () => {
     if (!req) return;
     try { await navigator.clipboard.writeText(String(req.amount)); notify("Nominal disalin"); } catch { notify("Salin manual ya: " + req.amount); }

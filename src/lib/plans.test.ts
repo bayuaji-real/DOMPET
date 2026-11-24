@@ -72,8 +72,8 @@ describe("batasBasicMessage", () => {
 describe("sisaLabel", () => {
   it("menulis sisa jatah", async () => {
     const { sisaLabel } = await import("./plans");
-    expect(sisaLabel({ limit: 2, used: 1, remaining: 1, per: "hari" })).toEqual({ n: 1, text: "Sisa 1x hari ini" });
-    expect(sisaLabel({ limit: 5, used: 5, remaining: 0, per: "akun" })).toEqual({ n: 0, text: "Jatah cicip habis" });
+    expect(sisaLabel({ limit: 2, used: 1, remaining: 1, per: "hari" })).toEqual({ n: 1, text: "Gratis penggunaan AI Ruby: sisa 1x hari ini" });
+    expect(sisaLabel({ limit: 5, used: 5, remaining: 0, per: "akun" })).toEqual({ n: 0, text: "Gratis penggunaan AI Ruby: sudah terpakai" });
     expect(sisaLabel(undefined)).toBeNull();
   });
 });

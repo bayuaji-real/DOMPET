@@ -6,9 +6,11 @@ import { AnalisisTerkunci } from "@/components/home/analisis-terkunci";
 import { parseEntitlement, cicipHabisMessage, canUse } from "@/lib/plans";
 
 describe("Basic/Pro: tampilan dan aturan", () => {
-  it("lencana Pro terkunci memuat mahkota dan gembok", () => {
-    render(<ProBadge locked />);
-    expect(screen.getByLabelText("Fitur Pro, terkunci")).toBeTruthy();
+  it("lencana Pro hanya mahkota, tanpa gembok", () => {
+    const { container } = render(<ProBadge />);
+    expect(screen.getByLabelText("Fitur Pro")).toBeTruthy();
+    expect(container.textContent).toContain("👑");
+    expect(container.textContent).not.toContain("🔒");
   });
   it("kartu Analisis Basic: tautan ke Paket, tanpa angka asli", () => {
     render(<AnalisisTerkunci />);
@@ -23,6 +25,12 @@ describe("Basic/Pro: tampilan dan aturan", () => {
   it("pesan jatah habis ramah, harian dan seumur akun", () => {
     expect(cicipHabisMessage("struk", "hari")).toMatch(/besok/);
     expect(cicipHabisMessage("tabungan", "akun")).toMatch(/Pro/);
+    expect(cicipHabisMessage("struk", "hari")).toContain("Gratis penggunaan AI Ruby");
+    expect(cicipHabisMessage("struk", "hari")).not.toMatch(/cicip/i);
+  });
+  it("Analisis keuangan khusus Pro", () => {
+    expect(canUse("free", "analisis")).toBe(false);
+    expect(canUse("pro", "analisis")).toBe(true);
   });
   it("Rencana lunasi utang dan Impor CSV masuk Basic, Simulator cicilan tetap Pro", () => {
     expect(canUse("free", "lunasi_utang")).toBe(true);

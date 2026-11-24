@@ -38,7 +38,7 @@ import { VoiceConfirmationSheet } from "@/components/transaction/voice-confirmat
 import type { ScanReceiptResult } from "@/app/api/scan-receipt/route";
 import type { ParsedVoiceTransaction } from "@/app/api/voice-transaction/route";
 
-/** Angka kecil sisa jatah cicip Ruby di pojok tombol (Basic). 0 = merah. */
+/** Angka kecil sisa Gratis penggunaan AI Ruby di pojok tombol (Basic). 0 = merah. */
 function SisaChip({ n, large = false }: { n: number; large?: boolean }) {
   return (
     <span
@@ -100,7 +100,7 @@ export function BottomNav() {
   // Popup ketik manual (latar buram)
   const [isManualOpen, setIsManualOpen] = React.useState(false);
 
-  // Sisa jatah cicip diperbarui setelah foto/suara selesai diproses.
+  // Sisa Gratis penggunaan AI Ruby diperbarui setelah foto/suara selesai diproses.
   React.useEffect(() => {
     if (!isScanning && !isProcessing) void reloadEnt();
   }, [isScanning, isProcessing, reloadEnt]);

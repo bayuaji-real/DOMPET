@@ -41,7 +41,7 @@ export const MORE_GROUPS: MoreGroup[] = [
   {
     title: "Analisis & laporan",
     items: [
-      { label: "Analisis Keuangan", description: "Arus kas, kategori, anggaran & insight Ruby", href: "/analisis", icon: PieChart, tone: "bg-violet-500/15 text-violet-600 dark:text-violet-400" },
+      { label: "Analisis Keuangan", description: "Arus kas, kategori, anggaran & insight Ruby", href: "/analisis", icon: PieChart, tone: "bg-violet-500/15 text-violet-600 dark:text-violet-400", pro: true },
       { label: "Kesehatan Finansial", description: "Skor 0-100 dan cara menaikkannya", href: "/kesehatan-finansial", icon: HeartPulse, tone: "bg-pink-500/15 text-pink-600 dark:text-pink-400", pro: true },
       { label: "Prediksi Cashflow", description: "Perkiraan saldo 3 bulan ke depan", href: "/prediksi-cashflow", icon: LineChart, tone: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400", pro: true },
       { label: "Laporan Mingguan", description: "Ringkasan 7 hari terakhir", href: "/laporan-mingguan", icon: CalendarDays, tone: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
