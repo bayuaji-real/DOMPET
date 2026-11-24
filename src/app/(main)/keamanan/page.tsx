@@ -10,7 +10,7 @@ import { MfaCard } from "@/components/security/mfa";
 import { PushCard } from "@/components/settings/push-card";
 import { createClient } from "@/lib/supabase/client";
 import { PIN_KEY, PIN_TRIES_KEY, makeStoredPin, validPinFormat } from "@/lib/konsultan/pin";
-import { PageHero } from "@/components/ui/form-kit";
+import { PageHero, Cta, IconBox, Notice } from "@/components/ui/form-kit";
 
 export default function KeamananPage() {
   const router = useRouter();
@@ -48,13 +48,13 @@ export default function KeamananPage() {
       <div className="space-y-4 px-4 pt-2">
         <PageHero title="Keamanan" desc="PIN, verifikasi, dan cadangan datamu." />
         <section aria-label="PIN aplikasi" className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
-          <h2 className="flex items-center gap-2.5 text-sm font-semibold"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-teal-500/15 text-teal-600"><ShieldCheck className="size-[18px]" aria-hidden /></span> PIN aplikasi</h2>
+          <h2 className="flex items-center gap-2.5 border-b border-border/50 pb-2.5 text-sm font-extrabold"><IconBox tone="neon"><ShieldCheck className="size-[18px]" aria-hidden /></IconBox> PIN aplikasi</h2>
           <p className="text-xs text-muted-foreground">Kunci layar di perangkat ini. Tidak menggantikan login.</p>
-          {msg && <p role="status" className={`rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-red-500/10 text-red-700 dark:text-red-300"}`}>{msg.text}</p>}
+          {msg && <Notice role="status" tone={msg.ok ? "emerald" : "rose"} emoji={msg.ok ? "✅" : "⚠️"}>{msg.text}</Notice>}
           <form onSubmit={save} className="space-y-2">
-            <Input aria-label="PIN baru" type="password" inputMode="numeric" maxLength={6} placeholder={hasPin ? "PIN baru (ganti)" : "PIN 4 sampai 6 angka"} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} />
-            <Input aria-label="Ulangi PIN" type="password" inputMode="numeric" maxLength={6} placeholder="Ulangi PIN" value={pin2} onChange={(e) => setPin2(e.target.value.replace(/\D/g, ""))} />
-            <Button type="submit" className="w-full" disabled={pin.length < 4}>{hasPin ? "Ganti PIN" : "Aktifkan PIN"}</Button>
+            <Input className="h-10 rounded-xl" aria-label="PIN baru" type="password" inputMode="numeric" maxLength={6} placeholder={hasPin ? "PIN baru (ganti)" : "PIN 4 sampai 6 angka"} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} />
+            <Input className="h-10 rounded-xl" aria-label="Ulangi PIN" type="password" inputMode="numeric" maxLength={6} placeholder="Ulangi PIN" value={pin2} onChange={(e) => setPin2(e.target.value.replace(/\D/g, ""))} />
+            <Cta type="submit" disabled={pin.length < 4}>{hasPin ? "Ganti PIN" : "Aktifkan PIN"}</Cta>
           </form>
           {hasPin && <Button variant="outline" className="h-10 w-full rounded-2xl text-xs" onClick={removePin}>Matikan PIN</Button>}
         </section>

@@ -145,7 +145,6 @@ describe("Cicilan & Utang", () => {
     expect(await screen.findByText(/Belum ada utang tercatat/)).toBeTruthy();
     expect((screen.getByRole("button", { name: "Tambah utang" }) as HTMLButtonElement).disabled).toBe(true);
   });
-  it("selalu ada peringatan Ruby", async () => { render(<CicilanUtangPage />); expect(screen.getByRole("note").textContent).toMatch(/cek ulang sendiri/); });
 });
 
 describe("Impor mutasi", () => {

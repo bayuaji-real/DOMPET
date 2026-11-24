@@ -136,13 +136,13 @@ function Ringkasan({ ev, d, today, onSaved, onDelete }: { ev: P.EventRow; d: P.P
   const [f, setF] = React.useState({ title: ev.title, date: ev.event_date ?? "", budget: ev.total_budget });
   return (
     <div className="space-y-3">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-800 via-teal-900 to-slate-950 p-5 text-white shadow-xl shadow-teal-950/20">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800 via-emerald-600 to-lime-300 p-5 text-white shadow-lg shadow-emerald-600/25">
         <span aria-hidden className="absolute -right-2 -top-3 text-7xl opacity-20">💍</span>
-        <p className="text-xs font-semibold text-teal-200">{ev.title}</p>
+        <p className="text-xs font-semibold text-white/90">{ev.title}</p>
         {days === null ? <p className="mt-1 text-base font-extrabold">Tanggal acara belum diisi</p> : days > 0 ? <p className="mt-1 text-3xl font-extrabold">{days} hari lagi</p> : days === 0 ? <p className="mt-1 text-3xl font-extrabold">Hari ini! 🎉</p> : <p className="mt-1 text-base font-extrabold">Acara sudah lewat {Math.abs(days)} hari</p>}
-        {ev.event_date && <p className="text-xs text-teal-200">{formatTanggal(ev.event_date + "T00:00:00+07:00")}</p>}
+        {ev.event_date && <p className="text-xs text-white/90">{formatTanggal(ev.event_date + "T00:00:00+07:00")}</p>}
         <div className="mt-3 space-y-1">
-          <div className="flex justify-between text-[10px] font-semibold text-teal-100"><span>Budget terpakai</span><span>{ev.total_budget > 0 ? Math.min(100, Math.round((s.planned / ev.total_budget) * 100)) : 0}%</span></div>
+          <div className="flex justify-between text-[10px] font-semibold text-white/90"><span>Budget terpakai</span><span>{ev.total_budget > 0 ? Math.min(100, Math.round((s.planned / ev.total_budget) * 100)) : 0}%</span></div>
           <div className="h-2 overflow-hidden rounded-full bg-white/15"><div className={`h-full rounded-full ${s.overBudget ? "bg-rose-400" : "bg-emerald-400"}`} style={{ width: `${ev.total_budget > 0 ? Math.min(100, Math.round((s.planned / ev.total_budget) * 100)) : 0}%` }} /></div>
         </div>
       </div>

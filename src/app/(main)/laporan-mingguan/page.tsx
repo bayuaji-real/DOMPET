@@ -5,7 +5,7 @@ import { TopHeader } from "@/components/layout/top-header";
 import { getFinanceSnapshot, type FinanceSnapshot } from "@/lib/data/finance-snapshot";
 import { weeklyReport } from "@/lib/konsultan/weekly-report";
 import { formatRupiah } from "@/lib/utils";
-import { PageHero } from "@/components/ui/form-kit";
+import { PageHero, Stat, Pill, Notice, EmptyState } from "@/components/ui/form-kit";
 
 export default function LaporanMingguanPage() {
   const [s, setS] = React.useState<FinanceSnapshot | null>(null);
@@ -17,18 +17,18 @@ export default function LaporanMingguanPage() {
       <TopHeader title="Laporan Mingguan" />
       <div className="space-y-3 px-4 pt-2">
         <PageHero title="Laporan Mingguan" desc="Ringkasan uangmu 7 hari terakhir." />
-        {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
+        {err && <Notice tone="rose" emoji="⚠️" role="alert">{err}</Notice>}
         {!s && !err && <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
-        {r && s && (r.count === 0 ? <p className="rounded-3xl border border-dashed border-border/70 p-5 text-center text-xs text-muted-foreground">Belum ada transaksi dalam 7 hari terakhir.</p> : (
+        {r && s && (r.count === 0 ? <EmptyState emoji="🗓️">Belum ada transaksi dalam 7 hari terakhir.</EmptyState> : (
           <>
-            <p className="text-sm text-muted-foreground">7 hari terakhir sampai hari ini.</p>
-            <div className="grid grid-cols-2 gap-2 text-center">
-              <div className="rounded-2xl bg-muted/50 p-3"><p className="text-xs text-muted-foreground">Pemasukan</p><p className="font-semibold text-emerald-600">{formatRupiah(r.income)}</p></div>
-              <div className="rounded-2xl bg-muted/50 p-3"><p className="text-xs text-muted-foreground">Pengeluaran</p><p className="font-semibold text-red-600">{formatRupiah(r.expense)}</p></div>
+            <Pill icon="📆">7 hari terakhir sampai hari ini</Pill>
+            <div className="grid grid-cols-2 gap-2">
+              <Stat icon="⬇️" tone="neon" label="Pemasukan" value={formatRupiah(r.income)} valueClass="text-emerald-600 dark:text-emerald-400" />
+              <Stat icon="⬆️" tone="rose" label="Pengeluaran" value={formatRupiah(r.expense)} valueClass="text-rose-600 dark:text-rose-400" />
             </div>
-            <p className="rounded-2xl p-3 text-sm border border-border/70 bg-card shadow-xs">{r.expenseDeltaPct == null ? "Belum ada data minggu lalu untuk dibandingkan." : r.expenseDeltaPct > 0 ? `Pengeluaran naik ${Math.round(r.expenseDeltaPct)}% dibanding minggu lalu (${formatRupiah(r.prevExpense)}).` : r.expenseDeltaPct < 0 ? `Pengeluaran turun ${Math.round(Math.abs(r.expenseDeltaPct))}% dibanding minggu lalu (${formatRupiah(r.prevExpense)}).` : "Pengeluaran sama dengan minggu lalu."}</p>
-            {r.topCategoryId && <p className="rounded-2xl p-3 text-sm border border-border/70 bg-card shadow-xs">Pengeluaran terbesar: <b>{s.categoryNames[r.topCategoryId] ?? "Kategori lain"}</b> sebesar {formatRupiah(r.topCategoryAmount)}.</p>}
-            <p className="text-sm">Sisa minggu ini: <b className={r.net < 0 ? "text-red-600" : ""}>{formatRupiah(r.net)}</b></p>
+            <Notice tone={r.expenseDeltaPct != null && r.expenseDeltaPct > 0 ? "amber" : "emerald"} emoji={r.expenseDeltaPct != null && r.expenseDeltaPct > 0 ? "📈" : "📉"}>{r.expenseDeltaPct == null ? "Belum ada data minggu lalu untuk dibandingkan." : r.expenseDeltaPct > 0 ? `Pengeluaran naik ${Math.round(r.expenseDeltaPct)}% dibanding minggu lalu (${formatRupiah(r.prevExpense)}).` : r.expenseDeltaPct < 0 ? `Pengeluaran turun ${Math.round(Math.abs(r.expenseDeltaPct))}% dibanding minggu lalu (${formatRupiah(r.prevExpense)}).` : "Pengeluaran sama dengan minggu lalu."}</Notice>
+            {r.topCategoryId && <Stat icon="🏆" tone="amber" label="Pengeluaran terbesar" value={<>{s.categoryNames[r.topCategoryId] ?? "Kategori lain"} · {formatRupiah(r.topCategoryAmount)}</>} />}
+            <Stat icon="💰" tone={r.net < 0 ? "rose" : "neon"} label="Sisa minggu ini" value={formatRupiah(r.net)} valueClass={r.net < 0 ? "text-rose-600 dark:text-rose-400" : ""} />
           </>
         ))}
       </div>

@@ -573,10 +573,10 @@ export default function TabunganPage() {
 
       <div className="space-y-4 p-4">
         {/* A. Ringkasan Atas */}
-        <div className="rounded-3xl bg-gradient-to-br from-teal-800 via-teal-900 to-slate-950 p-4.5 text-white shadow-xl shadow-teal-950/20">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800 via-emerald-600 to-lime-300 p-4.5 text-white shadow-lg shadow-emerald-600/25">
           <div className="flex items-center justify-between pb-3 border-b border-white/10">
             <div>
-              <p className="text-[11px] text-teal-200 font-medium">Total Terkumpul</p>
+              <p className="text-[11px] text-white/90 font-medium">Total Terkumpul</p>
               <h2 className="text-2xl font-extrabold tracking-tight">
                 {formatRupiah(totalTerkumpul)}
               </h2>
@@ -592,13 +592,13 @@ export default function TabunganPage() {
 
           <div className="grid grid-cols-2 gap-3 pt-3 text-xs">
             <div>
-              <span className="text-[10px] text-teal-200">Total Target</span>
+              <span className="text-[10px] text-white/90">Total Target</span>
               <p className="font-bold text-white text-sm">
                 {formatRupiah(totalTarget)}
               </p>
             </div>
             <div>
-              <span className="text-[10px] text-teal-200">Total Kekurangan</span>
+              <span className="text-[10px] text-white/90">Total Kekurangan</span>
               <p className="font-bold text-rose-300 text-sm">
                 {formatRupiah(totalKekurangan)}
               </p>
@@ -616,7 +616,7 @@ export default function TabunganPage() {
 
           {loading && (
             <div className="flex flex-col items-center justify-center gap-2 py-8 text-xs text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin text-teal-600 dark:text-teal-400" />
+              <Loader2 className="h-5 w-5 animate-spin text-teal-600 dark:text-white/90" />
               <span>Memuat data tabungan…</span>
             </div>
           )}

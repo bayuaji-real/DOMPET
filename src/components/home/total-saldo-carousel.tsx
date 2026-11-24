@@ -144,7 +144,7 @@ export function TotalSaldoCarousel({
   return (
     <section
       aria-label="Saldo"
-      className="relative rounded-3xl bg-gradient-to-br from-teal-700 via-teal-800 to-emerald-950 p-5 text-white shadow-xl shadow-teal-900/20"
+      className="relative rounded-3xl bg-gradient-to-br from-emerald-800 via-emerald-600 to-lime-300 p-5 text-white shadow-lg shadow-emerald-600/25"
     >
       <div className="flex items-center justify-between gap-2">
         <div ref={boxRef} className="relative min-w-0">
@@ -179,7 +179,7 @@ export function TotalSaldoCarousel({
         <button
           type="button"
           onClick={onToggleHide}
-          className="cursor-pointer rounded-lg p-1.5 text-teal-100 transition-all hover:bg-white/10 hover:text-white active:scale-95"
+          className="cursor-pointer rounded-lg p-1.5 text-white/90 transition-all hover:bg-white/10 hover:text-white active:scale-95"
           title={hideBalance ? "Tampilkan Saldo" : "Sembunyikan Saldo"}
           aria-label={hideBalance ? "Tampilkan Saldo" : "Sembunyikan Saldo"}
         >
@@ -189,12 +189,12 @@ export function TotalSaldoCarousel({
 
       <div className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">{display(amount)}</div>
       <div className="mt-1 flex items-center justify-between gap-2">
-        <p className="text-[11px] text-teal-200">{subtitle}</p>
+        <p className="text-[11px] text-white/90">{subtitle}</p>
         {selected && (
           <button
             type="button"
             onClick={() => onSelectWallet(selected)}
-            className="flex cursor-pointer items-center gap-0.5 text-[11px] font-bold text-teal-100 hover:text-white"
+            className="flex cursor-pointer items-center gap-0.5 text-[11px] font-bold text-white/90 hover:text-white"
           >
             Detail <ChevronRight className="h-3 w-3" />
           </button>
@@ -204,10 +204,10 @@ export function TotalSaldoCarousel({
       <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/10 pt-4">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10">
-            <TrendingUp className="h-4 w-4 text-emerald-300" />
+            <TrendingUp className="h-4 w-4 text-white/90" />
           </div>
           <div>
-            <p className="text-[10px] text-teal-200">Pemasukan Bulan Ini</p>
+            <p className="text-[10px] text-white/90">Pemasukan Bulan Ini</p>
             <p className="text-xs font-bold">{display(masuk)}</p>
           </div>
         </div>
@@ -216,7 +216,7 @@ export function TotalSaldoCarousel({
             <TrendingDown className="h-4 w-4 text-rose-300" />
           </div>
           <div>
-            <p className="text-[10px] text-teal-200">Pengeluaran Bulan Ini</p>
+            <p className="text-[10px] text-white/90">Pengeluaran Bulan Ini</p>
             <p className="text-xs font-bold">{display(keluar)}</p>
           </div>
         </div>

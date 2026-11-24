@@ -125,7 +125,6 @@ export default function TargetBeliPage() {
         )}
         <div ref={endRef} />
       </div>
-      <p className="bg-background px-3 pt-1.5 text-center text-[10px] leading-tight text-muted-foreground">Perkiraan dari datamu, bukan nasihat keuangan atau tawaran kredit.</p>
       <form onSubmit={(e) => { e.preventDefault(); void send(input); }} className="flex shrink-0 items-center gap-2 border-t border-border/60 bg-background px-3 py-2.5">
         <button type="button" onClick={() => setShowList(!showList)} aria-pressed={showList} aria-label="Target saya" className={`flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border ${showList ? "bg-teal-600 text-white" : "bg-muted/40"}`}><ListChecks className="h-4 w-4" /></button>
         <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={300} aria-label="Pesan Target Beli" placeholder="Misal: Laptop 12jt cicilan 12 bulan" className="h-10 flex-1 rounded-full border border-border bg-muted/40 px-4 text-xs outline-none focus:ring-2 focus:ring-teal-500/40" />

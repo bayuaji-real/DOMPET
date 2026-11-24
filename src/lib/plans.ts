@@ -111,7 +111,5 @@ export function trialErrorMessage(raw: string | undefined | null): string {
   return "Uji coba belum bisa dimulai. Coba lagi sebentar.";
 }
 
-export const RUBY_DISCLAIMER =
-  "Ruby hanya memberi saran berdasarkan riset dan data yang kamu catat. Ini bukan nasihat keuangan atau investasi berlisensi, jadi cek ulang sendiri sebelum mengambil keputusan.";
 export const INVEST_DISCLAIMER =
   "Informasi untuk edukasi, bukan ajakan atau rekomendasi membeli. Kinerja masa lalu tidak menjamin hasil di masa depan. Investasi mengandung risiko, nilai bisa turun dan modal bisa berkurang. Cek prospektus dan izin OJK produknya sendiri.";

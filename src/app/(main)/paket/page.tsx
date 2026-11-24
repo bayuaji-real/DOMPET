@@ -1,11 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { PageHero } from "@/components/ui/form-kit";
+import { PageHero, Cta, IconBox, Pill, Notice, AURORA, AuroraGlow } from "@/components/ui/form-kit";
 import { Check, Sparkles } from "lucide-react";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
-import { Disclaimer } from "@/components/plan/disclaimer";
 import { useEntitlement } from "@/hooks/use-entitlement";
 import { requestSubscription, startTrial } from "@/lib/data/entitlement";
 import { PLAN_LABEL, TRIAL_DAYS, trialDaysLeft, type Plan } from "@/lib/plans";
@@ -42,42 +41,42 @@ export default function PaketPage() {
       <TopHeader title="Paket" />
       <div className="space-y-4 px-4 pt-2">
         <PageHero title="Paket & Uji Coba" desc="Gratis, Premium, atau Pro. Coba gratis 7 hari." />
-        <div className="rounded-3xl border border-teal-500/30 bg-teal-500/10 p-4">
-          <p className="text-xs text-muted-foreground">Paketmu sekarang</p>
-          <p className="text-lg font-bold" data-testid="paket-aktif">{loading ? "..." : PLAN_LABEL[ent.plan]}{ent.source === "trial" && daysLeft > 0 ? ` (uji coba, sisa ${daysLeft} hari)` : ""}</p>
-          {ent.plan !== "free" && <p className="mt-1 text-xs text-muted-foreground">Kuota AI bulan ini: {ent.aiRemaining} dari {ent.aiLimit} tersisa.</p>}
+        <div className={`relative overflow-hidden rounded-3xl p-4 text-white shadow-lg shadow-emerald-600/25 ${AURORA}`}>
+          <AuroraGlow />
+          <p className="relative text-xs font-semibold text-white/90">Paketmu sekarang</p>
+          <p className="relative text-lg font-extrabold" data-testid="paket-aktif">{loading ? "..." : PLAN_LABEL[ent.plan]}{ent.source === "trial" && daysLeft > 0 ? ` (uji coba, sisa ${daysLeft} hari)` : ""}</p>
+          {ent.plan !== "free" && <p className="relative mt-1 text-xs font-medium text-white/95">Kuota AI bulan ini: {ent.aiRemaining} dari {ent.aiLimit} tersisa.</p>}
         </div>
 
-        {msg && <p role="status" className={`rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-red-500/10 text-red-700 dark:text-red-300"}`}>{msg.text}</p>}
+        {msg && <Notice role="status" tone={msg.ok ? "emerald" : "rose"} emoji={msg.ok ? "🎉" : "⚠️"}>{msg.text}</Notice>}
 
         {TIERS.map((t) => {
           const current = ent.plan === t.plan;
           const canTrial = t.plan !== "free" && ent.source === "free" && ent.trialAvailable[t.plan as "premium" | "pro"];
           return (
-            <section key={t.plan} className={`rounded-3xl border bg-card p-4 shadow-xs ${current ? "border-teal-500 ring-1 ring-teal-500/40" : "border-border/70"}`} aria-label={`Paket ${PLAN_LABEL[t.plan]}`}>
-              <div className="flex items-baseline justify-between">
-                <h2 className="text-base font-bold">{PLAN_LABEL[t.plan]}</h2>
-                <span className="text-xs text-muted-foreground">{t.harga}</span>
+            <section key={t.plan} className={`rounded-3xl border bg-card p-4 shadow-xs ${current ? "border-emerald-400 shadow-[0_0_18px_rgba(52,211,153,0.3)]" : "border-border/80"}`} aria-label={`Paket ${PLAN_LABEL[t.plan]}`}>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2.5"><IconBox tone={t.plan === "pro" ? "neon" : t.plan === "premium" ? "violet" : "sky"}>{t.plan === "pro" ? "👑" : t.plan === "premium" ? "⭐" : "🌱"}</IconBox>
+                  <div className="min-w-0"><h2 className="text-base font-extrabold">{PLAN_LABEL[t.plan]}</h2><p className="text-[11px] text-muted-foreground">{t.tagline}</p></div></div>
+                <Pill tone={t.plan === "free" ? "slate" : "amber"}>{t.harga}</Pill>
               </div>
-              <p className="text-xs text-muted-foreground">{t.tagline}</p>
               <ul className="mt-3 space-y-1.5 text-sm">
-                {t.fitur.map((f) => (<li key={f} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-hidden />{f}</li>))}
+                {t.fitur.map((f) => (<li key={f} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 rounded-full bg-emerald-400/25 p-0.5 text-emerald-600" aria-hidden />{f}</li>))}
               </ul>
-              {current && <p className="mt-3 text-sm font-medium text-primary">Paket aktif kamu</p>}
+              {current && <div className="mt-3"><Pill icon="✅">Paket aktif kamu</Pill></div>}
               {!current && canTrial && (
-                <Button className="mt-3 w-full" disabled={busy !== null} onClick={() => mulai(t.plan as "premium" | "pro")}>
+                <Cta className="mt-3" disabled={busy !== null} onClick={() => mulai(t.plan as "premium" | "pro")}>
                   <Sparkles className="size-4" aria-hidden /> {busy === t.plan ? "Memulai..." : `Coba gratis ${TRIAL_DAYS} hari`}
-                </Button>
+                </Cta>
               )}
               {!current && t.plan !== "free" && (
-                <Button className="mt-2 w-full" variant="outline" disabled={busy !== null} onClick={() => minta(t.plan as "premium" | "pro")}>Minta berlangganan</Button>
+                <Button className="mt-2 h-10 w-full rounded-2xl border-emerald-400/60 text-xs font-bold" variant="outline" disabled={busy !== null} onClick={() => minta(t.plan as "premium" | "pro")}>Minta berlangganan</Button>
               )}
               {!current && t.plan !== "free" && !canTrial && ent.source === "free" && <p className="mt-3 text-xs text-muted-foreground">Uji coba paket ini sudah kamu pakai.</p>}
             </section>
           );
         })}
         <p className="text-xs text-muted-foreground">Pembayaran langganan belum dibuka: tekan Minta berlangganan dan kami hubungi kamu begitu siap. Setelah uji coba berakhir, akunmu kembali ke paket Gratis dan semua catatanmu tetap aman.</p>
-        <Disclaimer />
       </div>
     </div>
   );

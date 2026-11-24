@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { RUBY_DISCLAIMER } from "@/lib/plans";
 import { useRouter } from "next/navigation";
 import { CheckCheck, ChevronRight, Send } from "lucide-react";
 import type { AIChatResponse, SavingsProposal } from "@/app/api/ai-chat/route";
@@ -267,7 +266,6 @@ export function AiChat({ mode, intro, placeholder, suggestions, showMenu, render
         {error && <p className="mt-3 rounded-xl bg-rose-500/10 px-3 py-2 text-[11px] text-rose-600 dark:text-rose-400">{error}</p>}
         <div ref={endRef} />
       </div>
-      <p className="bg-background px-3 pt-1.5 text-center text-[10px] leading-tight text-muted-foreground">{RUBY_DISCLAIMER}</p>
       <form
         onSubmit={(e) => {
           e.preventDefault();

@@ -60,6 +60,10 @@ describe("Admin UI", () => {
     render(<AdminPage />);
     await u.click(await screen.findByRole("tab", { name: "Pengguna" }));
     expect(await screen.findByText(/intan@example.test/)).toBeTruthy();
-    expect(screen.getByLabelText("Peran intan@example.test")).toBeTruthy();
+    expect(screen.getByRole("table")).toBeTruthy();
+    expect(screen.queryByLabelText("Peran intan@example.test")).toBeNull();
+    await u.click(screen.getByRole("button", { name: "Detail intan@example.test" }));
+    expect(await screen.findByLabelText("Peran intan@example.test")).toBeTruthy();
+    expect(screen.getByLabelText("Paket intan@example.test")).toBeTruthy();
   });
 });

@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { PageHero } from "@/components/ui/form-kit";
+import { PageHero, Tabs, Pill, Stat, IconBox, chipCls, type PillTone } from "@/components/ui/form-kit";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import { apiAlert } from "@/lib/admin-alert";
 import { Select } from "@/components/ui/select";
 
 type Tab = "api" | "pengguna" | "permintaan" | "pasar" | "catatan";
-const TABS: { id: Tab; label: string }[] = [{ id: "api", label: "API" }, { id: "pengguna", label: "Pengguna" }, { id: "permintaan", label: "Minta" }, { id: "pasar", label: "Pasar" }, { id: "catatan", label: "Catatan" }];
+const TABS: { id: Tab; label: string; icon: string }[] = [{ id: "api", label: "API", icon: "⚡" }, { id: "pengguna", label: "Pengguna", icon: "👥" }, { id: "permintaan", label: "Minta", icon: "📨" }, { id: "pasar", label: "Pasar", icon: "📈" }, { id: "catatan", label: "Catatan", icon: "📝" }];
 const FEATURE_LABEL: Record<string, string> = { tabungan: "Tabungan", konsultasi: "Chat Ruby", struk: "Scan struk", suara: "Suara", insight: "Insight", rencana: "Rencana", impor: "Impor" };
 const fmtDate = (s: string | null) => (s ? s.slice(0, 10) : "-");
 
@@ -40,9 +41,7 @@ export default function AdminPage() {
           <>
             {role === "superadmin" && mfa && <MfaSwitch status={mfa} onChange={reload} />}
             <p className="text-xs text-muted-foreground">Peranmu: {role === "superadmin" ? "Superadmin" : "Admin"}. Semua tindakan dicatat.</p>
-            <div role="tablist" aria-label="Bagian admin" className="grid grid-cols-5 gap-1 rounded-2xl bg-muted p-1">
-              {TABS.map((t) => (<button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`rounded-xl py-2 text-[11px] font-semibold ${tab === t.id ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{t.label}</button>))}
-            </div>
+            <Tabs value={tab} onChange={setTab} label="Bagian admin" options={TABS.map((t) => ({ value: t.id, label: t.label, icon: t.icon }))} />
             {tab === "api" && <ApiTab isSuper={role === "superadmin"} />}
             {tab === "pengguna" && <UsersTab isSuper={role === "superadmin"} />}
             {tab === "permintaan" && <RequestsTab />}
@@ -102,33 +101,99 @@ function ApiTab({ isSuper }: { isSuper: boolean }) {
   );
 }
 
+const PLAN_PILL: Record<string, { label: string; tone: PillTone; icon: string }> = {
+  free: { label: "Gratis", tone: "slate", icon: "🌱" },
+  premium: { label: "Premium", tone: "violet", icon: "⭐" },
+  pro: { label: "Pro", tone: "neon", icon: "👑" },
+};
+const planPill = (plan: string) => PLAN_PILL[plan] ?? { label: plan, tone: "slate" as PillTone, icon: "•" };
+const fmtShort = (s: string | null) => (s ? new Date(s).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "2-digit" }) : "-");
+
 function UsersTab({ isSuper }: { isSuper: boolean }) {
   const { data, err, load } = useLoad(A.listUsers);
   const [q, setQ] = React.useState("");
+  const [sel, setSel] = React.useState<string | null>(null);
   const [ask, dialog] = useConfirm();
   if (err) return <Err t={err} />;
   if (!data) return <Skel />;
   const list = data.filter((u) => u.email.toLowerCase().includes(q.trim().toLowerCase()));
   const byPlan = (p: string) => data.filter((u) => u.plan === p).length;
+  const user = data.find((u) => u.user_id === sel) ?? null;
+  const changePlan = async (u: A.AdminUser, plan: string, days: number | null) => {
+    setSel(null);
+    if (await ask(`Ubah paket ${u.email} menjadi ${plan}${days ? ` selama ${days} hari` : plan === "free" ? "" : " tanpa batas waktu"}?`, "Ubah")) void act(() => A.setPlan(u.user_id, plan, days), "Paket diubah", load);
+  };
+  const changeRole = async (u: A.AdminUser, role: string) => {
+    setSel(null);
+    if (await ask(`Ubah peran ${u.email} menjadi ${role === "none" ? "pengguna biasa" : role}?`, "Ubah")) void act(() => A.setRole(u.user_id, role), "Peran diubah", load);
+  };
   return (
     <div className="space-y-3">
       {dialog}
-      <p className="text-xs text-muted-foreground">{data.length} pengguna: Gratis {byPlan("free")}, Premium {byPlan("premium")}, Pro {byPlan("pro")}.</p>
-      <Input aria-label="Cari email" placeholder="Cari email" value={q} onChange={(e) => setQ(e.target.value)} />
-      <ul className="space-y-2">{list.map((u) => (
-        <li key={u.user_id} className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
-          <div><p className="break-all text-sm font-medium">{u.email} {u.admin_role && <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px]">{u.admin_role}</span>}</p>
-            <p className="text-xs text-muted-foreground">Daftar {fmtDate(u.created_at)} · login terakhir {fmtDate(u.last_sign_in_at)} · AI bulan ini {u.ai_used}</p>
-            <p className="text-xs">Paket: <b>{u.plan}</b> ({u.source === "paid" ? `aktif${u.plan_expires_at ? ` sampai ${fmtDate(u.plan_expires_at)}` : ", tanpa batas"}` : u.source === "trial" ? `uji coba sampai ${fmtDate(u.trial_ends_at)}` : "gratis"})</p></div>
-          <div className="flex gap-2">
-            <Select aria-label={`Paket ${u.email}`} value="" onChange={async (e) => { const v = e.target.value; if (!v) return; const [plan, d] = v.split(":"); const days = d ? Number(d) : null; if (await ask(`Ubah paket ${u.email} menjadi ${plan}${days ? ` selama ${days} hari` : plan === "free" ? "" : " tanpa batas waktu"}?`, "Ubah")) void act(() => A.setPlan(u.user_id, plan, days), "Paket diubah", load); }}>
-              <option value="">Ubah paket...</option><option value="pro">Pro tanpa batas</option><option value="pro:30">Pro 30 hari</option><option value="premium">Premium tanpa batas</option><option value="premium:30">Premium 30 hari</option><option value="free">Kembalikan ke Gratis</option>
-            </Select>
-            {isSuper && <Select aria-label={`Peran ${u.email}`} value="" onChange={async (e) => { const v = e.target.value; if (!v) return; if (await ask(`Ubah peran ${u.email} menjadi ${v === "none" ? "pengguna biasa" : v}?`, "Ubah")) void act(() => A.setRole(u.user_id, v), "Peran diubah", load); }}>
-              <option value="">Ubah peran...</option><option value="admin">Admin</option><option value="superadmin">Superadmin</option><option value="none">Pengguna biasa</option></Select>}
-          </div>
-        </li>))}
-        {list.length === 0 && <li className="rounded-2xl border border-dashed p-3 text-center text-xs text-muted-foreground">Tidak ada pengguna yang cocok.</li>}</ul>
+      <div className="grid grid-cols-4 gap-1.5">
+        <Pill tone="sky" className="justify-center" icon="👥">{data.length} total</Pill>
+        <Pill tone="slate" className="justify-center" icon="🌱">{byPlan("free")} Gratis</Pill>
+        <Pill tone="violet" className="justify-center" icon="⭐">{byPlan("premium")} Prem.</Pill>
+        <Pill tone="neon" className="justify-center" icon="👑">{byPlan("pro")} Pro</Pill>
+      </div>
+      <Input aria-label="Cari email" placeholder="🔎 Cari email" className="h-10 rounded-xl" value={q} onChange={(e) => setQ(e.target.value)} />
+      <div className="overflow-hidden rounded-3xl border border-border/80 bg-card shadow-xs">
+        <table className="w-full table-fixed text-left text-xs">
+          <thead className="bg-muted/70 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+            <tr><th className="px-3 py-2">Pengguna</th><th className="w-[86px] px-1 py-2">Paket</th><th className="w-9 px-1 py-2 text-right">AI</th><th className="w-[62px] px-3 py-2 text-right">Daftar</th></tr>
+          </thead>
+          <tbody>
+            {list.map((u) => { const pp = planPill(u.plan); return (
+              <tr key={u.user_id} onClick={() => setSel(u.user_id)} className="cursor-pointer border-t border-border/50 transition-colors hover:bg-emerald-400/10 active:bg-emerald-400/20">
+                <td className="px-3 py-2.5">
+                  <button type="button" onClick={(e) => { e.stopPropagation(); setSel(u.user_id); }} aria-label={`Detail ${u.email}`} className="block w-full cursor-pointer truncate text-left font-semibold">{u.email}</button>
+                  {u.admin_role && <span className="mt-0.5 inline-block rounded-full bg-indigo-500/15 px-1.5 text-[9px] font-bold text-indigo-600 dark:text-indigo-300">{u.admin_role}</span>}
+                </td>
+                <td className="px-1 py-2.5"><Pill tone={pp.tone} icon={pp.icon} className="px-1.5 text-[10px]">{pp.label}</Pill></td>
+                <td className="px-1 py-2.5 text-right font-bold tabular-nums">{u.ai_used}</td>
+                <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">{fmtShort(u.created_at)}</td>
+              </tr>); })}
+            {list.length === 0 && <tr><td colSpan={4} className="px-3 py-5 text-center text-xs text-muted-foreground">Tidak ada pengguna yang cocok.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+      <p className="px-1 text-[11px] text-muted-foreground">Ketuk baris untuk melihat detail dan mengubah paket.</p>
+      <Sheet open={!!user} onOpenChange={(o) => { if (!o) setSel(null); }}>
+        <SheetContent side="bottom" showCloseButton overlayClassName="bg-black/50 backdrop-blur-sm" className="mx-auto max-h-[88dvh] max-w-[430px] overflow-y-auto rounded-t-3xl border-border/80 bg-background px-5 pb-6 pt-4 shadow-2xl">
+          {user && (() => { const pp = planPill(user.plan); return (
+            <div className="space-y-3.5">
+              <div className="flex items-center gap-3 border-b border-border/50 pb-3">
+                <IconBox tone="neon" className="size-11 text-xl">👤</IconBox>
+                <div className="min-w-0">
+                  <SheetTitle className="break-all text-sm font-extrabold">{user.email}</SheetTitle>
+                  <div className="mt-1 flex flex-wrap gap-1"><Pill tone={pp.tone} icon={pp.icon}>{pp.label}</Pill>{user.admin_role && <Pill tone="indigo" icon="🛡️">{user.admin_role}</Pill>}</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Stat icon="📅" tone="sky" label="Daftar" value={fmtDate(user.created_at)} />
+                <Stat icon="🔑" tone="violet" label="Login terakhir" value={fmtDate(user.last_sign_in_at)} />
+                <Stat icon="🤖" tone="neon" label="AI bulan ini" value={user.ai_used} />
+                <Stat icon="🎟️" tone="amber" label="Status paket" value={user.source === "paid" ? (user.plan_expires_at ? `sampai ${fmtDate(user.plan_expires_at)}` : "aktif, tanpa batas") : user.source === "trial" ? `uji coba s.d. ${fmtDate(user.trial_ends_at)}` : "gratis"} />
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold">Ubah paket</p>
+                <div role="group" aria-label={`Paket ${user.email}`} className="flex flex-wrap gap-1.5">
+                  {([["Pro tanpa batas", "pro", null], ["Pro 30 hari", "pro", 30], ["Premium tanpa batas", "premium", null], ["Premium 30 hari", "premium", 30], ["Kembalikan ke Gratis", "free", null]] as const).map(([label, plan, days]) => (
+                    <button key={label} type="button" className={chipCls(false)} onClick={() => void changePlan(user, plan, days)}>{label}</button>))}
+                </div>
+              </div>
+              {isSuper && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold">Ubah peran</p>
+                  <div role="group" aria-label={`Peran ${user.email}`} className="flex flex-wrap gap-1.5">
+                    {([["Admin", "admin"], ["Superadmin", "superadmin"], ["Pengguna biasa", "none"]] as const).map(([label, role]) => (
+                      <button key={role} type="button" className={chipCls(false)} onClick={() => void changeRole(user, role)}>{label}</button>))}
+                  </div>
+                </div>
+              )}
+            </div>); })()}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

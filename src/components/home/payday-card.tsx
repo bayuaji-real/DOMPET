@@ -195,7 +195,7 @@ export function PaydayCard({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-teal-500/40 bg-gradient-to-br from-teal-950/40 via-card to-card p-4.5 shadow-lg shadow-teal-950/20 space-y-3.5 transition-all">
+    <div className="relative overflow-hidden rounded-3xl border border-emerald-400/50 bg-gradient-to-br from-emerald-400/20 via-lime-300/10 to-card p-4.5 shadow-lg shadow-emerald-500/10 space-y-3.5 transition-all">
       {/* Header Banner */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">

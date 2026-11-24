@@ -489,9 +489,6 @@ export default function RencanaPage() {
                           );
                         })}
                       </div>
-                      <p className="text-[10px] text-muted-foreground">
-                        Ini bukan nasihat keuangan berlisensi. Angka pembagian dihitung pasti oleh aplikasi; saran hanya membantu menjelaskan.
-                      </p>
                       <Button type="button" variant="outline" onClick={askAI} disabled={aiState === "loading"} className="w-full rounded-xl text-xs">
                         Buat ulang saran
                       </Button>

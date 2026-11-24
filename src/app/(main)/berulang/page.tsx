@@ -15,7 +15,7 @@ import { nextDateForDay } from "@/lib/dates";
 import { notify } from "@/lib/notify";
 import { formatRupiah } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
-import { PageHero } from "@/components/ui/form-kit";
+import { PageHero, Cta, FormCard, Field, IconBox, Pill, Notice, EmptyState, Segmented } from "@/components/ui/form-kit";
 
 const dmy = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
 
@@ -45,19 +45,19 @@ export default function BerulangPage() {
       {dialog}
       <div className="space-y-4 px-4 pt-2">
         <PageHero title="Transaksi Berulang" desc="Tagihan dan pemasukan rutin, tinggal tekan Catat." />
-        <p className="text-sm text-muted-foreground">Tagihan atau pemasukan yang datang tiap bulan (listrik, cicilan, gaji). Saat jatuh tempo, tinggal tekan Catat sekarang.</p>
-        {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
+        <Pill icon="🔁">Tagihan atau pemasukan tiap bulan: listrik, cicilan, gaji. Saat jatuh tempo, tinggal tekan Catat sekarang</Pill>
+        {err && <Notice tone="rose" emoji="⚠️" role="alert">{err}</Notice>}
         {list === null && !err && <div className="h-20 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
-        {list && list.length === 0 && <p className="rounded-3xl border border-dashed border-border/70 p-5 text-center text-xs text-muted-foreground">Belum ada transaksi berulang. Tambahkan yang pertama di bawah.</p>}
+        {list && list.length === 0 && <EmptyState emoji="🔁">Belum ada transaksi berulang. Tambahkan yang pertama di bawah.</EmptyState>}
         <ul className="space-y-2">
           {(list ?? []).map((r) => {
             const due = r.next_date <= today;
             return (
-              <li key={r.id} className="rounded-2xl p-3 border border-border/70 bg-card shadow-xs">
+              <li key={r.id} className={`rounded-3xl border bg-card p-3.5 shadow-xs ${due ? "border-amber-400/60" : "border-border/80"}`}>
                 <div className="flex items-start justify-between gap-2">
-                  <div><p className="font-medium">{r.note || "Tanpa nama"}</p>
+                  <div className="flex min-w-0 items-start gap-2.5"><IconBox tone={r.type === "income" ? "neon" : "rose"}>{r.type === "income" ? "⬇️" : "⬆️"}</IconBox><div className="min-w-0"><p className="truncate text-sm font-extrabold">{r.note || "Tanpa nama"}</p>
                     <p className="text-xs text-muted-foreground">{r.type === "income" ? "Pemasukan" : "Pengeluaran"} · tiap tanggal {r.day_of_month} · {walletName(r.wallet_id)}</p>
-                    <p className={`text-xs ${due ? "font-semibold text-amber-600" : "text-muted-foreground"}`}>{due ? "Jatuh tempo" : "Berikutnya"}: {dmy(r.next_date)}</p></div>
+                    <Pill tone={due ? "amber" : "slate"} icon={due ? "⏰" : "📅"} className="mt-1">{due ? "Jatuh tempo" : "Berikutnya"}: {dmy(r.next_date)}</Pill></div></div>
                   <div className="text-right"><p className={`font-semibold ${r.type === "income" ? "text-emerald-600" : ""}`}>{r.type === "income" ? "+" : "-"}{formatRupiah(Number(r.amount))}</p>
                     <button type="button" aria-label={`Hapus ${r.note || "item"}`} className="mt-1 text-muted-foreground" onClick={async () => { if (await ask(`Hapus "${r.note || "item ini"}" dari transaksi berulang? Transaksi yang sudah tercatat tidak ikut terhapus.`)) await act(() => deleteRecurringTransaction(r.id), "Dihapus"); }}><Trash2 className="size-4" /></button></div>
                 </div>
@@ -71,21 +71,20 @@ export default function BerulangPage() {
             );
           })}
         </ul>
-        <form aria-label="Tambah transaksi berulang" className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs" onSubmit={async (e) => {
+        <form aria-label="Tambah transaksi berulang" onSubmit={async (e) => {
           e.preventDefault(); if (!valid) return;
           await act(async () => { await createRecurringTransaction({ type: f.type, amount: f.amount, wallet_id: f.wallet, category_id: f.cat || null, note: f.note.trim(), rule: "monthly", day_of_month: day, next_date: nextDateForDay(day, today), is_active: true }); setF({ ...f, note: "", amount: 0 }); }, "Ditambahkan");
         }}>
-          <p className="font-semibold">Tambah baru</p>
-          <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1" role="group" aria-label="Jenis">
-            {(["expense", "income"] as const).map((t) => (<button key={t} type="button" aria-pressed={f.type === t} onClick={() => setF({ ...f, type: t, cat: "" })} className={`rounded-lg py-1.5 text-sm font-medium ${f.type === t ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{t === "expense" ? "Pengeluaran" : "Pemasukan"}</button>))}
-          </div>
+          <FormCard title="Tambah baru" desc="Isi sekali, ingatkan tiap bulan." icon="🔁">
+          <Segmented label="Jenis" value={f.type} onChange={(t) => setF({ ...f, type: t, cat: "" })} options={[{ value: "expense", label: "Pengeluaran", tone: "rose", icon: "⬆️" }, { value: "income", label: "Pemasukan", tone: "neon", icon: "⬇️" }]} />
           <Input aria-label="Nama" placeholder="Nama, misal Listrik atau Gaji" maxLength={60} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} />
           <MoneyInput aria-label="Nominal" value={f.amount} onChange={(n) => setF({ ...f, amount: n })} suffix="Rp" placeholder="Nominal" />
           <label className="block text-xs">Tanggal tiap bulan (1 sampai 31)<Input aria-label="Tanggal tiap bulan" inputMode="numeric" value={f.day} onChange={(e) => setF({ ...f, day: e.target.value.replace(/\D/g, "").slice(0, 2) })} /></label>
           <Select aria-label="Dompet" value={f.wallet} onChange={(e) => setF({ ...f, wallet: e.target.value })}>{wallets.map((w) => (<option key={w.id} value={w.id}>{w.name}</option>))}</Select>
           <Select aria-label="Kategori" value={f.cat} onChange={(e) => setF({ ...f, cat: e.target.value })}><option value="">Tanpa kategori</option>{catsFor.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}</Select>
-          <Button type="submit" className="w-full" disabled={!valid}>Tambahkan</Button>
+          <Cta type="submit" disabled={!valid}>Tambahkan</Cta>
           {!valid && f.note && <p className="text-xs text-muted-foreground">Isi nominal dan tanggal 1 sampai 31 dulu.</p>}
+          </FormCard>
         </form>
       </div>
     </div>
