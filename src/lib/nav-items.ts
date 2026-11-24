@@ -50,14 +50,14 @@ export const MORE_GROUPS: MoreGroup[] = [
   {
     title: "Rencana & dana",
     items: [
-      { label: "Rencana Keuangan Ruby", description: "Bagi gaji ke kebutuhan, tenggat & saran dompet", href: "/rencana", icon: Sparkles, tone: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400" },
-      { label: "Cicilan & Utang", description: "Bandingkan cicilan dan atur urutan melunasi utang", href: "/cicilan-utang", icon: Scale, tone: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
-      { label: "Target Beli", description: "Hitung mampu atau belum membeli sesuatu", href: "/target-beli", icon: ShoppingBag, tone: "bg-purple-500/15 text-purple-600 dark:text-purple-400" },
-      { label: "Money planner", description: "Bagi pemasukan jadi pos-pos", href: "/money-planner", icon: Wallet, tone: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" },
-      { label: "Dana daruratku", description: "Berapa cadangan yang cukup", href: "/dana-daruratku", icon: LifeBuoy, tone: "bg-red-500/15 text-red-600 dark:text-red-400" },
-      { label: "Dana pensiunku", description: "Berapa yang perlu disisihkan", href: "/dana-pensiunku", icon: Landmark, tone: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
-      { label: "Dana lain", description: "Kesehatan, pendidikan, rumah, dan lainnya", href: "/dana-lain", icon: PiggyBank, tone: "bg-teal-500/15 text-teal-600 dark:text-teal-400" },
-      { label: "Financial Freedom", description: "Dana untuk hidup dari hasil investasi", href: "/financial-freedom", icon: Flame, tone: "bg-orange-500/15 text-orange-600 dark:text-orange-400" },
+      { label: "Rencana Keuangan Ruby", description: "Bagi gaji ke kebutuhan, tenggat & saran dompet", href: "/rencana", icon: Sparkles, tone: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400", pro: true },
+      { label: "Cicilan & Utang", description: "Bandingkan cicilan dan atur urutan melunasi utang", href: "/cicilan-utang", icon: Scale, tone: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400", pro: true },
+      { label: "Target Beli", description: "Hitung mampu atau belum membeli sesuatu", href: "/target-beli", icon: ShoppingBag, tone: "bg-purple-500/15 text-purple-600 dark:text-purple-400", pro: true },
+      { label: "Money planner", description: "Bagi pemasukan jadi pos-pos", href: "/money-planner", icon: Wallet, tone: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400", pro: true },
+      { label: "Dana daruratku", description: "Berapa cadangan yang cukup", href: "/dana-daruratku", icon: LifeBuoy, tone: "bg-red-500/15 text-red-600 dark:text-red-400", pro: true },
+      { label: "Dana pensiunku", description: "Berapa yang perlu disisihkan", href: "/dana-pensiunku", icon: Landmark, tone: "bg-amber-500/15 text-amber-600 dark:text-amber-400", pro: true },
+      { label: "Dana lain", description: "Kesehatan, pendidikan, rumah, dan lainnya", href: "/dana-lain", icon: PiggyBank, tone: "bg-teal-500/15 text-teal-600 dark:text-teal-400", pro: true },
+      { label: "Financial Freedom", description: "Dana untuk hidup dari hasil investasi", href: "/financial-freedom", icon: Flame, tone: "bg-orange-500/15 text-orange-600 dark:text-orange-400", pro: true },
     ],
   },
   {

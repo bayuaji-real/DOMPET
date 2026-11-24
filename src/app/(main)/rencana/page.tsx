@@ -5,6 +5,7 @@ import { PageHero } from "@/components/ui/form-kit";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, Loader2, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";
 import { AiChat } from "@/components/ai/ai-chat";
+import { PageGate } from "@/components/plan/gate";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,10 @@ interface ExtraNeed {
 }
 
 export default function RencanaPage() {
+  return <PageGate feature="ai_rencana" title="Rencana Keuangan"><RencanaInner /></PageGate>;
+}
+
+function RencanaInner() {
   // "hari ini" dibaca setelah halaman terbuka (bukan saat build)
   const [today, setToday] = React.useState("");
   React.useEffect(() => setToday(todayJakarta()), []);

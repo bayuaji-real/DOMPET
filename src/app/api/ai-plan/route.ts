@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Data kebutuhan kosong" }, { status: 400 });
   }
 
-  const guard = await guardAi("ai_rencana", auth.userId);
+  const guard = await guardAi("ai_rencana", auth.userId, undefined, true);
   if (!guard.ok) return guard.response;
 
   const needsText = body.needs

@@ -5,6 +5,11 @@ import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 vi.mock("@/components/layout/top-header", () => ({ TopHeader: ({ title }: { title: string }) => <h1>{title}</h1> }));
+vi.mock("@/hooks/use-entitlement", async () => {
+  const { canUse, parseEntitlement: pe } = await import("@/lib/plans");
+  const ent = pe({ plan: "pro", source: "paid", ai_limit: 1000, ai_used: 0 });
+  return { useEntitlement: () => ({ ent, loading: false, reload: async () => {}, can: (f: never) => canUse(ent.plan, f) }) };
+});
 vi.mock("next/link", () => ({ default: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a> }));
 vi.mock("@/lib/data/finance-snapshot", () => ({ getFinanceSnapshot: async () => ({ monthlyExpense: 4_000_000 }) }));
 vi.mock("@/lib/data/goals", () => ({ getSavingsGoals: async () => [{ id: "g", name: "Dana Darurat", is_emergency_fund: true, status: "aktif", saved: 5_000_000 }] }));

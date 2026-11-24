@@ -6,6 +6,11 @@ import userEvent from "@testing-library/user-event";
 
 vi.mock("@/components/layout/top-header", () => ({ TopHeader: ({ title }: { title: string }) => <h1>{title}</h1> }));
 vi.mock("@/lib/notify", () => ({ notify: vi.fn() }));
+vi.mock("@/hooks/use-entitlement", async () => {
+  const { canUse, parseEntitlement: pe } = await import("@/lib/plans");
+  const ent = pe({ plan: "pro", source: "paid", ai_limit: 1000, ai_used: 0 });
+  return { useEntitlement: () => ({ ent, loading: false, reload: async () => {}, can: (f: never) => canUse(ent.plan, f) }) };
+});
 vi.mock("next/link", () => ({ default: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a> }));
 vi.mock("@/components/ui/use-confirm", () => ({ useConfirm: () => [async () => true, null] }));
 vi.mock("@/lib/data/finance-snapshot", () => ({ getFinanceSnapshot: async () => ({ monthlyIncome: 6_000_000, monthlyExpense: 3_500_000, monthlyExpenseX: 0, today: "2026-11-24", hasData: true }) }));

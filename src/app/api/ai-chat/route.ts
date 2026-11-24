@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
   const { mode, messages } = parsed.data;
   // Jenis jatah cicip Basic mengikuti mode: tabungan, rencana, atau tanya biasa.
   const cicipKey = mode === "savings" ? "tabungan" : mode === "plan" ? "rencana" : "konsultasi";
-  const guard = await guardAi("ai_chat", auth.userId, cicipKey);
+  const guard = await guardAi("ai_chat", auth.userId, cicipKey, mode === "plan");
   if (!guard.ok) return guard.response;
   if (messages[messages.length - 1].role !== "user") {
     return NextResponse.json({ success: false, error: "Pesan terakhir harus dari pengguna." }, { status: 400 });

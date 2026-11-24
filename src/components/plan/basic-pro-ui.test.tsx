@@ -32,9 +32,11 @@ describe("Basic/Pro: tampilan dan aturan", () => {
     expect(canUse("free", "analisis")).toBe(false);
     expect(canUse("pro", "analisis")).toBe(true);
   });
-  it("Rencana lunasi utang dan Impor CSV masuk Basic, Simulator cicilan tetap Pro", () => {
-    expect(canUse("free", "lunasi_utang")).toBe(true);
+  it("Impor CSV masuk Basic; Simulator cicilan, lunasi utang, dan seluruh perencana khusus Pro", () => {
     expect(canUse("free", "impor_csv")).toBe(true);
-    expect(canUse("free", "simulator_cicilan")).toBe(false);
+    for (const f of ["simulator_cicilan", "lunasi_utang", "ai_rencana", "target_beli", "money_planner", "dana_darurat", "dana_pensiun", "dana_lain", "financial_freedom"] as const) {
+      expect(canUse("free", f)).toBe(false);
+      expect(canUse("pro", f)).toBe(true);
+    }
   });
 });

@@ -16,6 +16,8 @@ export type FeatureKey =
   // Konsultan (non-AI, dihitung di perangkat)
   | "analisis" | "skor_kesehatan" | "peringatan_dini" | "simulator_cicilan" | "mode_thr"
   | "proyeksi_arus_kas" | "lunasi_utang"
+  // Perencana (non-AI, dihitung di perangkat; Pro atas keputusan Owner)
+  | "target_beli" | "money_planner" | "dana_darurat" | "dana_pensiun" | "dana_lain" | "financial_freedom"
   // Investasi
   | "kalkulator_investasi" | "portofolio" | "info_pasar"
   // Umum
@@ -24,7 +26,8 @@ export type FeatureKey =
 export const FEATURE_MIN_PLAN: Record<FeatureKey, Plan> = {
   ai_chat: "pro", ai_struk: "pro", ai_suara: "pro", ai_insight: "pro", ai_rencana: "pro", ai_impor: "pro",
   analisis: "pro", skor_kesehatan: "pro", peringatan_dini: "pro", simulator_cicilan: "pro", mode_thr: "pro",
-  proyeksi_arus_kas: "pro", lunasi_utang: "free",
+  proyeksi_arus_kas: "pro", lunasi_utang: "pro",
+  target_beli: "pro", money_planner: "pro", dana_darurat: "pro", dana_pensiun: "pro", dana_lain: "pro", financial_freedom: "pro",
   kalkulator_investasi: "free", portofolio: "pro", info_pasar: "pro",
   laporan_mingguan: "free", kalkulator_zakat: "free", impor_csv: "free", impor_ai: "pro", dompet_bersama: "pro", pengingat: "free",
 };
@@ -34,6 +37,7 @@ export const FEATURE_LABEL: Record<FeatureKey, string> = {
   ai_rencana: "Rencana Keuangan Ruby", ai_impor: "Impor mutasi dengan Ruby",
   analisis: "Analisis keuangan", skor_kesehatan: "Skor kesehatan keuangan", peringatan_dini: "Peringatan dini", simulator_cicilan: "Simulator cicilan & paylater",
   mode_thr: "Mode THR & Lebaran", proyeksi_arus_kas: "Proyeksi arus kas 3 bulan", lunasi_utang: "Rencana lunasi utang",
+  target_beli: "Target Beli", money_planner: "Money planner", dana_darurat: "Dana daruratku", dana_pensiun: "Dana pensiunku", dana_lain: "Dana lain", financial_freedom: "Financial Freedom",
   kalkulator_investasi: "Kalkulator investasi", portofolio: "Portofolio investasi", info_pasar: "Info pasar & peringkat return",
   laporan_mingguan: "Laporan mingguan", kalkulator_zakat: "Kalkulator zakat", impor_csv: "Impor mutasi CSV", impor_ai: "Impor teks/PDF dengan Ruby", dompet_bersama: "Dompet bersama", pengingat: "Pengingat"
 };

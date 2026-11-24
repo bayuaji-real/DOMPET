@@ -3,6 +3,7 @@
 import * as React from "react";
 import { IconBox, EmptyState } from "@/components/ui/form-kit";
 import { Send, Trash2, ListChecks } from "lucide-react";
+import { PageGate } from "@/components/plan/gate";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
 import { MoneyInput } from "@/components/konsultan/money-input";
@@ -30,6 +31,10 @@ function analyze(g: PurchaseRow, snap: FinanceSnapshot, infl: number): PurchaseR
 }
 
 export default function TargetBeliPage() {
+  return <PageGate feature="target_beli" title="Target Beli"><TargetBeliInner /></PageGate>;
+}
+
+function TargetBeliInner() {
   const [list, setList] = React.useState<PurchaseRow[] | null>(null);
   const [snap, setSnap] = React.useState<FinanceSnapshot | null>(null);
   const [infl, setInfl] = React.useState(3);

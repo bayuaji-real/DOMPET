@@ -1,5 +1,6 @@
 "use client";
 
+import { PageGate } from "@/components/plan/gate";
 import { GuidedChat } from "@/components/ai/guided-chat";
 import { DANA_DARURAT } from "@/lib/konsultan/guided";
 import { getFinanceSnapshot } from "@/lib/data/finance-snapshot";
@@ -15,5 +16,5 @@ async function prefill() {
 }
 
 export default function Page() {
-  return <GuidedChat flow={DANA_DARURAT} prefill={prefill} />;
+  return <PageGate feature="dana_darurat" title="Dana daruratku"><GuidedChat flow={DANA_DARURAT} prefill={prefill} /></PageGate>;
 }

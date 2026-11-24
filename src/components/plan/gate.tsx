@@ -2,6 +2,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { TopHeader } from "@/components/layout/top-header";
 import { useEntitlement } from "@/hooks/use-entitlement";
 import { FEATURE_LABEL, FEATURE_MIN_PLAN, PLAN_LABEL, type FeatureKey } from "@/lib/plans";
 
@@ -18,6 +19,18 @@ export function Gate({ feature, children }: { feature: FeatureKey; children: Rea
         <p className="mt-1 text-sm text-muted-foreground">Tersedia di paket {PLAN_LABEL[FEATURE_MIN_PLAN[feature]]}. Kamu bisa coba Pro gratis 7 hari.</p>
       </div>
       <Button render={<Link href="/paket" />}>Lihat paket</Button>
+    </div>
+  );
+}
+
+/** Gerbang satu halaman penuh: judul halaman tetap tampil, isi (dan pengambilan datanya) hanya jalan kalau paket cukup. */
+export function PageGate({ feature, title, children }: { feature: FeatureKey; title: string; children: React.ReactNode }) {
+  const { can, loading } = useEntitlement();
+  if (!loading && can(feature)) return <>{children}</>;
+  return (
+    <div className="pb-24">
+      <TopHeader title={title} />
+      <div className="px-4 pt-2"><Gate feature={feature}>{null}</Gate></div>
     </div>
   );
 }
