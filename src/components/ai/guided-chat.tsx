@@ -73,7 +73,7 @@ export function GuidedChat({ flow, prefill }: { flow: Flow; prefill?: () => Prom
         {msgs.map((m, i) => (<Bubble key={i} msg={m} first={i === 0 ? true : msgs[i - 1].role !== m.role} profile={profile} />))}
         {(chips.length > 0 || (done && !!flow.links?.length)) && (
           <ReplyBubble>
-            <p className="mb-1.5">{done ? "Mau hitung lagi atau buka fitur lain?" : "Ketuk salah satu, atau ketik sendiri di bawah ya:"}</p>
+            <p className="mb-1.5">{done ? (flow.links?.length ? "Mau hitung lagi atau buka fitur lain?" : "Mau hitung lagi?") : "Ketuk salah satu, atau ketik sendiri di bawah ya:"}</p>
             <div className="flex flex-col gap-1.5">
               {chips.map((c) => (<ReplyRow key={c.label} label={c.label} onClick={c.run} icon={c.label === "Hitung lagi" ? <RotateCcw className="h-3 w-3" aria-hidden="true" /> : undefined} />))}
               {done && flow.links?.map((l) => (<ReplyRow key={l.href + l.text} label={l.text} href={l.href} />))}
@@ -84,7 +84,7 @@ export function GuidedChat({ flow, prefill }: { flow: Flow; prefill?: () => Prom
       </div>
       <p className="bg-background px-3 pt-1.5 text-center text-[10px] leading-tight text-muted-foreground">{flow.footer}</p>
       <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex shrink-0 items-center gap-2 border-t border-border/60 bg-background px-3 py-2.5">
-        <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={100} aria-label={`Pesan ${flow.title}`} placeholder={step?.placeholder ?? "Ketuk Hitung lagi"} disabled={done} className="h-10 flex-1 rounded-full border border-border bg-muted/40 px-4 text-xs outline-none focus:ring-2 focus:ring-teal-500/40 disabled:opacity-50" />
+        <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={100} aria-label={`Pesan ${flow.title}`} placeholder={done ? "Ketuk Hitung lagi" : (step?.placeholder ?? "Ketik jawabanmu di sini")} disabled={done} className="h-10 flex-1 rounded-full border border-border bg-muted/40 px-4 text-xs outline-none focus:ring-2 focus:ring-teal-500/40 disabled:opacity-50" />
         <button type="submit" disabled={done || !input.trim()} aria-label="Kirim" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-sm disabled:opacity-40"><Send className="h-4 w-4" /></button>
       </form>
     </div>
