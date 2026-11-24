@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatRupiah, parseRupiahInput, triggerHapticFeedback } from "@/lib/utils";
+import { formatRupiah, parseRupiahInput, triggerHapticFeedback, MAX_AMOUNT, MAX_AMOUNT_MESSAGE } from "@/lib/utils";
 import { createTransaction } from "@/lib/data/transactions";
 import { limitWarnings } from "@/lib/data/limits";
 import { notify } from "@/lib/notify";
@@ -85,7 +85,13 @@ export default function TambahTransaksiPage() {
       setNominalStr("");
       return;
     }
-    const asBigInt = BigInt(rawVal);
+    let asBigInt = BigInt(rawVal);
+    if (asBigInt > BigInt(MAX_AMOUNT)) {
+      asBigInt = BigInt(MAX_AMOUNT);
+      setErrorMessage(MAX_AMOUNT_MESSAGE);
+    } else {
+      setErrorMessage(null);
+    }
     setNominalStr(asBigInt.toLocaleString("id-ID"));
   };
 
@@ -94,8 +100,12 @@ export default function TambahTransaksiPage() {
     setErrorMessage(null);
 
     const amount = Number(nominalStr.replace(/\D/g, ""));
-    if (amount <= 0) {
+    if (!(amount > 0)) {
       setErrorMessage("Nominal transaksi harus lebih dari Rp 0.");
+      return;
+    }
+    if (amount > MAX_AMOUNT) {
+      setErrorMessage(MAX_AMOUNT_MESSAGE);
       return;
     }
 

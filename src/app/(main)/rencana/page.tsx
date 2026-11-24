@@ -258,12 +258,12 @@ export default function RencanaPage() {
               <h2 className="text-sm font-bold">1. Pemasukan & pengeluaran wajib</h2>
               {usingSchedule ? (
                 <p className="text-xs text-muted-foreground">
-                  Memakai <b className="text-foreground">{schedule.length} jadwal gajian</b> dari Pengaturan (rata-rata {formatRupiah(avgIncome)}, mulai{" "}
+                  Memakai <b className="text-foreground">{schedule.length} jadwal gajian</b> dari menu Jadwal Gajian & Biaya Hidup di More (rata-rata {formatRupiah(avgIncome)}, mulai{" "}
                   {formatTanggalWIB(schedule[0].date)}).
                 </p>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Belum ada jadwal gajian di Pengaturan. Isi perkiraan dulu:</p>
+                  <p className="text-xs text-muted-foreground">Belum ada jadwal gajian di More, menu Jadwal Gajian & Biaya Hidup. Isi perkiraan dulu:</p>
                   <div className="grid grid-cols-2 gap-2">
                     <MoneyField label="Gaji per gajian" value={manual.amount} onChange={(v) => setManual({ ...manual, amount: v })} />
                     <div className="space-y-1">
@@ -289,7 +289,7 @@ export default function RencanaPage() {
               <MoneyField label="Biaya hidup per gajian" value={living} onChange={setLiving} />
               {bills.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-[11px] font-medium">Tagihan bulanan (dari Pengaturan)</p>
+                  <p className="text-[11px] font-medium">Tagihan bulanan (dari menu Tagihan & Langganan Rutin di More)</p>
                   {bills.map((b, i) => (
                     <p key={i} className="text-xs text-muted-foreground">
                       {b.name}: <b className="text-foreground">{formatRupiah(b.amount)}</b> tiap tgl {b.dayOfMonth}

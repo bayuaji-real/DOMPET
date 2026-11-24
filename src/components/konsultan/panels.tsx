@@ -12,7 +12,7 @@ export function Skor({ s }: { s: FinanceSnapshot }) {
   const [debt, setDebt] = React.useState(0);
   React.useEffect(() => { getDebts().then((d) => setDebt(d.reduce((x, r) => x + Number(r.min_payment), 0))).catch(() => {}); }, []);
   if (!s.hasData) return <Empty />;
-  const r = healthScore({ monthlyIncome: s.monthlyIncome, monthlyExpense: s.monthlyExpense, liquidSavings: s.liquidSavings, monthlyDebtPayment: debt });
+  const r = healthScore({ monthlyIncome: s.monthlyIncome, monthlyExpense: s.monthlyExpense, liquidSavings: s.freeCash ?? s.liquidSavings, monthlyDebtPayment: debt });
   const color = r.level === "sehat" ? "text-emerald-600" : r.level === "cukup" ? "text-amber-600" : "text-red-600";
   return (
     <div className="space-y-3">
@@ -29,7 +29,7 @@ export function Skor({ s }: { s: FinanceSnapshot }) {
           </li>
         ))}
       </ul>
-      <p className="text-xs text-muted-foreground">Dihitung dari rata-rata 3 bulan terakhir: pemasukan {formatRupiah(s.monthlyIncome)}, pengeluaran {formatRupiah(s.monthlyExpense)}, uang tersedia {formatRupiah(s.liquidSavings)}. Cicilan utang dari menu Utang.</p>
+      <p className="text-xs text-muted-foreground">Dihitung dari rata-rata {s.monthsCovered ?? 3} bulan data: pemasukan {formatRupiah(s.monthlyIncome)}, pengeluaran {formatRupiah(s.monthlyExpense)}, uang bebas pakai {formatRupiah(s.freeCash ?? s.liquidSavings)} (di luar dompet tabungan dan investasi). Cicilan utang dari menu Utang.</p>
     </div>
   );
 }
@@ -39,7 +39,7 @@ export function Proyeksi({ s }: { s: FinanceSnapshot }) {
   const r = forecastCashflow({ startBalance: s.liquidSavings, monthlyIncome: s.monthlyIncome, avgMonthlyExpense: s.monthlyExpense, monthlyFixedBills: 0, months: 3 });
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">Perkiraan saldo 3 bulan ke depan jika pemasukan dan pengeluaranmu mirip rata-rata 3 bulan terakhir. Ini tebakan berbasis pola, bukan kepastian.</p>
+      <p className="text-xs text-muted-foreground">Perkiraan saldo 3 bulan ke depan jika pemasukan dan pengeluaranmu mirip rata-rata {s.monthsCovered ?? 3} bulan data. Gaji terjadwal dan tagihan rutin yang belum tercatat belum ikut dihitung. Ini tebakan berbasis pola, bukan kepastian.</p>
       {r.firstNegativeMonth ? <p role="alert" className="rounded-lg bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300">Saldo diperkirakan minus mulai bulan ke-{r.firstNegativeMonth}. Pertimbangkan menekan pengeluaran atau menambah pemasukan.</p> : <p className="rounded-lg bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300">Saldo diperkirakan tetap positif 3 bulan ke depan.</p>}
       <ul className="space-y-1.5">{r.months.map((m) => (<li key={m.month} className="flex justify-between rounded-2xl p-3 border border-border/70 bg-card shadow-xs text-sm"><span>Bulan ke-{m.month}</span><span className={`font-semibold ${m.negative ? "text-red-600" : ""}`}>{formatRupiah(m.balance)}</span></li>))}</ul>
       <p className="text-xs text-muted-foreground">Saldo awal {formatRupiah(s.liquidSavings)} · pemasukan {formatRupiah(s.monthlyIncome)}/bulan · pengeluaran {formatRupiah(s.monthlyExpense)}/bulan.</p>

@@ -454,7 +454,7 @@ export default function TabunganPage() {
   ) => {
     if (!selectedGoal) return false;
     if (!selectedWallet) {
-      notify("Pilih dompet dulu. Kalau belum ada dompet, tambahkan di Pengaturan.");
+      notify("Pilih dompet dulu. Kalau belum ada dompet, tambahkan di menu Dompet.");
       return false;
     }
     setSaving(true);

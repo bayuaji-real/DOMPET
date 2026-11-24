@@ -63,7 +63,7 @@ export default function KeamananPage() {
 
         <section aria-label="Hapus akun" className="space-y-3 rounded-3xl border border-red-500/30 bg-red-500/5 p-4">
           <h2 className="flex items-center gap-2.5 text-sm font-semibold text-red-600"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-red-500/15"><Trash2 className="size-[18px]" aria-hidden /></span> Hapus akun</h2>
-          <p className="text-xs text-muted-foreground">Semua datamu dihapus permanen dan tidak bisa dikembalikan. Unduh datamu dulu di Pengaturan kalau perlu.</p>
+          <p className="text-xs text-muted-foreground">Semua datamu dihapus permanen dan tidak bisa dikembalikan. Unduh datamu dulu lewat More, menu Cadangan & Ekspor Data, kalau perlu.</p>
           <label className="block text-sm">Ketik <b>HAPUS</b> untuk melanjutkan<Input aria-label="Ketik HAPUS" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} /></label>
           {delErr && <p role="alert" className="text-sm text-red-600">{delErr}</p>}
           <Button className="w-full bg-red-600 text-white hover:bg-red-700" disabled={confirmText.trim() !== "HAPUS" || busy} onClick={deleteAccount}>{busy ? "Menghapus..." : "Hapus akun saya"}</Button>

@@ -9,7 +9,7 @@ import { updateTransaction, type Transaction } from "@/lib/data/transactions";
 import { NewCategoryInline } from "@/components/category/new-category-inline";
 import { categoryEmoji, type Category } from "@/lib/data/categories";
 import type { WalletBalance } from "@/lib/data/wallets";
-import { triggerHapticFeedback } from "@/lib/utils";
+import { triggerHapticFeedback, MAX_AMOUNT } from "@/lib/utils";
 
 const fmt = (n: number) => (n > 0 ? n.toLocaleString("id-ID") : "");
 
@@ -32,6 +32,8 @@ export function EditTransactionSheet({ trx, wallets, categories, onClose, onSave
   const [date, setDate] = React.useState("");
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  // Hook harus dipanggil sebelum return awal di bawah (kalau tidak, halaman crash dengan error React #310 saat Ubah dibuka).
+  const [extraCats, setExtraCats] = React.useState<Category[]>([]);
 
   React.useEffect(() => {
     if (!trx) return;
@@ -48,7 +50,6 @@ export function EditTransactionSheet({ trx, wallets, categories, onClose, onSave
   if (!trx) return null;
   const isFlow = trx.type === "income" || trx.type === "expense";
   const isTransfer = trx.type === "transfer";
-  const [extraCats, setExtraCats] = React.useState<Category[]>([]);
   const cats = [...categories, ...extraCats].filter((c) => c.type === trx.type);
   const activeWallets = wallets.filter((w) => !w.is_archived);
 
@@ -106,7 +107,7 @@ export function EditTransactionSheet({ trx, wallets, categories, onClose, onSave
                 id="edit-amount"
                 inputMode="numeric"
                 value={amountStr}
-                onChange={(e) => setAmountStr(fmt(Number(e.target.value.replace(/\D/g, "")) || 0))}
+                onChange={(e) => setAmountStr(fmt(Math.min(Number(e.target.value.replace(/\D/g, "")) || 0, MAX_AMOUNT)))}
                 className="h-11 w-full bg-transparent px-2 text-lg font-extrabold outline-none"
               />
             </div>

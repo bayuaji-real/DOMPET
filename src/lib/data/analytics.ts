@@ -37,6 +37,9 @@ function withTimeout<T>(p: PromiseLike<T>, ms = 1500): Promise<T> {
 }
 
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+/** Label bulan dari database berbahasa Inggris (Aug, Oct, Dec, May): ubah ke bahasa Indonesia. */
+const ID_MONTH: Record<string, string> = { May: "Mei", Aug: "Agt", Oct: "Okt", Dec: "Des" };
+const idMonthLabel = (l: unknown) => { const s = String(l ?? ""); return ID_MONTH[s] ?? s; };
 
 // Dataset sampel 2 bulan realistis (Oktober & November 2026) sebagai baseline fallback
 const SAMPLE_TRANSACTIONS = [
@@ -530,7 +533,7 @@ export async function getAnalyticsData(
         })),
         monthlyCashflow: (rpcData.monthly_cashflow || []).map((m: any) => ({
           monthKey: m.month_key,
-          label: m.label,
+          label: idMonthLabel(m.label),
           income: Number(m.income || 0),
           expense: Number(m.expense || 0),
         })),

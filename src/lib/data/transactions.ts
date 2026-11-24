@@ -2,6 +2,13 @@ import { createClient, isSupabaseConfigured } from "../supabase/client";
 import type { Database, TransactionType, TransactionSource } from "@/types/database";
 import { todayJakarta } from "./sample-mode";
 import { ensureDefaultWallet } from "./wallets";
+import { MAX_AMOUNT, MAX_AMOUNT_MESSAGE } from "../utils";
+
+/** Menolak nominal nol, negatif, bukan angka, atau di atas batas (jangan sampai tersimpan rusak). */
+function assertAmountInRange(amount: number) {
+  if (!Number.isFinite(amount) || !(amount > 0)) throw new Error("Nominal harus lebih dari Rp0.");
+  if (amount > MAX_AMOUNT) throw new Error(MAX_AMOUNT_MESSAGE);
+}
 
 export type Transaction = Database["public"]["Tables"]["transactions"]["Row"];
 
@@ -126,6 +133,7 @@ async function categoryMatchingType(
 export async function createTransaction(
   rawInput: CreateTransactionInput
 ): Promise<Transaction | null> {
+  assertAmountInRange(rawInput.amount);
   const input = await withResolvedWallets(rawInput);
   input.category_id = await categoryMatchingType(input.type, input.category_id);
   const supabase = createClient();
@@ -199,6 +207,7 @@ export async function createTransaction(
 export async function createTransactions(
   rawInputs: CreateTransactionInput[]
 ): Promise<Transaction[]> {
+  rawInputs.forEach((r) => assertAmountInRange(r.amount));
   const inputs = await Promise.all(
     rawInputs.map(async (raw) => {
       const resolved = await withResolvedWallets(raw);
@@ -286,6 +295,9 @@ export async function updateTransaction(
 ): Promise<{ ok: boolean; error?: string }> {
   if (input.amount !== undefined && !(input.amount > 0)) {
     return { ok: false, error: "Nominal harus lebih dari Rp0." };
+  }
+  if (input.amount !== undefined && input.amount > MAX_AMOUNT) {
+    return { ok: false, error: MAX_AMOUNT_MESSAGE };
   }
   if (type === "transfer" && input.wallet_id && input.to_wallet_id && input.wallet_id === input.to_wallet_id) {
     return { ok: false, error: "Dompet tujuan tidak boleh sama dengan dompet asal." };

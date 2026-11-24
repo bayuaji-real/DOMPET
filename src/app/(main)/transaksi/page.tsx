@@ -651,6 +651,7 @@ export default function TransaksiPage() {
                               : "text-rose-600 dark:text-rose-400"
                         }`}
                       >
+                        {!isNeutral && (isIncome ? "+" : "-")}
                         {formatRupiah(trx.nominal, { absolute: true })}
                       </span>
                     </div>

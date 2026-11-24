@@ -3,7 +3,7 @@
 import { RubyAvatar, RubyBubble } from "@/components/ai/ruby";
 import * as React from "react";
 import { TopHeader } from "@/components/layout/top-header";
-import { formatRupiah } from "@/lib/utils";
+import { formatRupiah, formatTanggal } from "@/lib/utils";
 import { WalletIcon } from "@/components/wallet/wallet-icon";
 import { BudgetCard } from "@/components/analytics/budget-card";
 import {
@@ -997,7 +997,7 @@ export function AnalisisClient({ initialData }: AnalisisClientProps) {
                     <p className="font-bold text-rose-600 dark:text-rose-400">
                       {formatRupiah(trx.nominal, { absolute: true })}
                     </p>
-                    <p className="text-[9px] text-muted-foreground">{trx.tanggal}</p>
+                    <p className="text-[9px] text-muted-foreground">{formatTanggal(trx.tanggal)}</p>
                   </div>
                 </div>
               ))}

@@ -42,6 +42,10 @@ export function parseRupiah(value: string | number): number {
   return isNaN(parsed) ? 0 : parsed;
 }
 
+/** Batas atas satu nominal transaksi: Rp100 miliar (sama dengan batas di tabel database yang lebih baru). */
+export const MAX_AMOUNT = 100_000_000_000;
+export const MAX_AMOUNT_MESSAGE = "Nominal terlalu besar. Maksimal Rp100.000.000.000.";
+
 /**
  * Parse string input user (misal "1.250.000" atau "Rp 50.000") menjadi BigInt
  */
