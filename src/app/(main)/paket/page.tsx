@@ -40,10 +40,10 @@ export default function PaketPage() {
     <div className="pb-24">
       <TopHeader title="Paket" />
       <div className="space-y-4 px-4 pt-2">
-        <div className="rounded-xl bg-primary/10 p-4">
-          <p className="text-sm text-muted-foreground">Paketmu sekarang</p>
-          <p className="text-xl font-bold" data-testid="paket-aktif">{loading ? "..." : PLAN_LABEL[ent.plan]}{ent.source === "trial" && daysLeft > 0 ? ` (uji coba, sisa ${daysLeft} hari)` : ""}</p>
-          {ent.plan !== "free" && <p className="mt-1 text-sm text-muted-foreground">Kuota AI bulan ini: {ent.aiRemaining} dari {ent.aiLimit} tersisa.</p>}
+        <div className="rounded-3xl border border-teal-500/30 bg-teal-500/10 p-4">
+          <p className="text-xs text-muted-foreground">Paketmu sekarang</p>
+          <p className="text-lg font-bold" data-testid="paket-aktif">{loading ? "..." : PLAN_LABEL[ent.plan]}{ent.source === "trial" && daysLeft > 0 ? ` (uji coba, sisa ${daysLeft} hari)` : ""}</p>
+          {ent.plan !== "free" && <p className="mt-1 text-xs text-muted-foreground">Kuota AI bulan ini: {ent.aiRemaining} dari {ent.aiLimit} tersisa.</p>}
         </div>
 
         {msg && <p role="status" className={`rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-red-500/10 text-red-700 dark:text-red-300"}`}>{msg.text}</p>}
@@ -52,12 +52,12 @@ export default function PaketPage() {
           const current = ent.plan === t.plan;
           const canTrial = t.plan !== "free" && ent.source === "free" && ent.trialAvailable[t.plan as "premium" | "pro"];
           return (
-            <section key={t.plan} className={`rounded-xl p-4 ring-1 ${current ? "ring-2 ring-primary" : "ring-foreground/10"}`} aria-label={`Paket ${PLAN_LABEL[t.plan]}`}>
+            <section key={t.plan} className={`rounded-3xl border bg-card p-4 shadow-xs ${current ? "border-teal-500 ring-1 ring-teal-500/40" : "border-border/70"}`} aria-label={`Paket ${PLAN_LABEL[t.plan]}`}>
               <div className="flex items-baseline justify-between">
-                <h2 className="text-lg font-bold">{PLAN_LABEL[t.plan]}</h2>
-                <span className="text-sm text-muted-foreground">{t.harga}</span>
+                <h2 className="text-base font-bold">{PLAN_LABEL[t.plan]}</h2>
+                <span className="text-xs text-muted-foreground">{t.harga}</span>
               </div>
-              <p className="text-sm text-muted-foreground">{t.tagline}</p>
+              <p className="text-xs text-muted-foreground">{t.tagline}</p>
               <ul className="mt-3 space-y-1.5 text-sm">
                 {t.fitur.map((f) => (<li key={f} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-emerald-600" aria-hidden />{f}</li>))}
               </ul>
@@ -70,7 +70,7 @@ export default function PaketPage() {
               {!current && t.plan !== "free" && (
                 <Button className="mt-2 w-full" variant="outline" disabled={busy !== null} onClick={() => minta(t.plan as "premium" | "pro")}>Minta berlangganan</Button>
               )}
-              {!current && t.plan !== "free" && !canTrial && ent.source === "free" && <p className="mt-3 text-sm text-muted-foreground">Uji coba paket ini sudah kamu pakai.</p>}
+              {!current && t.plan !== "free" && !canTrial && ent.source === "free" && <p className="mt-3 text-xs text-muted-foreground">Uji coba paket ini sudah kamu pakai.</p>}
             </section>
           );
         })}

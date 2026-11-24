@@ -44,13 +44,13 @@ export default function BerulangPage() {
       <div className="space-y-4 px-4 pt-2">
         <p className="text-sm text-muted-foreground">Tagihan atau pemasukan yang datang tiap bulan (listrik, cicilan, gaji). Saat jatuh tempo, tinggal tekan Catat sekarang.</p>
         {err && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{err}</p>}
-        {list === null && !err && <div className="h-20 animate-pulse rounded-xl bg-muted" aria-busy="true" />}
+        {list === null && !err && <div className="h-20 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
         {list && list.length === 0 && <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">Belum ada transaksi berulang. Tambahkan yang pertama di bawah.</p>}
         <ul className="space-y-2">
           {(list ?? []).map((r) => {
             const due = r.next_date <= today;
             return (
-              <li key={r.id} className="rounded-xl p-3 ring-1 ring-foreground/10">
+              <li key={r.id} className="rounded-2xl p-3 border border-border/70 bg-card shadow-xs">
                 <div className="flex items-start justify-between gap-2">
                   <div><p className="font-medium">{r.note || "Tanpa nama"}</p>
                     <p className="text-xs text-muted-foreground">{r.type === "income" ? "Pemasukan" : "Pengeluaran"} · tiap tanggal {r.day_of_month} · {walletName(r.wallet_id)}</p>
@@ -68,7 +68,7 @@ export default function BerulangPage() {
             );
           })}
         </ul>
-        <form aria-label="Tambah transaksi berulang" className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10" onSubmit={async (e) => {
+        <form aria-label="Tambah transaksi berulang" className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs" onSubmit={async (e) => {
           e.preventDefault(); if (!valid) return;
           await act(async () => { await createRecurringTransaction({ type: f.type, amount: f.amount, wallet_id: f.wallet, category_id: f.cat || null, note: f.note.trim(), rule: "monthly", day_of_month: day, next_date: nextDateForDay(day, today), is_active: true }); setF({ ...f, note: "", amount: 0 }); }, "Ditambahkan");
         }}>

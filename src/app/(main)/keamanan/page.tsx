@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Trash2 } from "lucide-react";
 import { TopHeader } from "@/components/layout/top-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,10 +44,10 @@ export default function KeamananPage() {
   return (
     <div className="pb-24">
       <TopHeader title="Keamanan" />
-      <div className="space-y-6 px-4 pt-2">
-        <section aria-label="PIN aplikasi" className="space-y-3">
-          <h2 className="flex items-center gap-2 text-lg font-bold"><ShieldCheck className="size-5 text-teal-600" aria-hidden /> PIN aplikasi</h2>
-          <p className="text-sm text-muted-foreground">PIN menutup layar kalau HP-mu dipinjam orang. PIN hanya berlaku di perangkat ini dan tidak menggantikan login.</p>
+      <div className="space-y-4 px-4 pt-2">
+        <section aria-label="PIN aplikasi" className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
+          <h2 className="flex items-center gap-2.5 text-sm font-semibold"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-teal-500/15 text-teal-600"><ShieldCheck className="size-[18px]" aria-hidden /></span> PIN aplikasi</h2>
+          <p className="text-xs text-muted-foreground">Kunci layar di perangkat ini. Tidak menggantikan login.</p>
           {msg && <p role="status" className={`rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-red-500/10 text-red-700 dark:text-red-300"}`}>{msg.text}</p>}
           <form onSubmit={save} className="space-y-2">
             <Input aria-label="PIN baru" type="password" inputMode="numeric" maxLength={6} placeholder={hasPin ? "PIN baru (ganti)" : "PIN 4 sampai 6 angka"} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} />
@@ -61,9 +61,9 @@ export default function KeamananPage() {
 
         <PushCard />
 
-        <section aria-label="Hapus akun" className="space-y-3 rounded-xl border border-red-500/30 p-4">
-          <h2 className="text-lg font-bold text-red-600">Hapus akun</h2>
-          <p className="text-sm text-muted-foreground">Semua datamu (dompet, transaksi, tabungan, utang, portofolio) dihapus permanen dan tidak bisa dikembalikan. Unduh dulu datamu lewat menu Pengaturan di More kalau perlu.</p>
+        <section aria-label="Hapus akun" className="space-y-3 rounded-3xl border border-red-500/30 bg-red-500/5 p-4">
+          <h2 className="flex items-center gap-2.5 text-sm font-semibold text-red-600"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-red-500/15"><Trash2 className="size-[18px]" aria-hidden /></span> Hapus akun</h2>
+          <p className="text-xs text-muted-foreground">Semua datamu dihapus permanen dan tidak bisa dikembalikan. Unduh datamu dulu di Pengaturan kalau perlu.</p>
           <label className="block text-sm">Ketik <b>HAPUS</b> untuk melanjutkan<Input aria-label="Ketik HAPUS" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} /></label>
           {delErr && <p role="alert" className="text-sm text-red-600">{delErr}</p>}
           <Button className="w-full bg-red-600 text-white hover:bg-red-700" disabled={confirmText.trim() !== "HAPUS" || busy} onClick={deleteAccount}>{busy ? "Menghapus..." : "Hapus akun saya"}</Button>

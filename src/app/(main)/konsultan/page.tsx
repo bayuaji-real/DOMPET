@@ -43,7 +43,7 @@ export default function KonsultanPage() {
         </div>
         {err && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{err}</p>}
         <Gate feature={cur.feature}>
-          {!snap && !err ? <div className="h-32 animate-pulse rounded-xl bg-muted" aria-busy="true" /> : snap && (
+          {!snap && !err ? <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" /> : snap && (
             <>
               {tab === "skor" && <Skor s={snap} />}
               {tab === "peringatan" && <Peringatan s={snap} />}
@@ -80,7 +80,7 @@ function Cicilan() {
   const f = compareFlat(price, num(flat), n), p = comparePaylater(price, num(fee), n);
   const a = annuityPayment(price, num(flat), n);
   const row = (label: string, c: { payment: number; total: number; interest: number; effectiveAnnualPct: number }) => (
-    <div className="rounded-lg p-3 ring-1 ring-foreground/10"><p className="font-semibold">{label}</p>
+    <div className="rounded-2xl p-3 border border-border/70 bg-card shadow-xs"><p className="font-semibold">{label}</p>
       <p className="text-sm">Cicilan {formatRupiah(Math.round(c.payment))} per bulan</p>
       <p className="text-sm">Total bayar {formatRupiah(Math.round(c.total))} (bunga/biaya {formatRupiah(Math.round(c.interest))})</p>
       <p className="text-xs text-muted-foreground">Setara bunga sekitar {c.effectiveAnnualPct.toFixed(1).replace(".", ",")}% per tahun</p></div>);
@@ -119,9 +119,9 @@ function Utang({ s }: { s: FinanceSnapshot }) {
       {confirmDialog}
       <p className="text-sm text-muted-foreground">Masukkan utangmu, lalu lihat urutan melunasi yang paling hemat bunga.</p>
       {err && <p role="alert" className="text-sm text-red-600">{err}</p>}
-      <ul className="space-y-1.5">{debts.map((d) => (<li key={d.id} className="flex items-center justify-between rounded-lg p-3 ring-1 ring-foreground/10 text-sm"><span>{d.name}<span className="block text-xs text-muted-foreground">{formatRupiah(d.balance)} · bunga {d.annualRatePct}%/thn · min {formatRupiah(d.minPayment)}</span></span><button aria-label={`Hapus ${d.name}`} onClick={async () => { if (await ask(`Hapus ${d.name}?`)) { await deleteDebt(d.id); await load(); } }}><Trash2 className="size-4 text-muted-foreground" /></button></li>))}</ul>
+      <ul className="space-y-1.5">{debts.map((d) => (<li key={d.id} className="flex items-center justify-between rounded-2xl p-3 border border-border/70 bg-card shadow-xs text-sm"><span>{d.name}<span className="block text-xs text-muted-foreground">{formatRupiah(d.balance)} · bunga {d.annualRatePct}%/thn · min {formatRupiah(d.minPayment)}</span></span><button aria-label={`Hapus ${d.name}`} onClick={async () => { if (await ask(`Hapus ${d.name}?`)) { await deleteDebt(d.id); await load(); } }}><Trash2 className="size-4 text-muted-foreground" /></button></li>))}</ul>
       {list && list.length === 0 && <p className="rounded-lg border border-dashed p-3 text-center text-sm text-muted-foreground">Belum ada utang tercatat.</p>}
-      <form className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10" aria-label="Tambah utang" onSubmit={async (e) => { e.preventDefault(); if (!valid) return; try { await addDebt({ name: f.name.trim(), balance: f.balance, annual_rate: Number(f.rate.replace(",", ".")) || 0, min_payment: f.min }); setF({ name: "", balance: 0, rate: "0", min: 0 }); await load(); } catch { setErr("Belum bisa menyimpan utang."); } }}>
+      <form className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs" aria-label="Tambah utang" onSubmit={async (e) => { e.preventDefault(); if (!valid) return; try { await addDebt({ name: f.name.trim(), balance: f.balance, annual_rate: Number(f.rate.replace(",", ".")) || 0, min_payment: f.min }); setF({ name: "", balance: 0, rate: "0", min: 0 }); await load(); } catch { setErr("Belum bisa menyimpan utang."); } }}>
         <Input aria-label="Nama utang" placeholder="Nama, misal Kartu kredit" maxLength={60} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
         <MoneyInput aria-label="Sisa utang" value={f.balance} onChange={(n) => setF({ ...f, balance: n })} placeholder="Sisa utang" suffix="Rp" />
         <div className="grid grid-cols-2 gap-2"><Input aria-label="Bunga per tahun" inputMode="decimal" placeholder="Bunga %/thn" value={f.rate} onChange={(e) => setF({ ...f, rate: e.target.value.replace(/[^\d.,]/g, "") })} /><MoneyInput aria-label="Cicilan minimum" value={f.min} onChange={(n) => setF({ ...f, min: n })} placeholder="Cicilan min/bln" /></div>
@@ -133,7 +133,7 @@ function Utang({ s }: { s: FinanceSnapshot }) {
           {!av.feasible ? <p role="alert" className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">{eff < minTotal ? "Dana per bulan kurang dari total cicilan minimum." : "Dengan dana ini utang belum bisa lunas dalam 50 tahun. Naikkan dana per bulan."}</p> : (
             <>
               <div className="rounded-lg p-3 ring-1 ring-primary"><p className="font-semibold">Bunga terbesar dulu (paling hemat)</p><p className="text-sm">Lunas dalam {fmtMonths(av.months)} · total bunga {formatRupiah(av.totalInterest)}</p><p className="text-xs text-muted-foreground">Urutan lunas: {av.order.join(" → ")}</p></div>
-              <div className="rounded-lg p-3 ring-1 ring-foreground/10"><p className="font-semibold">Saldo terkecil dulu (lebih semangat)</p><p className="text-sm">Lunas dalam {fmtMonths(sn.months)} · total bunga {formatRupiah(sn.totalInterest)}</p><p className="text-xs text-muted-foreground">Urutan lunas: {sn.order.join(" → ")}</p></div>
+              <div className="rounded-2xl p-3 border border-border/70 bg-card shadow-xs"><p className="font-semibold">Saldo terkecil dulu (lebih semangat)</p><p className="text-sm">Lunas dalam {fmtMonths(sn.months)} · total bunga {formatRupiah(sn.totalInterest)}</p><p className="text-xs text-muted-foreground">Urutan lunas: {sn.order.join(" → ")}</p></div>
             </>
           )}
           <p className="text-xs text-muted-foreground">Pemasukan rata-rata kamu {formatRupiah(s.monthlyIncome)} per bulan sebagai gambaran.</p>

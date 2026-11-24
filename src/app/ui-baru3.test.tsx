@@ -33,33 +33,41 @@ import { AcuanSection } from "@/components/market/acuan-section";
 import { MfaCard } from "@/components/security/mfa";
 afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
-describe("Target Beli", () => {
-  it("menampilkan penilaian, setoran per bulan, dan perkiraan harga", async () => {
-    render(<TargetBeliPage />);
-    expect(await screen.findByText("Laptop kerja")).toBeTruthy();
-    expect(screen.getAllByText(/Aman|Pas-pasan|Berat/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Sisihkan sekitar/)).toBeTruthy();
-  });
-  it("form tunai disimpan dengan harga dan tanggal target", async () => {
+describe("Target Beli (obrolan)", () => {
+  it("menyapa singkat dan menampilkan daftar target dengan penilaian", async () => {
     const u = userEvent.setup();
     render(<TargetBeliPage />);
-    await screen.findByText("Laptop kerja");
-    await u.click(screen.getByRole("button", { name: "Tambah target beli" }));
-    await u.type(screen.getByLabelText("Nama barang"), "Kulkas");
-    await u.type(screen.getByLabelText("Harga barang"), "4000000");
-    await u.click(screen.getByRole("button", { name: "Simpan dan hitung" }));
+    expect(screen.getByText(/Mau beli apa/)).toBeTruthy();
+    await u.click(screen.getByRole("button", { name: "Target saya" }));
+    expect(await screen.findByText("Laptop kerja")).toBeTruthy();
+    expect(screen.getAllByText(/Aman|Pas-pasan|Berat/).length).toBeGreaterThan(0);
+  });
+  it("kalimat tunai disimpan dengan harga dan dijawab singkat", async () => {
+    const u = userEvent.setup();
+    render(<TargetBeliPage />);
+    await u.type(screen.getByLabelText("Pesan Target Beli"), "Kulkas 4jt tunai");
+    await u.click(screen.getByRole("button", { name: "Kirim" }));
     await waitFor(() => expect(addPurchase).toHaveBeenCalled());
     const arg = (addPurchase.mock.calls[0] as unknown[])[0] as Record<string, unknown>;
     expect(arg.name).toBe("Kulkas"); expect(arg.price).toBe(4000000); expect(arg.mode).toBe("tunai");
+    expect(await screen.findByText(/Rp\s?4\.000\.000, tunai/)).toBeTruthy();
   });
-  it("mode cicilan menampilkan DP, lama, dan bunga", async () => {
+  it("kalimat cicilan membaca DP dan lama cicilan", async () => {
     const u = userEvent.setup();
     render(<TargetBeliPage />);
-    await screen.findByText("Laptop kerja");
-    await u.click(screen.getByRole("button", { name: "Tambah target beli" }));
-    await u.click(screen.getByRole("button", { name: "Cicilan" }));
-    expect(screen.getByLabelText("Uang muka")).toBeTruthy();
-    expect(screen.getByLabelText("Lama cicilan bulan")).toBeTruthy();
+    await u.type(screen.getByLabelText("Pesan Target Beli"), "Motor 25jt cicilan 24 bulan dp 5jt");
+    await u.click(screen.getByRole("button", { name: "Kirim" }));
+    await waitFor(() => expect(addPurchase).toHaveBeenCalled());
+    const arg = (addPurchase.mock.calls[0] as unknown[])[0] as Record<string, unknown>;
+    expect(arg).toMatchObject({ name: "Motor", price: 25000000, mode: "cicilan", months: 24, down_payment: 5000000 });
+  });
+  it("tanpa harga bertanya dulu dan tidak menyimpan", async () => {
+    const u = userEvent.setup();
+    render(<TargetBeliPage />);
+    await u.type(screen.getByLabelText("Pesan Target Beli"), "mau beli sepeda");
+    await u.click(screen.getByRole("button", { name: "Kirim" }));
+    expect(await screen.findByText(/harganya berapa/)).toBeTruthy();
+    expect(addPurchase).not.toHaveBeenCalled();
   });
 });
 

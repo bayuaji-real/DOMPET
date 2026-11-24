@@ -27,10 +27,10 @@ export function PushCard() {
     } finally { setBusy(false); }
   };
   return (
-    <section aria-label="Notifikasi" className="space-y-3">
-      <h2 className="flex items-center gap-2 text-lg font-bold"><Bell className="size-5 text-teal-600" aria-hidden /> Notifikasi peringatan</h2>
-      <p className="text-sm text-muted-foreground">Dapat peringatan saat batas pengeluaranmu hampir habis atau terlewati, walau aplikasi sedang ditutup. Dikirim paling sering sekali sehari.</p>
-      {msg && <p role="status" className="rounded-lg bg-muted px-3 py-2 text-sm">{msg}</p>}
+    <section aria-label="Notifikasi" className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
+      <h2 className="flex items-center gap-2.5 text-sm font-semibold"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600"><Bell className="size-[18px]" aria-hidden /></span> Notifikasi peringatan</h2>
+      <p className="text-xs text-muted-foreground">Peringatan batas pengeluaran, walau aplikasi ditutup. Maksimal sekali sehari.</p>
+      {msg && <p role="status" className="rounded-2xl bg-muted px-3 py-2 text-xs">{msg}</p>}
       {!supported && <p className="text-sm text-amber-700 dark:text-amber-300">{TEXT.tidak_didukung}</p>}
       <Button className="w-full" variant={on ? "outline" : "default"} disabled={busy || !supported} onClick={toggle}>{on ? "Matikan notifikasi" : "Aktifkan notifikasi"}</Button>
     </section>

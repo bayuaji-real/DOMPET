@@ -11,14 +11,14 @@ import { ASSISTANT_AVATAR, ASSISTANT_GREETING, ASSISTANT_NAME, RUBY_MENU } from 
 export type { SavingsProposal };
 
 
-interface Msg {
+export interface Msg {
   role: "user" | "model";
   text: string;
   /** Jam kirim (WIB), mis. "09:41". */
   time?: string;
 }
 
-function nowLabel(): string {
+export function nowLabel(): string {
   return new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Jakarta" })
     .format(new Date())
     .replace(".", ":");
@@ -72,7 +72,7 @@ function Avatar({ who, profile }: { who: "user" | "model"; profile: UserProfile 
 }
 
 /** Satu bubble ala WhatsApp: foto dan nama pengirim hanya di bubble paling atas dalam satu rangkaian, jam di pojok kanan bawah. */
-function Bubble({
+export function Bubble({
   msg,
   first,
   profile,

@@ -51,15 +51,15 @@ export default function PlannerPage() {
       {dialog}
       <TopHeader title="Planner Acara" />
       <div className="space-y-4 px-4 pt-2">
-        {err && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{err}</p>}
-        {!events && !err && <div className="h-32 animate-pulse rounded-xl bg-muted" aria-busy="true" />}
+        {err && <p role="alert" className="rounded-2xl bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300">{err}</p>}
+        {!events && !err && <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
         {events && !ev && <NewEvent onDone={loadEvents} />}
         {ev && (
           <>
-            <div role="tablist" aria-label="Bagian planner" className="grid grid-cols-6 gap-1 rounded-xl bg-muted p-1">
-              {TABS.map((t) => (<button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`rounded-lg py-2 text-[11px] font-medium ${tab === t.id ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{t.label}</button>))}
+            <div role="tablist" aria-label="Bagian planner" className="grid grid-cols-6 gap-1 rounded-2xl bg-muted p-1">
+              {TABS.map((t) => (<button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`rounded-xl py-2 text-[11px] font-semibold ${tab === t.id ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{t.label}</button>))}
             </div>
-            {!data ? <div className="h-32 animate-pulse rounded-xl bg-muted" aria-busy="true" /> : (
+            {!data ? <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" /> : (
               <>
                 {tab === "ringkasan" && <Ringkasan ev={ev} d={data} today={today} onSaved={loadEvents} onDelete={async () => { if (await ask("Hapus seluruh planner ini beserta vendor, pembayaran, tamu, dan tugasnya? Tidak bisa dibatalkan.", "Hapus")) { await P.deleteEvent(ev.id).then(() => { setData(null); return loadEvents(); }).catch(() => notify("Belum bisa dihapus. Coba lagi.")); } }} />}
                 {(tab === "vendor" || tab === "seserahan") && <Belanja key={tab} kind={tab} ev={ev} d={data} run={run} ask={ask} />}
@@ -89,9 +89,9 @@ function NewEvent({ onDone }: { onDone: () => void }) {
     catch { notify("Belum bisa membuat planner. Coba lagi sebentar."); } finally { setBusy(false); }
   };
   return (
-    <div className="space-y-3 rounded-xl p-4 ring-1 ring-foreground/10">
+    <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
       <p className="font-semibold">Mulai planner acaramu</p>
-      <p className="text-sm text-muted-foreground">Catat semua kebutuhan lamaran, pernikahan, atau acara lain: apa saja, berapa harganya, kapan dibutuhkan, dan sudah dibayar berapa.</p>
+      <p className="text-xs text-muted-foreground">Catat kebutuhan, harga, dan pembayaran acaramu.</p>
       <label className="block space-y-1 text-sm">Nama acara<Input aria-label="Nama acara" value={f.title} maxLength={80} placeholder="Contoh: Pernikahan Bayu & Intan" onChange={(e) => setF({ ...f, title: e.target.value })} /></label>
       <div className="grid grid-cols-2 gap-2">
         <label className="space-y-1 text-xs">Jenis<select aria-label="Jenis acara" className={selectCls} value={f.type} onChange={(e) => setF({ ...f, type: e.target.value as typeof f.type })}><option value="nikah">Pernikahan</option><option value="lamaran">Lamaran</option><option value="lainnya">Lainnya</option></select></label>
@@ -113,7 +113,7 @@ function NewEvent({ onDone }: { onDone: () => void }) {
 }
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "bad" | "good" }) {
-  return (<div className="rounded-lg p-3 ring-1 ring-foreground/10"><p className="text-xs text-muted-foreground">{label}</p><p className={`font-semibold ${tone === "bad" ? "text-red-600 dark:text-red-400" : tone === "good" ? "text-emerald-600 dark:text-emerald-400" : ""}`}>{value}</p></div>);
+  return (<div className="rounded-2xl p-3 border border-border/70 bg-card shadow-xs"><p className="text-xs text-muted-foreground">{label}</p><p className={`font-semibold ${tone === "bad" ? "text-red-600 dark:text-red-400" : tone === "good" ? "text-emerald-600 dark:text-emerald-400" : ""}`}>{value}</p></div>);
 }
 
 function Ringkasan({ ev, d, today, onSaved, onDelete }: { ev: P.EventRow; d: P.PlannerData; today: string; onSaved: () => void; onDelete: () => void }) {
@@ -129,8 +129,8 @@ function Ringkasan({ ev, d, today, onSaved, onDelete }: { ev: P.EventRow; d: P.P
   const [f, setF] = React.useState({ title: ev.title, date: ev.event_date ?? "", budget: ev.total_budget });
   return (
     <div className="space-y-3">
-      <div className="rounded-xl bg-primary/10 p-4">
-        <p className="text-sm text-muted-foreground">{ev.title}</p>
+      <div className="rounded-3xl border border-teal-500/30 bg-teal-500/10 p-4">
+        <p className="text-xs text-muted-foreground">{ev.title}</p>
         {days === null ? <p className="font-semibold">Tanggal acara belum diisi</p> : days > 0 ? <p className="text-2xl font-bold">{days} hari lagi</p> : days === 0 ? <p className="text-2xl font-bold">Hari ini!</p> : <p className="font-semibold">Acara sudah lewat {Math.abs(days)} hari</p>}
         {ev.event_date && <p className="text-xs text-muted-foreground">{ev.event_date}</p>}
       </div>
@@ -142,8 +142,8 @@ function Ringkasan({ ev, d, today, onSaved, onDelete }: { ev: P.EventRow; d: P.P
         <Stat label={s.budgetLeft >= 0 ? "Sisa budget" : "Melebihi budget"} value={formatRupiah(Math.abs(s.budgetLeft))} tone={s.overBudget ? "bad" : "good"} />
         <Stat label="Kas budget tersisa" value={formatRupiah(s.cashLeft)} />
       </div>
-      {s.overBudget && <p role="alert" className="rounded-lg bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300">Rencana belanja sudah melebihi budget. Kurangi item atau naikkan budget.</p>}
-      {save !== null && <p className="rounded-lg bg-sky-500/10 p-3 text-sm text-sky-700 dark:text-sky-300">Agar sisa kewajiban {formatRupiah(s.obligation)} terkumpul sebelum acara, sisihkan sekitar {formatRupiah(save)} per bulan. Ini hitungan sederhana. <Link href="/tabungan" className="underline">Buat target di Tabungan</Link></p>}
+      {s.overBudget && <p role="alert" className="rounded-2xl bg-red-500/10 p-3 text-xs text-red-700 dark:text-red-300">Rencana belanja sudah melebihi budget. Kurangi item atau naikkan budget.</p>}
+      {save !== null && <p className="rounded-2xl bg-sky-500/10 p-3 text-xs text-sky-700 dark:text-sky-300">Agar sisa kewajiban {formatRupiah(s.obligation)} terkumpul sebelum acara, sisihkan sekitar {formatRupiah(save)} per bulan. Ini hitungan sederhana. <Link href="/tabungan" className="underline">Buat target di Tabungan</Link></p>}
       <div className="grid grid-cols-2 gap-2">
         <Stat label="Vendor beres" value={`${vend.filter(isItemDone).length}/${vend.length} (${pct(vend.filter(isItemDone).length, vend.length)}%)`} />
         <Stat label="Seserahan siap" value={`${ses.filter(isItemDone).length}/${ses.length} (${pct(ses.filter(isItemDone).length, ses.length)}%)`} />
@@ -152,14 +152,14 @@ function Ringkasan({ ev, d, today, onSaved, onDelete }: { ev: P.EventRow; d: P.P
       </div>
       <div>
         <p className="mb-1 text-sm font-semibold">Perlu diperhatikan (30 hari)</p>
-        {up.length === 0 ? <p className="rounded-lg border border-dashed p-3 text-center text-sm text-muted-foreground">Belum ada yang jatuh tempo dalam 30 hari.</p> : (
+        {up.length === 0 ? <p className="rounded-2xl border border-dashed p-3 text-center text-xs text-muted-foreground">Belum ada yang jatuh tempo dalam 30 hari.</p> : (
           <ul className="space-y-1">{up.map((u) => (<li key={u.kind + u.id} className={`flex justify-between rounded-lg p-2 text-sm ${u.overdue ? "bg-red-500/10" : "bg-muted"}`}><span>{u.title} <span className="text-xs text-muted-foreground">({u.kind})</span></span><span className="text-xs">{u.overdue ? `terlambat ${Math.abs(u.days)} hari` : u.days === 0 ? "hari ini" : `${u.days} hari lagi`}</span></li>))}</ul>
         )}
       </div>
       <Share ev={ev} />
       <GoalLink ev={ev} obligation={s.obligation} onSaved={onSaved} />
       {edit ? (
-        <div className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+        <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
           <Input aria-label="Nama acara" value={f.title} maxLength={80} onChange={(e) => setF({ ...f, title: e.target.value })} />
           <Input type="date" aria-label="Tanggal acara" value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} />
           <MoneyInput value={f.budget} onChange={(n) => setF({ ...f, budget: n })} aria-label="Total budget" suffix="Rp" />
@@ -184,10 +184,10 @@ function Belanja({ kind, ev, d, run, ask }: { kind: "vendor" | "seserahan"; ev: 
   const starter = isV ? STARTER_VENDORS : STARTER_SESERAHAN;
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between"><p className="text-sm text-muted-foreground">{shown.length} item, estimasi {formatRupiah(total)}</p><Button size="sm" onClick={() => setOpen(!open)}><Plus className="size-4" /> Tambah</Button></div>
+      <div className="flex items-center justify-between"><p className="text-xs text-muted-foreground">{shown.length} item, estimasi {formatRupiah(total)}</p><Button size="sm" onClick={() => setOpen(!open)}><Plus className="size-4" /> Tambah</Button></div>
       {!isV && <div className="flex gap-1">{(["semua", "pria", "wanita", "umum"] as const).map((x) => (<button key={x} onClick={() => setSide(x)} aria-pressed={side === x} className={`rounded-full px-3 py-1 text-xs ${side === x ? "bg-primary text-primary-foreground" : "bg-muted"}`}>{x === "semua" ? "Semua" : SIDE_LABEL[x]}</button>))}</div>}
       {open && (
-        <div className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+        <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
           <Input aria-label={isV ? "Nama vendor" : "Nama barang"} placeholder={isV ? "Nama vendor atau jasa" : "Nama barang"} maxLength={80} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
           <label className="block space-y-1 text-xs">Harga / biaya<MoneyInput value={f.cost} onChange={(n) => setF({ ...f, cost: n })} aria-label="Harga" suffix="Rp" /></label>
           <div className="grid grid-cols-2 gap-2">
@@ -200,7 +200,7 @@ function Belanja({ kind, ev, d, run, ask }: { kind: "vendor" | "seserahan"; ev: 
         </div>
       )}
       {list.length === 0 && !open && (
-        <div className="space-y-2 rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+        <div className="space-y-2 rounded-2xl border border-dashed p-4 text-center text-xs text-muted-foreground">
           <p>{isV ? "Belum ada vendor." : "Belum ada seserahan."} Tekan Tambah, atau isi daftar contoh lalu ubah harganya.</p>
           <Button variant="outline" size="sm" onClick={() => run(() => P.addItems(starter.map((n) => ({ event_id: ev.id, kind, name: n, status: statuses[0] }))), "Daftar contoh ditambahkan")}>Isi daftar contoh</Button>
         </div>
@@ -210,7 +210,7 @@ function Belanja({ kind, ev, d, run, ask }: { kind: "vendor" | "seserahan"; ev: 
           const paid = paidFor(i.id, d.payments), pct = itemProgressPct(i, d.payments);
           const late = i.needed_date && !isItemDone(i) && daysUntil(i.needed_date, todayJakarta()) < 0;
           return (
-            <li key={i.id} className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+            <li key={i.id} className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0"><p className="truncate font-medium">{i.name}</p><p className="text-xs text-muted-foreground">{SIDE_LABEL[i.side]}{i.needed_date ? ` · butuh ${i.needed_date}` : ""}{late ? " · terlambat" : ""}</p>{i.contact && <p className="text-xs text-muted-foreground">{i.contact}</p>}{i.note && <p className="text-xs text-muted-foreground">{i.note}</p>}</div>
                 <p className="shrink-0 text-sm font-semibold">{formatRupiah(i.planned_cost)}</p>
@@ -242,7 +242,7 @@ function Bayar({ ev, d, run, ask, today }: { ev: P.EventRow; d: P.PlannerData; r
   }, "Pembayaran dicatat");
   return (
     <div className="space-y-3">
-      <div className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+      <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
         <p className="text-sm font-semibold">Catat pembayaran</p>
         <select aria-label="Untuk item" className={selectCls} value={f.item} onChange={(e) => setF({ ...f, item: e.target.value })}><option value="">Umum (tanpa item)</option>{d.items.map((i) => <option key={i.id} value={i.id}>{i.kind === "vendor" ? "Vendor" : i.kind === "seserahan" ? "Seserahan" : "Lainnya"}: {i.name}</option>)}</select>
         <MoneyInput value={f.amount} onChange={(n) => setF({ ...f, amount: n })} aria-label="Jumlah dibayar" suffix="Rp" />
@@ -251,8 +251,8 @@ function Bayar({ ev, d, run, ask, today }: { ev: P.EventRow; d: P.PlannerData; r
         <p className="text-xs text-muted-foreground">Ini hanya catatan di planner. Uang di dompetmu tidak berubah. Catat pengeluarannya juga di Transaksi bila perlu.</p>
       </div>
       <div className="flex gap-1">{(["semua", "vendor", "seserahan", "umum"] as const).map((x) => (<button key={x} onClick={() => setFilter(x)} aria-pressed={filter === x} className={`rounded-full px-3 py-1 text-xs ${filter === x ? "bg-primary text-primary-foreground" : "bg-muted"}`}>{x[0].toUpperCase() + x.slice(1)}</button>))}</div>
-      {shown.length === 0 ? <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">Belum ada riwayat pembayaran.</p> : (
-        <ul className="space-y-2">{shown.map((p) => (<li key={p.id} className="flex items-center justify-between gap-2 rounded-lg p-3 ring-1 ring-foreground/10"><div className="min-w-0"><p className="truncate text-sm font-medium">{p.item_id ? byId.get(p.item_id)?.name ?? "Item" : "Umum"}</p><p className="text-xs text-muted-foreground">{p.paid_at}{p.note ? ` · ${p.note}` : ""}</p></div><div className="flex items-center gap-2"><span className="text-sm font-semibold">{formatRupiah(p.amount)}</span><Button variant="ghost" size="icon" aria-label="Hapus pembayaran" onClick={async () => { if (await ask("Hapus catatan pembayaran ini?", "Hapus")) void run(() => P.deletePayment(p.id), "Dihapus"); }}><Trash2 className="size-4" /></Button></div></li>))}</ul>
+      {shown.length === 0 ? <p className="rounded-2xl border border-dashed p-4 text-center text-xs text-muted-foreground">Belum ada riwayat pembayaran.</p> : (
+        <ul className="space-y-2">{shown.map((p) => (<li key={p.id} className="flex items-center justify-between gap-2 rounded-2xl p-3 border border-border/70 bg-card shadow-xs"><div className="min-w-0"><p className="truncate text-sm font-medium">{p.item_id ? byId.get(p.item_id)?.name ?? "Item" : "Umum"}</p><p className="text-xs text-muted-foreground">{p.paid_at}{p.note ? ` · ${p.note}` : ""}</p></div><div className="flex items-center gap-2"><span className="text-sm font-semibold">{formatRupiah(p.amount)}</span><Button variant="ghost" size="icon" aria-label="Hapus pembayaran" onClick={async () => { if (await ask("Hapus catatan pembayaran ini?", "Hapus")) void run(() => P.deletePayment(p.id), "Dihapus"); }}><Trash2 className="size-4" /></Button></div></li>))}</ul>
       )}
     </div>
   );
@@ -267,14 +267,14 @@ function Tamu({ ev, d, run, ask }: { ev: P.EventRow; d: P.PlannerData; run: Run;
     <div className="space-y-3">
       <div className="grid grid-cols-4 gap-2 text-center text-xs"><Stat label="Orang" value={String(t.orang)} /><Stat label="Hadir" value={String(t.hadir)} /><Stat label="Tidak" value={String(t.tidak)} /><Stat label="Belum" value={String(t.belum)} /></div>
       <div className="flex gap-1">{(["semua", "pria", "wanita", "umum"] as const).map((x) => (<button key={x} onClick={() => setSide(x)} aria-pressed={side === x} className={`rounded-full px-3 py-1 text-xs ${side === x ? "bg-primary text-primary-foreground" : "bg-muted"}`}>{x === "semua" ? "Semua" : SIDE_LABEL[x]}</button>))}</div>
-      <div className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+      <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
         <Input aria-label="Nama tamu" placeholder="Nama tamu" maxLength={80} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
         <div className="grid grid-cols-3 gap-2"><Input aria-label="Kategori" placeholder="Kategori" maxLength={40} value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} /><Input aria-label="Jumlah orang" inputMode="numeric" placeholder="Jml" value={f.pax} onChange={(e) => setF({ ...f, pax: e.target.value.replace(/\D/g, "").slice(0, 2) })} /><select aria-label="Pihak tamu" className={selectCls} value={f.side} onChange={(e) => setF({ ...f, side: e.target.value as Side })}>{(["umum", "pria", "wanita"] as const).map((x) => <option key={x} value={x}>{SIDE_LABEL[x]}</option>)}</select></div>
         <Input aria-label="Alamat tamu" placeholder="Alamat (opsional)" maxLength={200} value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} />
         <Button className="w-full" disabled={!f.name.trim()} onClick={() => run(async () => { await P.addGuest({ event_id: ev.id, name: f.name.trim(), category: f.category.trim() || null, side: f.side, pax: Math.min(Math.max(Number(f.pax) || 1, 1), 50), address: f.address.trim() || null }); setF({ ...f, name: "", address: "", pax: "1" }); }, "Tamu ditambahkan")}>Tambah tamu</Button>
       </div>
-      {shown.length === 0 ? <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">Belum ada tamu.</p> : (
-        <ul className="space-y-2">{shown.map((g) => (<li key={g.id} className="space-y-1 rounded-lg p-3 ring-1 ring-foreground/10"><div className="flex items-start justify-between"><div className="min-w-0"><p className="truncate font-medium">{g.name} <span className="text-xs text-muted-foreground">({g.pax} orang)</span></p><p className="text-xs text-muted-foreground">{[g.category, SIDE_LABEL[g.side], g.address].filter(Boolean).join(" · ")}</p></div><div className="flex"><Button variant="ghost" size="sm" aria-label={`Salin undangan ${g.name}`} onClick={() => { void navigator.clipboard?.writeText(`Halo ${g.name}, kami mengundangmu ke ${ev.title}${ev.event_date ? ` pada ${ev.event_date}` : ""}. Mohon konfirmasi kehadiran ya. Terima kasih.`); notify("Teks undangan disalin"); }}>Salin undangan</Button><Button variant="ghost" size="icon" aria-label={`Hapus ${g.name}`} onClick={async () => { if (await ask(`Hapus tamu "${g.name}"?`, "Hapus")) void run(() => P.deleteGuest(g.id)); }}><Trash2 className="size-4" /></Button></div></div>
+      {shown.length === 0 ? <p className="rounded-2xl border border-dashed p-4 text-center text-xs text-muted-foreground">Belum ada tamu.</p> : (
+        <ul className="space-y-2">{shown.map((g) => (<li key={g.id} className="space-y-1 rounded-2xl p-3 border border-border/70 bg-card shadow-xs"><div className="flex items-start justify-between"><div className="min-w-0"><p className="truncate font-medium">{g.name} <span className="text-xs text-muted-foreground">({g.pax} orang)</span></p><p className="text-xs text-muted-foreground">{[g.category, SIDE_LABEL[g.side], g.address].filter(Boolean).join(" · ")}</p></div><div className="flex"><Button variant="ghost" size="sm" aria-label={`Salin undangan ${g.name}`} onClick={() => { void navigator.clipboard?.writeText(`Halo ${g.name}, kami mengundangmu ke ${ev.title}${ev.event_date ? ` pada ${ev.event_date}` : ""}. Mohon konfirmasi kehadiran ya. Terima kasih.`); notify("Teks undangan disalin"); }}>Salin undangan</Button><Button variant="ghost" size="icon" aria-label={`Hapus ${g.name}`} onClick={async () => { if (await ask(`Hapus tamu "${g.name}"?`, "Hapus")) void run(() => P.deleteGuest(g.id)); }}><Trash2 className="size-4" /></Button></div></div>
           <select aria-label={`Kehadiran ${g.name}`} className={selectCls} value={g.attendance} onChange={(e) => run(() => P.updateGuest(g.id, { attendance: e.target.value as typeof g.attendance }))}><option value="belum">Belum konfirmasi</option><option value="hadir">Hadir</option><option value="tidak">Tidak hadir</option></select></li>))}</ul>
       )}
     </div>
@@ -288,17 +288,17 @@ function Tugas({ ev, d, run, ask, today }: { ev: P.EventRow; d: P.PlannerData; r
   const pr = todoProgress(list);
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">{(["dokumen", "jadwal"] as const).map((k) => (<button key={k} aria-pressed={kind === k} onClick={() => setKind(k)} className={`rounded-lg py-2 text-xs font-medium ${kind === k ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{k === "dokumen" ? "Dokumen & berkas" : "Jadwal penting"}</button>))}</div>
-      <p className="text-sm text-muted-foreground">{pr.done} dari {pr.total} beres ({pr.pct}%)</p>
-      <div className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+      <div className="grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1">{(["dokumen", "jadwal"] as const).map((k) => (<button key={k} aria-pressed={kind === k} onClick={() => setKind(k)} className={`rounded-lg py-2 text-xs font-medium ${kind === k ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{k === "dokumen" ? "Dokumen & berkas" : "Jadwal penting"}</button>))}</div>
+      <p className="text-xs text-muted-foreground">{pr.done} dari {pr.total} beres ({pr.pct}%)</p>
+      <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
         <Input aria-label={kind === "dokumen" ? "Nama dokumen" : "Nama kegiatan"} placeholder={kind === "dokumen" ? "Nama dokumen" : "Nama kegiatan (fitting, survei, dll)"} maxLength={100} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
         <div className="grid grid-cols-2 gap-2"><Input type="date" aria-label="Batas tanggal" value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} /><select aria-label="Pihak tugas" className={selectCls} value={f.side} onChange={(e) => setF({ ...f, side: e.target.value as Side })}>{(["umum", "pria", "wanita"] as const).map((x) => <option key={x} value={x}>{SIDE_LABEL[x]}</option>)}</select></div>
         <Button className="w-full" disabled={!f.title.trim()} onClick={() => run(async () => { await P.addTodo({ event_id: ev.id, kind, title: f.title.trim(), side: f.side, due_date: f.date || null }); setF({ title: "", date: "", side: "umum" }); }, "Ditambahkan")}>Tambah</Button>
       </div>
-      {list.length === 0 && (<div className="space-y-2 rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground"><p>Belum ada {kind === "dokumen" ? "dokumen" : "jadwal"}.</p>{kind === "dokumen" && <Button variant="outline" size="sm" onClick={() => run(() => P.addTodos(STARTER_DOCS.map((x) => ({ event_id: ev.id, kind: "dokumen" as const, title: x.title, side: x.side }))), "Daftar contoh ditambahkan")}>Isi daftar contoh berkas</Button>}</div>)}
+      {list.length === 0 && (<div className="space-y-2 rounded-2xl border border-dashed p-4 text-center text-xs text-muted-foreground"><p>Belum ada {kind === "dokumen" ? "dokumen" : "jadwal"}.</p>{kind === "dokumen" && <Button variant="outline" size="sm" onClick={() => run(() => P.addTodos(STARTER_DOCS.map((x) => ({ event_id: ev.id, kind: "dokumen" as const, title: x.title, side: x.side }))), "Daftar contoh ditambahkan")}>Isi daftar contoh berkas</Button>}</div>)}
       <ul className="space-y-2">{list.map((t) => {
         const late = t.due_date && !t.done && daysUntil(t.due_date, today) < 0;
-        return (<li key={t.id} className="flex items-center gap-2 rounded-lg p-3 ring-1 ring-foreground/10"><button role="checkbox" aria-checked={t.done} aria-label={`Tandai ${t.title}`} onClick={() => run(() => P.updateTodo(t.id, { done: !t.done }))} className={`flex size-6 shrink-0 items-center justify-center rounded-md border ${t.done ? "border-emerald-500 bg-emerald-500 text-white" : "border-input"}`}>{t.done && <Check className="size-4" />}</button>
+        return (<li key={t.id} className="flex items-center gap-2 rounded-2xl p-3 border border-border/70 bg-card shadow-xs"><button role="checkbox" aria-checked={t.done} aria-label={`Tandai ${t.title}`} onClick={() => run(() => P.updateTodo(t.id, { done: !t.done }))} className={`flex size-6 shrink-0 items-center justify-center rounded-md border ${t.done ? "border-emerald-500 bg-emerald-500 text-white" : "border-input"}`}>{t.done && <Check className="size-4" />}</button>
           <div className="min-w-0 flex-1"><p className={`truncate text-sm ${t.done ? "text-muted-foreground line-through" : ""}`}>{t.title}</p><p className="text-xs text-muted-foreground">{SIDE_LABEL[t.side]}{t.due_date ? ` · ${t.due_date}` : ""}{late ? " · terlambat" : ""}</p></div>
           <Button variant="ghost" size="icon" aria-label={`Hapus ${t.title}`} onClick={async () => { if (await ask(`Hapus "${t.title}"?`, "Hapus")) void run(() => P.deleteTodo(t.id)); }}><Trash2 className="size-4" /></Button></li>);
       })}</ul>
@@ -310,7 +310,7 @@ function Share({ ev }: { ev: P.EventRow }) {
   const [code, setCode] = React.useState<string | null>(ev.invite_code ?? null);
   const [busy, setBusy] = React.useState(false);
   return (
-    <div className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+    <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
       <p className="text-sm font-semibold">Bagikan ke pasangan</p>
       <p className="text-xs text-muted-foreground">Pasanganmu bisa melihat dan mengisi planner yang sama dengan kode undangan. Hanya kamu sebagai pemilik yang bisa menghapus planner.</p>
       {code ? (
@@ -329,7 +329,7 @@ function GoalLink({ ev, obligation, onSaved }: { ev: P.EventRow; obligation: num
   React.useEffect(() => { getSavingsGoals().then(setGoals).catch(() => setGoals([])); }, []);
   const g = goals?.find((x) => x.id === ev.goal_id);
   return (
-    <div className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+    <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
       <p className="text-sm font-semibold">Tautkan ke target Tabungan</p>
       {goals && goals.length === 0 ? <p className="text-xs text-muted-foreground">Belum ada target Tabungan. <Link href="/tabungan" className="underline">Buat target</Link> lalu tautkan di sini.</p> : (
         <select aria-label="Target Tabungan" className={selectCls} value={ev.goal_id ?? ""} onChange={async (e) => { try { await P.updateEvent(ev.id, { goal_id: e.target.value || null }); onSaved(); } catch { notify("Belum bisa disimpan. Coba lagi."); } }}>

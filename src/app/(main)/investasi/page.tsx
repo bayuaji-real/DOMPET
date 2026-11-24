@@ -27,9 +27,9 @@ export default function InvestasiPage() {
     <div className="pb-24">
       <TopHeader title="Investasi" />
       <div className="px-4 pt-2">
-        <div role="tablist" aria-label="Bagian investasi" className="mb-4 grid gap-1 rounded-xl bg-muted p-1" style={{ gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))` }}>
+        <div role="tablist" aria-label="Bagian investasi" className="mb-4 grid gap-1 rounded-2xl bg-muted p-1" style={{ gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))` }}>
           {TABS.map((t) => (
-            <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`rounded-lg py-2 text-sm font-medium ${tab === t.id ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{t.label}</button>
+            <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`rounded-xl py-2 text-xs font-semibold ${tab === t.id ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{t.label}</button>
           ))}
         </div>
         {tab === "kalkulator" && <Kalkulator />}
@@ -51,8 +51,8 @@ function Kalkulator() {
   const res = React.useMemo(() => simulateInvestment({ initial, monthly, annualReturnPct: retNum, years: Number(years) || 0 }), [initial, monthly, retNum, years]);
   const rows = view === "tahun" ? res.years : res.months;
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">Simulasi sederhana. Hasil hanya ilustrasi dari angka yang kamu isi, bukan janji keuntungan.</p>
+    <div className="space-y-4 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
+      <p className="text-xs text-muted-foreground">Simulasi sederhana, bukan janji keuntungan.</p>
       <div className="grid gap-3">
         <label className="space-y-1 text-sm">Uang awal<MoneyInput value={initial} onChange={setInitial} aria-label="Uang awal" placeholder="0" suffix="Rp" /></label>
         <label className="space-y-1 text-sm">Setoran tiap bulan<MoneyInput value={monthly} onChange={setMonthly} aria-label="Setoran tiap bulan" suffix="Rp" /></label>
@@ -69,8 +69,8 @@ function Kalkulator() {
       <div className="flex gap-2" role="group" aria-label="Tampilan hasil">
         {(["tahun", "bulan"] as const).map((v) => (<Button key={v} size="sm" variant={view === v ? "default" : "outline"} onClick={() => setView(v)} aria-pressed={view === v}>Per {v}</Button>))}
       </div>
-      {rows.length === 0 ? <p className="text-sm text-muted-foreground">Isi lama investasi minimal 1 tahun untuk melihat tabel.</p> : (
-        <div className="max-h-96 overflow-auto rounded-lg ring-1 ring-foreground/10">
+      {rows.length === 0 ? <p className="text-xs text-muted-foreground">Isi lama investasi minimal 1 tahun untuk melihat tabel.</p> : (
+        <div className="max-h-96 overflow-auto rounded-2xl border border-border/70 bg-card shadow-xs">
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-muted text-left"><tr><th className="p-2">{view === "tahun" ? "Tahun" : "Bulan"}</th><th className="p-2 text-right">Setoran</th><th className="p-2 text-right">Nilai</th></tr></thead>
             <tbody>{rows.map((r) => (<tr key={r.month} className="border-t"><td className="p-2">{view === "tahun" ? r.month / 12 : r.month}</td><td className="p-2 text-right">{formatRupiah(r.contributed)}</td><td className="p-2 text-right font-medium">{formatRupiah(r.value)}</td></tr>))}</tbody>
@@ -103,19 +103,19 @@ function Portofolio() {
   return (
     <div className="space-y-4">
       {confirmDialog}
-      <p className="text-sm text-muted-foreground">Isi sendiri aset investasimu. Harga terbaru diperbarui manual karena aplikasi belum tersambung ke broker atau Bibit.</p>
-      {err && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{err}</p>}
+      <p className="text-xs text-muted-foreground">Isi sendiri aset investasimu. Harga terbaru diperbarui manual karena aplikasi belum tersambung ke broker atau Bibit.</p>
+      {err && <p role="alert" className="rounded-2xl bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300">{err}</p>}
       {list && (
         <div className="grid grid-cols-3 gap-2 text-center">
           <Stat label="Modal" value={formatRupiah(sum.cost)} /><Stat label="Nilai sekarang" value={formatRupiah(sum.value)} strong /><Stat label="Untung/rugi" value={`${formatRupiah(sum.pnl)} (${pct(sum.pnlPct)})`} neg={sum.pnl < 0} />
         </div>
       )}
       {sum.missingPrice > 0 && <p className="text-xs text-muted-foreground">{sum.missingPrice} aset belum diisi harga terbaru, jadi nilainya sementara dianggap sama dengan modal.</p>}
-      {list === null && !err && <div className="h-20 animate-pulse rounded-xl bg-muted" aria-busy="true" />}
-      {list && list.length === 0 && <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">Belum ada aset. Tambahkan yang pertama di bawah.</p>}
+      {list === null && !err && <div className="h-20 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
+      {list && list.length === 0 && <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">Belum ada aset. Tambahkan yang pertama di bawah.</p>}
       <ul className="space-y-2">
         {sum.rows.map((r) => (
-          <li key={r.id} className="rounded-lg p-3 ring-1 ring-foreground/10">
+          <li key={r.id} className="rounded-2xl p-3 border border-border/70 bg-card shadow-xs">
             <div className="flex items-start justify-between gap-2">
               <div><p className="font-medium">{r.name}</p><p className="text-xs text-muted-foreground">Modal {formatRupiah(r.cost)} · nilai {formatRupiah(r.value)}</p></div>
               <div className="text-right"><p className={`text-sm font-semibold ${tone(r.pnl)}`}>{pct(r.pnlPct)}</p>
@@ -125,7 +125,7 @@ function Portofolio() {
           </li>
         ))}
       </ul>
-      <form onSubmit={submit} className="space-y-3 rounded-xl p-3 ring-1 ring-foreground/10" aria-label="Tambah aset">
+      <form onSubmit={submit} className="space-y-3 rounded-2xl p-3 border border-border/70 bg-card shadow-xs" aria-label="Tambah aset">
         <p className="font-semibold">Tambah aset</p>
         <Input aria-label="Nama aset" placeholder="Nama, misal Insight Money atau BBCA" value={f.name} maxLength={80} onChange={(e) => setF({ ...f, name: e.target.value })} />
         <select aria-label="Jenis aset" className="h-9 w-full rounded-lg border bg-background px-2 text-sm" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value as HoldingRow["kind"] })}>
@@ -162,13 +162,13 @@ function Pasar() {
   const [key, setKey] = React.useState<SortKey>("ret_1y");
   React.useEffect(() => { getSnapshots().then(setData).catch(() => setErr("Data pasar belum bisa dimuat.")); }, []);
   if (err) return <p role="alert" className="text-sm text-red-600">{err}</p>;
-  if (!data) return <div className="h-24 animate-pulse rounded-xl bg-muted" aria-busy="true" />;
+  if (!data) return <div className="h-24 animate-pulse rounded-3xl bg-muted" aria-busy="true" />;
   const asOf = data[0]?.as_of; const src = data[0]?.source_url;
   return (
     <div className="space-y-4">
       <AcuanSection />
-      {data.length === 0 && <p className="rounded-lg border border-dashed p-3 text-center text-sm text-muted-foreground">Data per produk reksa dana belum tersedia. Acuan pasar di atas bersumber dari lembaga resmi.</p>}
-      <p className="text-sm text-muted-foreground">Peringkat dari return terbesar, dikelompokkan per jenis supaya adil. Return tinggi biasanya datang bersama risiko tinggi, dan angka masa lalu tidak menjamin masa depan.</p>
+      {data.length === 0 && <p className="rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground">Data per produk reksa dana belum tersedia. Acuan pasar di atas bersumber dari lembaga resmi.</p>}
+      <p className="text-xs text-muted-foreground">Diurutkan per jenis. Return tinggi biasanya berisiko tinggi.</p>
       <div className="flex gap-2" role="group" aria-label="Urutkan berdasarkan">
         {([["ret_1y", "Return 1 tahun"], ["ret_1m", "Return 1 bulan"]] as [SortKey, string][]).map(([k, l]) => (<Button key={k} size="sm" variant={key === k ? "default" : "outline"} aria-pressed={key === k} onClick={() => setKey(k)}>{l}</Button>))}
       </div>
@@ -177,10 +177,10 @@ function Pasar() {
         if (items.length === 0) return null;
         return (
           <section key={c} aria-label={CAT_LABEL[c]}>
-            <h3 className="mb-1 font-semibold">{CAT_LABEL[c]} <span className="text-xs font-normal text-muted-foreground">· {RISK_LABEL[items[0]?.risk ?? "sedang"]}</span></h3>
+            <h3 className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{CAT_LABEL[c]} <span className="text-xs font-normal text-muted-foreground">· {RISK_LABEL[items[0]?.risk ?? "sedang"]}</span></h3>
             <ol className="space-y-1.5">
               {items.map((s, i) => (
-                <li key={s.id} className="flex items-center justify-between gap-2 rounded-lg p-2.5 ring-1 ring-foreground/10">
+                <li key={s.id} className="flex items-center justify-between gap-2 rounded-2xl p-3 border border-border/70 bg-card shadow-xs">
                   <span className="text-sm"><span className="mr-2 text-muted-foreground">{i + 1}.</span>{s.name}</span>
                   <span className="text-right text-xs"><span className={`block text-sm font-semibold ${tone(s[key])}`}>{pct(s[key])}</span>{key === "ret_1y" ? "1 tahun" : "1 bulan"}</span>
                 </li>

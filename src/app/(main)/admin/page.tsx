@@ -31,15 +31,15 @@ export default function AdminPage() {
     <div className="pb-24">
       <TopHeader title="Admin" />
       <div className="space-y-4 px-4 pt-2">
-        {role === undefined && <div className="h-32 animate-pulse rounded-xl bg-muted" aria-busy="true" />}
-        {role === null && <p role="alert" className="rounded-lg bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-300">Halaman ini hanya untuk admin.</p>}
+        {role === undefined && <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
+        {role === null && <p role="alert" className="rounded-2xl bg-red-500/10 p-4 text-xs text-red-700 dark:text-red-300">Halaman ini hanya untuk admin.</p>}
         {role && locked && <MfaChallenge onDone={reload} title="Admin wajib memakai kode MFA. Masukkan kode dari aplikasi authenticator." />}
         {role && !locked && (
           <>
             {role === "superadmin" && mfa && <MfaSwitch status={mfa} onChange={reload} />}
             <p className="text-xs text-muted-foreground">Peranmu: {role === "superadmin" ? "Superadmin" : "Admin"}. Semua tindakan dicatat.</p>
-            <div role="tablist" aria-label="Bagian admin" className="grid grid-cols-5 gap-1 rounded-xl bg-muted p-1">
-              {TABS.map((t) => (<button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`rounded-lg py-2 text-[11px] font-medium ${tab === t.id ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{t.label}</button>))}
+            <div role="tablist" aria-label="Bagian admin" className="grid grid-cols-5 gap-1 rounded-2xl bg-muted p-1">
+              {TABS.map((t) => (<button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)} className={`rounded-xl py-2 text-[11px] font-semibold ${tab === t.id ? "bg-background shadow-sm" : "text-muted-foreground"}`}>{t.label}</button>))}
             </div>
             {tab === "api" && <ApiTab isSuper={role === "superadmin"} />}
             {tab === "pengguna" && <UsersTab isSuper={role === "superadmin"} />}
@@ -60,8 +60,8 @@ function useLoad<T>(fn: () => Promise<T>) {
   React.useEffect(() => { load(); }, [load]);
   return { data, err, load };
 }
-const Err = ({ t }: { t: string }) => (t ? <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{t}</p> : null);
-const Skel = () => <div className="h-32 animate-pulse rounded-xl bg-muted" aria-busy="true" />;
+const Err = ({ t }: { t: string }) => (t ? <p role="alert" className="rounded-2xl bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300">{t}</p> : null);
+const Skel = () => <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" />;
 async function act(fn: () => Promise<unknown>, ok: string, after: () => void) {
   try { await fn(); notify(ok); after(); } catch (e) { notify(A.adminErrorText(e)); }
 }
@@ -76,20 +76,20 @@ function ApiTab({ isSuper }: { isSuper: boolean }) {
   const max = Math.max(1, ...u.daily.map((d) => d.cost_idr));
   return (
     <div className="space-y-3">
-      <div role={al.tone === "bad" || al.tone === "warn" ? "alert" : "status"} className={`rounded-xl p-4 ${cls}`}><p className="font-semibold">{al.title}</p><p className="text-sm">{al.body}</p></div>
+      <div role={al.tone === "bad" || al.tone === "warn" ? "alert" : "status"} className={`rounded-2xl p-4 ${cls}`}><p className="font-semibold">{al.title}</p><p className="text-sm">{al.body}</p></div>
       {u.configured && <div className="h-2 overflow-hidden rounded-full bg-muted"><div className={`h-full ${u.level === "aman" ? "bg-emerald-500" : u.level === "waspada" ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${Math.min(100, u.used_pct ?? 0)}%` }} /></div>}
       <div className="grid grid-cols-2 gap-2 text-sm">
-        {[["Top-up diisi", formatRupiah(u.budget_idr)], ["Terpakai sejak " + fmtDate(u.since), formatRupiah(Math.round(u.spent_idr))], ["Bulan ini", formatRupiah(Math.round(u.month_spent_idr))], ["Hari ini", formatRupiah(Math.round(u.today_spent_idr))], ["Panggilan AI bulan ini", String(u.calls_month)], ["Rata-rata per hari (7 hari)", formatRupiah(Math.round(u.avg_daily_idr))]].map(([k, v]) => (<div key={k} className="rounded-lg p-3 ring-1 ring-foreground/10"><p className="text-xs text-muted-foreground">{k}</p><p className="font-semibold">{v}</p></div>))}
+        {[["Top-up diisi", formatRupiah(u.budget_idr)], ["Terpakai sejak " + fmtDate(u.since), formatRupiah(Math.round(u.spent_idr))], ["Bulan ini", formatRupiah(Math.round(u.month_spent_idr))], ["Hari ini", formatRupiah(Math.round(u.today_spent_idr))], ["Panggilan AI bulan ini", String(u.calls_month)], ["Rata-rata per hari (7 hari)", formatRupiah(Math.round(u.avg_daily_idr))]].map(([k, v]) => (<div key={k} className="rounded-2xl p-3 border border-border/70 bg-card shadow-xs"><p className="text-xs text-muted-foreground">{k}</p><p className="font-semibold">{v}</p></div>))}
       </div>
-      <div><p className="mb-1 text-sm font-semibold">Biaya per hari (30 hari)</p>
-        {u.daily.length === 0 ? <p className="rounded-lg border border-dashed p-3 text-center text-sm text-muted-foreground">Belum ada pemakaian AI.</p> : (
-          <div className="flex h-24 items-end gap-0.5" role="img" aria-label="Grafik biaya AI per hari">{u.daily.map((d) => (<div key={d.day} title={`${d.day}: ${formatRupiah(Math.round(d.cost_idr))}`} className="flex-1 rounded-t bg-primary/70" style={{ height: `${Math.max(4, (d.cost_idr / max) * 100)}%` }} />))}</div>
+      <div><p className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Biaya per hari (30 hari)</p>
+        {u.daily.length === 0 ? <p className="rounded-2xl border border-dashed p-3 text-center text-xs text-muted-foreground">Belum ada pemakaian AI.</p> : (
+          <div className="flex h-20 items-end gap-1 rounded-2xl border border-border/70 bg-card p-3 shadow-xs" role="img" aria-label="Grafik biaya AI per hari">{u.daily.map((d) => (<div key={d.day} title={`${d.day}: ${formatRupiah(Math.round(d.cost_idr))}`} className="max-w-6 flex-1 rounded-t-md bg-teal-500/70" style={{ height: `${Math.max(4, (d.cost_idr / max) * 100)}%` }} />))}</div>
         )}</div>
-      <div><p className="mb-1 text-sm font-semibold">Per fitur (bulan ini)</p>
-        <ul className="space-y-1">{u.by_feature.map((x) => (<li key={x.feature} className="flex justify-between rounded-lg bg-muted p-2 text-sm"><span>{FEATURE_LABEL[x.feature] ?? x.feature} <span className="text-xs text-muted-foreground">({x.calls}x)</span></span><span>{formatRupiah(Math.round(x.cost_idr))}</span></li>))}{u.by_feature.length === 0 && <li className="text-sm text-muted-foreground">Belum ada data.</li>}</ul></div>
-      <p className="text-xs text-muted-foreground">Biaya adalah perkiraan dari jumlah token dan harga di pengaturan server. Google tidak menyediakan sisa saldo lewat kode, jadi cocokkan dengan tagihan asli di Google AI Studio atau Cloud Console. Peringatan hanya tampil di sini saat kamu membuka halaman ini.</p>
+      <div><p className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Per fitur (bulan ini)</p>
+        <ul className="space-y-1">{u.by_feature.map((x) => (<li key={x.feature} className="flex justify-between rounded-lg bg-muted p-2 text-sm"><span>{FEATURE_LABEL[x.feature] ?? x.feature} <span className="text-xs text-muted-foreground">({x.calls}x)</span></span><span>{formatRupiah(Math.round(x.cost_idr))}</span></li>))}{u.by_feature.length === 0 && <li className="text-xs text-muted-foreground">Belum ada data.</li>}</ul></div>
+      <p className="text-xs text-muted-foreground">Biaya adalah perkiraan. Cocokkan dengan tagihan asli di Google AI Studio.</p>
       {isSuper ? (
-        <div className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+        <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
           <p className="text-sm font-semibold">Catat top-up terakhir</p>
           <label className="block space-y-1 text-xs">Nilai top-up (sisa saldo saat dicatat)<MoneyInput value={f.budget} onChange={(n) => setF({ ...f, budget: n })} aria-label="Nilai top-up" suffix="Rp" /></label>
           <div className="grid grid-cols-2 gap-2"><label className="space-y-1 text-xs">Berlaku sejak<Input type="date" aria-label="Berlaku sejak" value={f.since} onChange={(e) => setF({ ...f, since: e.target.value })} /></label><label className="space-y-1 text-xs">Peringatkan di (%)<Input inputMode="numeric" aria-label="Ambang peringatan" value={f.warn} onChange={(e) => setF({ ...f, warn: e.target.value.replace(/\D/g, "").slice(0, 2) })} /></label></div>
@@ -111,10 +111,10 @@ function UsersTab({ isSuper }: { isSuper: boolean }) {
   return (
     <div className="space-y-3">
       {dialog}
-      <p className="text-sm text-muted-foreground">{data.length} pengguna: Gratis {byPlan("free")}, Premium {byPlan("premium")}, Pro {byPlan("pro")}.</p>
+      <p className="text-xs text-muted-foreground">{data.length} pengguna: Gratis {byPlan("free")}, Premium {byPlan("premium")}, Pro {byPlan("pro")}.</p>
       <Input aria-label="Cari email" placeholder="Cari email" value={q} onChange={(e) => setQ(e.target.value)} />
       <ul className="space-y-2">{list.map((u) => (
-        <li key={u.user_id} className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+        <li key={u.user_id} className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
           <div><p className="break-all text-sm font-medium">{u.email} {u.admin_role && <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px]">{u.admin_role}</span>}</p>
             <p className="text-xs text-muted-foreground">Daftar {fmtDate(u.created_at)} · login terakhir {fmtDate(u.last_sign_in_at)} · AI bulan ini {u.ai_used}</p>
             <p className="text-xs">Paket: <b>{u.plan}</b> ({u.source === "paid" ? `aktif${u.plan_expires_at ? ` sampai ${fmtDate(u.plan_expires_at)}` : ", tanpa batas"}` : u.source === "trial" ? `uji coba sampai ${fmtDate(u.trial_ends_at)}` : "gratis"})</p></div>
@@ -126,7 +126,7 @@ function UsersTab({ isSuper }: { isSuper: boolean }) {
               <option value="">Ubah peran...</option><option value="admin">Admin</option><option value="superadmin">Superadmin</option><option value="none">Pengguna biasa</option></select>}
           </div>
         </li>))}
-        {list.length === 0 && <li className="rounded-lg border border-dashed p-3 text-center text-sm text-muted-foreground">Tidak ada pengguna yang cocok.</li>}</ul>
+        {list.length === 0 && <li className="rounded-2xl border border-dashed p-3 text-center text-xs text-muted-foreground">Tidak ada pengguna yang cocok.</li>}</ul>
     </div>
   );
 }
@@ -136,10 +136,10 @@ function RequestsTab() {
   const [ask, dialog] = useConfirm();
   if (err) return <Err t={err} />;
   if (!data) return <Skel />;
-  if (data.length === 0) return <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">Belum ada permintaan berlangganan.</p>;
+  if (data.length === 0) return <p className="rounded-2xl border border-dashed p-4 text-center text-xs text-muted-foreground">Belum ada permintaan berlangganan.</p>;
   return (
     <ul className="space-y-2">{dialog}{data.map((r) => (
-      <li key={r.id} className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+      <li key={r.id} className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
         <p className="break-all text-sm font-medium">{r.email}</p>
         <p className="text-xs text-muted-foreground">Minta {r.plan} · {fmtDate(r.created_at)} · status {r.status}{r.note ? ` · "${r.note}"` : ""}</p>
         {(r.status === "baru" || r.status === "diproses") && <div className="flex gap-2">
@@ -164,8 +164,8 @@ function MarketTab() {
   return (
     <div className="space-y-3">
       {dialog}
-      <p className="text-sm text-muted-foreground">Isi dari sumber resmi (factsheet manajer investasi, OJK, BEI). Setiap data wajib punya tanggal dan alamat sumber https. Info Pasar tampil ke pengguna hanya jika pengaturan NEXT_PUBLIC_INFO_PASAR bernilai on.</p>
-      <div className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+      <p className="text-xs text-muted-foreground">Isi dari sumber resmi. Wajib ada tanggal dan alamat sumber https.</p>
+      <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
         <p className="text-sm font-semibold">{f.id ? "Ubah data" : "Tambah data"}</p>
         <Input aria-label="Nama produk" placeholder="Nama produk atau kategori" maxLength={80} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
         <div className="grid grid-cols-2 gap-2">
@@ -178,10 +178,10 @@ function MarketTab() {
         <div className="flex gap-2"><Button className="flex-1" disabled={!valid} onClick={() => act(() => A.upsertMarket({ id: f.id, name: f.name.trim(), category: f.category, risk: f.risk, ret_1m: num(f.ret_1m), ret_ytd: num(f.ret_ytd), ret_1y: num(f.ret_1y), aum: num(f.aum), as_of: f.as_of, source_url: f.source_url }), "Tersimpan", () => { setF(empty); load(); })}>Simpan</Button>{f.id && <Button variant="outline" onClick={() => setF(empty)}>Batal</Button>}</div>
       </div>
       <ul className="space-y-2">{data.map((s: SnapshotRow) => (
-        <li key={s.id} className="flex items-center justify-between gap-2 rounded-lg p-3 ring-1 ring-foreground/10"><div className="min-w-0"><p className="truncate text-sm font-medium">{s.name}</p><p className="text-xs text-muted-foreground">{s.category} · {s.risk} · {s.as_of} · 1th {s.ret_1y ?? "-"}%</p></div>
+        <li key={s.id} className="flex items-center justify-between gap-2 rounded-2xl p-3 border border-border/70 bg-card shadow-xs"><div className="min-w-0"><p className="truncate text-sm font-medium">{s.name}</p><p className="text-xs text-muted-foreground">{s.category} · {s.risk} · {s.as_of} · 1th {s.ret_1y ?? "-"}%</p></div>
           <div className="flex gap-1"><Button size="sm" variant="outline" onClick={() => setF({ id: s.id, name: s.name, category: s.category, risk: s.risk, ret_1m: s.ret_1m?.toString() ?? "", ret_ytd: s.ret_ytd?.toString() ?? "", ret_1y: s.ret_1y?.toString() ?? "", aum: s.aum?.toString() ?? "", as_of: s.as_of, source_url: s.source_url })}>Ubah</Button>
             <Button size="sm" variant="outline" aria-label={`Hapus ${s.name}`} onClick={async () => { if (await ask(`Hapus data "${s.name}"?`, "Hapus")) void act(() => A.deleteMarket(s.id), "Dihapus", load); }}>Hapus</Button></div></li>))}
-        {data.length === 0 && <li className="rounded-lg border border-dashed p-3 text-center text-sm text-muted-foreground">Belum ada data pasar.</li>}</ul>
+        {data.length === 0 && <li className="rounded-2xl border border-dashed p-3 text-center text-xs text-muted-foreground">Belum ada data pasar.</li>}</ul>
     </div>
   );
 }
@@ -190,7 +190,7 @@ function AuditTab() {
   const { data, err } = useLoad(A.listAudit);
   if (err) return <Err t={err} />;
   if (!data) return <Skel />;
-  if (data.length === 0) return <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">Belum ada aktivitas admin.</p>;
+  if (data.length === 0) return <p className="rounded-2xl border border-dashed p-4 text-center text-xs text-muted-foreground">Belum ada aktivitas admin.</p>;
   return <ul className="space-y-1">{data.map((a) => (<li key={a.id} className="rounded-lg bg-muted p-2 text-xs"><b>{a.action}</b> oleh {a.actor_email ?? "-"}{a.target_email ? ` untuk ${a.target_email}` : ""}{a.detail ? ` (${a.detail})` : ""} · {a.created_at.slice(0, 16).replace("T", " ")}</li>))}</ul>;
 }
 
@@ -203,7 +203,7 @@ function MfaSwitch({ status, onChange }: { status: A.MfaStatus; onChange: () => 
     catch (e) { if (e instanceof Error && e.message.includes("MFA_BELUM_AKTIF")) setNeedCode(true); setErr(A.adminErrorText(e)); }
   };
   return (
-    <div className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+    <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
       <p className="text-sm font-semibold">Kode MFA wajib untuk admin: {status.require_mfa ? "Aktif" : "Belum aktif"}</p>
       <p className="text-xs text-muted-foreground">{status.require_mfa ? "Semua admin harus memasukkan kode dari aplikasi authenticator sebelum memakai halaman Admin." : "Daftarkan MFA-mu dulu di menu Keamanan, masukkan kodenya di sini, lalu wajibkan. Dengan begitu kamu tidak terkunci."}</p>
       {err && <p role="alert" className="text-xs text-red-600">{err}</p>}

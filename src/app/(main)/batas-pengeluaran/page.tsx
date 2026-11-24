@@ -49,11 +49,11 @@ export default function BatasPengeluaranPage() {
       {dialog}
       <TopHeader title="Batas Pengeluaran" />
       <div className="space-y-4 px-4 pt-2">
-        <p className="text-sm text-muted-foreground">Atur batas per hari, minggu, atau bulan. Kamu bisa membatasi hanya kategori tertentu (misalnya makan dan hiburan), sehingga kebutuhan lain tidak ikut dihitung. Kamu diperingatkan saat pengeluaran hampir mencapai batas.</p>
-        {err && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{err}</p>}
+        <p className="text-xs text-muted-foreground">Atur batas per hari, minggu, atau bulan, boleh khusus kategori tertentu. Kamu diperingatkan saat hampir habis.</p>
+        {err && <p role="alert" className="rounded-2xl bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300">{err}</p>}
         <Button className="w-full" onClick={() => setOpen(!open)}>{open ? "Tutup" : "Tambah batas"}</Button>
         {open && (
-          <div className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+          <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
             <Input aria-label="Nama batas" placeholder="Contoh: Makan dan main" maxLength={40} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
             <div className="grid grid-cols-2 gap-2">
               <label className="space-y-1 text-xs">Periode<select aria-label="Periode" className={selectCls} value={f.period} onChange={(e) => setF({ ...f, period: e.target.value as Period })}><option value="harian">Per hari</option><option value="mingguan">Per minggu (Senin-Minggu)</option><option value="bulanan">Per bulan</option></select></label>
@@ -65,13 +65,13 @@ export default function BatasPengeluaranPage() {
             <Button className="w-full" disabled={!f.name.trim() || f.amount <= 0} onClick={save}>Simpan batas</Button>
           </div>
         )}
-        {!list && !err && <div className="h-24 animate-pulse rounded-xl bg-muted" aria-busy="true" />}
-        {list && list.length === 0 && inactive.length === 0 && <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">Belum ada batas. Contoh: 50 ribu per hari untuk makan dan hiburan, atau 100 ribu per minggu untuk hiburan.</p>}
+        {!list && !err && <div className="h-24 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
+        {list && list.length === 0 && inactive.length === 0 && <p className="rounded-2xl border border-dashed p-4 text-center text-xs text-muted-foreground">Belum ada batas. Contoh: 50 ribu per hari untuk makan dan hiburan, atau 100 ribu per minggu untuk hiburan.</p>}
         <ul className="space-y-2">{list?.map((s) => {
           const l = s.limit, msg = limitMessage(s, rp);
           const catNames = l.category_ids.map((id) => cats.find((c) => c.id === id)?.name).filter(Boolean).join(", ");
           return (
-            <li key={l.id} className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+            <li key={l.id} className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
               <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate font-medium">{l.name}</p><p className="text-xs text-muted-foreground">{rp(l.amount)} {PERIOD_LABEL[l.period]} · {catNames || "semua pengeluaran"}</p></div>
                 <p className={`shrink-0 text-sm font-semibold ${s.level === "lewat" ? "text-red-600 dark:text-red-400" : s.level === "hampir" ? "text-amber-600 dark:text-amber-400" : ""}`}>{s.pct}%</p></div>
               <div className="h-2 overflow-hidden rounded-full bg-muted"><div className={`h-full ${s.level === "lewat" ? "bg-red-500" : s.level === "hampir" ? "bg-amber-500" : "bg-emerald-500"}`} style={{ width: `${Math.min(100, s.pct)}%` }} /></div>

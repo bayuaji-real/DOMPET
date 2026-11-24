@@ -46,3 +46,15 @@ describe("target beli", () => {
     expect(r.buyDate).toBe("2026-11-24");
   });
 });
+
+describe("quickSummary", () => {
+  const base = { price: 12_000_000, downPayment: 0, saved: 0, mode: "tunai" as const, months: 12, ratePctYear: 0, targetDate: null, today: "2026-11-24", income: 119_000, expense: 107_000, commitments: 0, inflationPct: 3 };
+  const fmt = (n: number) => `Rp${n}`;
+  it("tidak menulis tanggal beli yang absurd (ratusan tahun)", async () => {
+    const { quickSummary } = await import("./purchase-calc");
+    const lines = quickSummary(analyzePurchase(base), fmt, (d) => d);
+    expect(lines.join(" ")).toMatch(/belum terjangkau/);
+    expect(lines.join(" ")).not.toMatch(/2110/);
+    expect(lines.length).toBeLessThanOrEqual(3);
+  });
+});

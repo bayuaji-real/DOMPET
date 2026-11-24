@@ -50,3 +50,20 @@ export function analyzePurchase(i: PurchaseInput): PurchaseResult {
     : "Berat untuk saat ini. Pertimbangkan menunda, menaikkan DP, atau memilih harga lebih rendah.";
   return { cashNeeded, remainingCash: Math.max(0, cashNeeded - i.saved), feasibility: feas, installment, totalInterest, totalPaid, installmentPctIncome: instPct, leftoverAfterInstallment, priceAtTarget, monthsToBuy, buyDate, verdict, headline };
 }
+
+/** Ringkasan pendek (maksimal 3 baris) untuk obrolan Target Beli. */
+export function quickSummary(r: PurchaseResult, rp: (n: number) => string, fmtDate: (d: string) => string): string[] {
+  const lines: string[] = [];
+  const fe = r.feasibility;
+  if (r.verdict === "belum_ada_data") return ["Catat pemasukanmu dulu supaya bisa dihitung."];
+  if (r.installment !== null) {
+    lines.push(`Cicilan ${rp(r.installment)} per bulan${r.installmentPctIncome !== null ? ` (${r.installmentPctIncome}% dari pemasukan)` : ""}, DP ${rp(r.cashNeeded)}.`);
+  }
+  if (fe.monthlyNeeded !== null && fe.monthlyNeeded > 0) lines.push(`Sisihkan ${rp(fe.monthlyNeeded)} per bulan selama ${fe.monthsLeft} bulan.`);
+  else if (r.remainingCash > 0) {
+    if (r.monthsToBuy !== null && r.monthsToBuy <= 120 && r.buyDate) lines.push(`Kalau semua sisa uang ditabung, terbeli sekitar ${fmtDate(r.buyDate)}.`);
+    else lines.push("Dengan sisa uang sekarang, belum terjangkau dalam waktu dekat.");
+  } else lines.push("Uangnya sudah cukup.");
+  if (r.priceAtTarget !== null && r.priceAtTarget > r.cashNeeded && r.installment === null) lines.push(`Harga di tanggal target diperkirakan ${rp(r.priceAtTarget)}.`);
+  return lines.slice(0, 3);
+}

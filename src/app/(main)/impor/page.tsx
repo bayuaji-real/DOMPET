@@ -85,7 +85,7 @@ function Impor() {
       <textarea aria-label="Isi CSV" className="h-32 w-full rounded-lg border bg-background p-2 text-xs" placeholder={"Tanggal,Keterangan,Jumlah\n24/11/2026,Kopi,-25.000"} value={text} onChange={(e) => setText(e.target.value)} />
       <Button className="w-full" disabled={!text.trim()} onClick={baca}>Baca mutasi</Button>
       <Gate feature="impor_ai">
-        <section aria-label="Impor dengan AI" className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+        <section aria-label="Impor dengan AI" className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
           <p className="font-semibold">Atau baca dengan AI (teks atau PDF)</p>
           <p className="text-xs text-muted-foreground">Tempel mutasi dari m-banking atau pilih PDF e-statement. Memakai 1 kuota AI. Hasilnya bisa salah, jadi selalu tinjau dulu sebelum disimpan.</p>
           <textarea aria-label="Isi mutasi untuk AI" className="h-24 w-full rounded-lg border bg-background p-2 text-xs" placeholder="Tempel isi mutasi di sini" value={aiText} onChange={(e) => setAiText(e.target.value)} />
@@ -102,7 +102,7 @@ function Impor() {
             <select aria-label="Dompet tujuan" className="h-9 w-full rounded-lg border bg-background px-2" value={walletId} onChange={(e) => setWalletId(e.target.value)}>{wallets.map((w) => (<option key={w.id} value={w.id}>{w.name}</option>))}</select></label>
           <ul className="max-h-80 space-y-1.5 overflow-auto">
             {rows.map((r, i) => (
-              <li key={i} className="flex items-center gap-2 rounded-lg p-2 ring-1 ring-foreground/10">
+              <li key={i} className="flex items-center gap-2 rounded-2xl p-2 border border-border/70 bg-card shadow-xs">
                 <input type="checkbox" aria-label={`Catat ${r.description || "baris " + (i + 1)}`} checked={r.on} onChange={() => setRows(rows.map((x, j) => (j === i ? { ...x, on: !x.on } : x)))} />
                 <span className="flex-1 text-sm">{r.description || "(tanpa keterangan)"}<span className="block text-xs text-muted-foreground">{r.date}</span>
                   <select aria-label={`Kategori ${r.description || "baris " + (i + 1)}`} className="mt-1 h-7 w-full max-w-[11rem] rounded-md border bg-background px-1 text-xs" value={r.cat ?? ""} onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, cat: e.target.value || null } : x)))}>

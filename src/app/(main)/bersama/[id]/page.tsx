@@ -38,9 +38,9 @@ function Detail() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => { if (uid && !payer) setPayer(uid); }, [uid, payer]);
 
-  if (err) return <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{err}</p>;
-  if (!d) return <div className="h-32 animate-pulse rounded-xl bg-muted" aria-busy="true" />;
-  if (!d.group) return <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">Grup tidak ditemukan, atau kamu bukan anggotanya. <Link href="/bersama" className="underline">Kembali</Link></p>;
+  if (err) return <p role="alert" className="rounded-2xl bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300">{err}</p>;
+  if (!d) return <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" />;
+  if (!d.group) return <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">Grup tidak ditemukan, atau kamu bukan anggotanya. <Link href="/bersama" className="underline">Kembali</Link></p>;
 
   const name = (u: string) => d.members.find((m) => m.user_id === u)?.display_name ?? "Anggota";
   const net = netBalances(d.members, d.expenses, d.payments);
@@ -53,22 +53,22 @@ function Detail() {
     <div className="space-y-4">
       {dialog}
       <Link href="/bersama" className="inline-flex items-center gap-1 text-sm text-teal-600"><ArrowLeft className="size-4" aria-hidden /> Semua grup</Link>
-      <div><h2 className="text-xl font-bold">{d.group.name}</h2>
+      <div><h2 className="text-base font-bold">{d.group.name}</h2>
         <button type="button" className="mt-1 inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-xs" onClick={async () => { try { await navigator.clipboard.writeText(d.group!.invite_code); notify("Kode undangan disalin"); } catch { notify(`Kode undangan: ${d.group!.invite_code}`); } }}><Copy className="size-3" aria-hidden /> Kode undangan: <b>{d.group.invite_code}</b></button>
         <p className="mt-1 text-xs text-muted-foreground">Anggota: {d.members.map((m) => m.display_name).join(", ")}</p></div>
 
       <section aria-label="Siapa bayar ke siapa" className="space-y-2">
-        <h3 className="font-semibold">Siapa bayar ke siapa</h3>
-        {transfers.length === 0 ? <p className="rounded-lg bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300">Semua sudah impas.</p> : (
+        <h3 className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Siapa bayar ke siapa</h3>
+        {transfers.length === 0 ? <p className="rounded-2xl bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">Semua sudah impas.</p> : (
           <ul className="space-y-2">{transfers.map((t, i) => (
-            <li key={i} className="flex items-center justify-between gap-2 rounded-lg p-3 ring-1 ring-foreground/10 text-sm">
+            <li key={i} className="flex items-center justify-between gap-2 rounded-2xl p-3 border border-border/70 bg-card shadow-xs text-sm">
               <span><b>{name(t.from)}</b> bayar ke <b>{name(t.to)}</b><span className="block font-semibold">{formatRupiah(t.amount)}</span></span>
               {(t.from === uid || t.to === uid) && <Button size="sm" variant="outline" onClick={() => act(() => addPayment({ group_id: id, from_user: t.from, to_user: t.to, amount: t.amount }), "Pembayaran dicatat")}>Sudah dibayar</Button>}
             </li>))}</ul>)}
       </section>
 
-      <form aria-label="Catat pengeluaran" className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10" onSubmit={(e) => { e.preventDefault(); if (!valid) return; void act(async () => { await addExpense({ group_id: id, paid_by: payer, amount, note: note.trim(), split_among: who }); setNote(""); setAmount(0); }, "Pengeluaran dicatat"); }}>
-        <p className="font-semibold">Catat pengeluaran</p>
+      <form aria-label="Catat pengeluaran" className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs" onSubmit={(e) => { e.preventDefault(); if (!valid) return; void act(async () => { await addExpense({ group_id: id, paid_by: payer, amount, note: note.trim(), split_among: who }); setNote(""); setAmount(0); }, "Pengeluaran dicatat"); }}>
+        <p className="text-sm font-bold">Catat pengeluaran</p>
         <Input aria-label="Untuk apa" placeholder="Untuk apa, misal Makan malam" maxLength={80} value={note} onChange={(e) => setNote(e.target.value)} />
         <MoneyInput aria-label="Jumlah pengeluaran" value={amount} onChange={setAmount} suffix="Rp" placeholder="Jumlah" />
         <label className="block text-sm">Dibayar oleh
@@ -79,10 +79,10 @@ function Detail() {
       </form>
 
       <section aria-label="Riwayat pengeluaran" className="space-y-2">
-        <h3 className="font-semibold">Riwayat</h3>
-        {d.expenses.length === 0 && <p className="text-sm text-muted-foreground">Belum ada pengeluaran.</p>}
+        <h3 className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Riwayat</h3>
+        {d.expenses.length === 0 && <p className="text-xs text-muted-foreground">Belum ada pengeluaran.</p>}
         <ul className="space-y-1.5">{d.expenses.map((x) => (
-          <li key={x.id} className="flex items-center justify-between gap-2 rounded-lg p-2.5 ring-1 ring-foreground/10 text-sm">
+          <li key={x.id} className="flex items-center justify-between gap-2 rounded-2xl p-3 border border-border/70 bg-card shadow-xs text-sm">
             <span>{x.note}<span className="block text-xs text-muted-foreground">{name(x.paid_by)} bayar · dibagi {x.split_among.length} orang · {x.date}</span></span>
             <span className="flex items-center gap-2"><b>{formatRupiah(Number(x.amount))}</b>
               {x.created_by === uid && <button type="button" aria-label={`Hapus ${x.note}`} onClick={async () => { if (await ask(`Hapus pengeluaran "${x.note}"?`)) await act(() => deleteExpense(x.id)); }}><Trash2 className="size-4 text-muted-foreground" /></button>}</span>

@@ -18,12 +18,12 @@ export function AcuanSection() {
   const today = todayJakarta();
   return (
     <section aria-label="Acuan pasar" className="space-y-2">
-      <h3 className="font-semibold">Acuan pasar</h3>
+      <h3 className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Acuan pasar</h3>
       <ul className="grid grid-cols-2 gap-2">
         {rows.map((b) => (
-          <li key={b.code} className="rounded-xl p-3 ring-1 ring-foreground/10">
+          <li key={b.code} className="space-y-0.5 rounded-3xl border border-border/70 bg-card p-3.5 shadow-xs">
             <p className="text-xs text-muted-foreground">{b.name}</p>
-            <p className="text-lg font-bold">{formatBenchmark(b)}</p>
+            <p className="text-base font-bold">{formatBenchmark(b)}</p>
             <p className="text-[11px] text-muted-foreground">per {fmtDate(b.as_of)}</p>
             {isStale(b.as_of, today) && <p className="text-[11px] text-amber-600">Angka ini sudah lama, mungkin sudah berubah.</p>}
             <a className="text-[11px] underline" href={b.source_url} target="_blank" rel="noopener noreferrer">Sumber: {b.source_name}</a>

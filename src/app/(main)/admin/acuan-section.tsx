@@ -25,7 +25,7 @@ export function AdminAcuanSection() {
   };
   const del = async (code: string) => { try { await A.deleteBenchmark(code); notify("Dihapus"); load(); } catch (e) { notify(A.adminErrorText(e)); } };
   return (
-    <div className="space-y-2 rounded-xl p-3 ring-1 ring-foreground/10">
+    <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
       <p className="text-sm font-semibold">Acuan pasar (angka tunggal)</p>
       <p className="text-xs text-muted-foreground">Contoh kode: bi_rate, lps_tbp_umum, sun_10y, sr025_kupon, ihsg_ytd. Isi dari situs resmi (bi.go.id, lps.go.id, djppr.kemenkeu.go.id, idx.co.id).</p>
       <div className="grid grid-cols-2 gap-2">

@@ -32,7 +32,7 @@ export function MfaChallenge({ onDone, title = "Masukkan kode dari aplikasi auth
     } catch { setErr("Belum berhasil. Coba lagi sebentar."); } finally { setBusy(false); }
   };
   return (
-    <form onSubmit={submit} className="space-y-2 rounded-xl p-4 ring-1 ring-foreground/10" aria-label="Kode MFA">
+    <form onSubmit={submit} className="space-y-2 rounded-2xl p-4 border border-border/70 bg-card shadow-xs" aria-label="Kode MFA">
       <p className="flex items-center gap-2 text-sm font-semibold"><KeyRound className="size-4 text-teal-600" aria-hidden /> {title}</p>
       {noFactor && <p role="alert" className="text-sm text-amber-700 dark:text-amber-300">Akunmu belum punya MFA. Daftarkan dulu di menu Keamanan.</p>}
       {err && <p role="alert" className="text-sm text-red-600">{err}</p>}
@@ -91,13 +91,13 @@ export function MfaCard() {
 
   const active = (factors ?? []).filter((f) => f.status === "verified");
   return (
-    <section aria-label="Verifikasi dua langkah (MFA)" className="space-y-3">
-      <h2 className="flex items-center gap-2 text-lg font-bold"><KeyRound className="size-5 text-teal-600" aria-hidden /> Verifikasi dua langkah (MFA)</h2>
-      <p className="text-sm text-muted-foreground">Selain kata sandi, akunmu meminta kode 6 angka dari aplikasi authenticator (Google Authenticator, Authy, atau 1Password) di HP-mu. Sangat disarankan untuk akun admin.</p>
+    <section aria-label="Verifikasi dua langkah (MFA)" className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
+      <h2 className="flex items-center gap-2.5 text-sm font-semibold"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-600"><KeyRound className="size-[18px]" aria-hidden /></span> Verifikasi dua langkah (MFA)</h2>
+      <p className="text-xs text-muted-foreground">Tambah kode 6 angka dari aplikasi authenticator saat login. Disarankan untuk admin.</p>
       {msg && <p role="status" className={`rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-red-500/10 text-red-700 dark:text-red-300"}`}>{msg.text}</p>}
-      {factors === null && <div className="h-16 animate-pulse rounded-xl bg-muted" aria-busy="true" />}
+      {factors === null && <div className="h-16 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
       {enrolling && (
-        <form onSubmit={confirm} className="space-y-2 rounded-xl p-4 ring-1 ring-foreground/10">
+        <form onSubmit={confirm} className="space-y-2 rounded-2xl p-4 border border-border/70 bg-card shadow-xs">
           <p className="text-sm">1. Buka aplikasi authenticator, pilih tambah akun, lalu pindai gambar ini.</p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={enrolling.qr} alt="Kode QR untuk aplikasi authenticator" className="mx-auto size-44 rounded-lg bg-white p-2" />
@@ -109,12 +109,12 @@ export function MfaCard() {
       )}
       {factors && !enrolling && active.length === 0 && <Button className="w-full" disabled={busy} onClick={start}>Daftarkan MFA</Button>}
       {active.map((f) => (
-        <div key={f.id} className="flex items-center justify-between gap-2 rounded-xl p-3 ring-1 ring-foreground/10">
+        <div key={f.id} className="flex items-center justify-between gap-2 rounded-2xl p-3 border border-border/70 bg-card shadow-xs">
           <span className="text-sm">MFA aktif <span className="text-xs text-muted-foreground">({f.friendly_name ?? "authenticator"})</span></span>
           <Button size="sm" variant="outline" disabled={busy} onClick={() => remove(f.id)}>Matikan</Button>
         </div>
       ))}
-      <p className="text-xs text-muted-foreground">Simpan kunci cadangan di tempat aman. Kalau HP hilang dan tidak ada cadangan, minta superadmin atau pemilik aplikasi mereset MFA-mu.</p>
+      <p className="text-xs text-muted-foreground">Kalau HP hilang, minta superadmin mereset MFA-mu.</p>
     </section>
   );
 }
