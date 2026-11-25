@@ -69,10 +69,10 @@ export function LandingFeaturesGrid() {
     },
     {
       icon: Smartphone,
-      tag: "Modern PWA",
-      title: "Enteng, Cepat, & Bisa Diinstall Tanpa App Store",
+      tag: "Hemat Memori",
+      title: "Enteng, Cepat, & Bisa Dipasang Tanpa App Store",
       description:
-        "Berbasis Progressive Web App (PWA). Cukup tambahkan ke layar utama HP (iOS & Android). Ukuran super hemat di bawah 5MB, tanpa iklan pop-up, dan bekerja offline.",
+        "Cukup tambahkan ke layar utama HP (iOS & Android). Ukuran super hemat di bawah 5MB, tanpa iklan pop-up, dan bekerja cepat.",
       highlight: "Hemat Memori & Baterai HP",
     },
     {

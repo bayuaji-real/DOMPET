@@ -133,7 +133,7 @@ describe("Landing Page Components & User Flow", () => {
     // Toggle open question 2 (install PWA)
     const q2 = screen.getByText(/Bagaimana cara memasang \(install\) Dompetku di HP iPhone atau Android\?/i);
     fireEvent.click(q2);
-    expect(screen.getByText(/Dompetku adalah Progressive Web App \(PWA\) modern/i)).toBeDefined();
+    expect(screen.getByText(/Dompetku dirancang sangat ringan/i)).toBeDefined();
   });
 
   it("adapts CTA labels when user is already logged in", () => {

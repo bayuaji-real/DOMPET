@@ -18,7 +18,7 @@ const FAQS: FaqItem[] = [
   {
     question: "Bagaimana cara memasang (install) Dompetku di HP iPhone atau Android?",
     answer:
-      "Dompetku adalah Progressive Web App (PWA) modern yang sangat ringan (<5MB) dan tidak butuh unduh dari App Store / Play Store:\n• Di iPhone: Buka website ini di Safari, ketuk tombol Share (ikon kotak dengan panah ke atas), lalu pilih 'Add to Home Screen' (Tambahkan ke Layar Utama).\n• Di Android: Buka di Google Chrome, ketuk ikon titik tiga di kanan atas, lalu pilih 'Pasang Aplikasi' atau 'Tambahkan ke Layar Utama'.\nDompetku akan langsung tampil di beranda HP Anda layaknya aplikasi native.",
+      "Dompetku dirancang sangat ringan (<5MB) dan tidak butuh unduh memori besar dari App Store / Play Store:\n• Di iPhone: Buka website ini di Safari, ketuk tombol Share (ikon kotak dengan panah ke atas), lalu pilih 'Add to Home Screen' (Tambahkan ke Layar Utama).\n• Di Android: Buka di Google Chrome, ketuk ikon titik tiga di kanan atas, lalu pilih 'Pasang Aplikasi' atau 'Tambahkan ke Layar Utama'.\nDompetku akan langsung tampil di beranda HP Anda layaknya aplikasi native.",
   },
   {
     question: "Bagaimana cara kerja uji coba gratis 7 hari (Trial)?",

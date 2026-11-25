@@ -146,7 +146,7 @@ export function LandingFooter({ isLoggedIn = false }: LandingFooterProps) {
               </li>
               <li>
                 <Link href="/login" className="hover:text-foreground transition-colors">
-                  Pasang Aplikasi di HP (PWA)
+                  Pasang Aplikasi di HP
                 </Link>
               </li>
             </ul>

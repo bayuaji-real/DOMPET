@@ -102,7 +102,7 @@ export function LandingHero({ isLoggedIn = false }: LandingHeroProps) {
               <div className="flex items-center gap-2 p-2 rounded-xl bg-card/60 border border-border/40">
                 <Smartphone className="size-4 text-teal-600 dark:text-teal-400 shrink-0" />
                 <span className="text-[11px] font-semibold text-muted-foreground">
-                  <strong className="text-foreground font-bold">PWA Enteng:</strong> Pasang langsung di HP tanpa app store
+                  <strong className="text-foreground font-bold">Aplikasi Enteng:</strong> Pasang langsung di HP tanpa antre app store
                 </span>
               </div>
 
