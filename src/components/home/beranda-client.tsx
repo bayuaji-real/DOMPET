@@ -23,7 +23,6 @@ import { TotalSaldoCarousel } from "./total-saldo-carousel";
 import { WalletDetailSheet } from "@/components/wallet/wallet-detail-sheet";
 import { PaydayCard } from "./payday-card";
 import { DueRecurringCard } from "./due-recurring-card";
-import { LimitAlerts } from "./limit-alerts";
 import { DailyQuotaCard } from "./daily-quota-card";
 import { AdminAlertBanner } from "./admin-alert-banner";
 import { getWallets, ensureDefaultWallet, type WalletBalance } from "@/lib/data/wallets";
@@ -177,7 +176,6 @@ export function BerandaClient({
 
         <AdminAlertBanner />
         <DailyQuotaCard />
-        <LimitAlerts />
 
         {/* 2. Kartu Gajian Hari Ini (Part A: Mode Gajian) */}
         {(paydaySchedule || (USE_SAMPLE_DATA && showSimulatePayday)) && (

@@ -2,12 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { getMasterView, type MasterView } from "@/lib/data/limits";
+import { getHomeLimits, type HomeLimits } from "@/lib/data/limits";
 import { formatRupiah } from "@/lib/utils";
 import type { Level } from "@/lib/konsultan/spend-limit";
 
 const rp = (n: number) => formatRupiah(Math.round(n));
 const RING: Record<Level, string> = { aman: "stroke-emerald-500", hampir: "stroke-amber-500", lewat: "stroke-rose-500" };
+const PERIOD_SHORT = { harian: "per hari", mingguan: "per minggu", bulanan: "per bulan" } as const;
 const BAR: Record<Level, string> = { aman: "bg-emerald-500", hampir: "bg-amber-500", lewat: "bg-rose-500" };
 
 /**
@@ -15,15 +16,31 @@ const BAR: Record<Level, string> = { aman: "bg-emerald-500", hampir: "bg-amber-5
  * mengaktifkan batas pengeluaran (batas aktif tanpa kategori).
  */
 export function DailyQuotaCard() {
-  const [v, setV] = React.useState<MasterView | null>(null);
+  const [all, setAll] = React.useState<HomeLimits | null>(null);
   React.useEffect(() => {
-    const load = () => { getMasterView().then(setV).catch(() => setV(null)); };
+    const load = () => { getHomeLimits().then(setAll).catch(() => setAll(null)); };
     load();
     window.addEventListener("transaction_created", load);
     return () => window.removeEventListener("transaction_created", load);
   }, []);
-  if (!v) return null;
+  if (!all || (!all.master && all.others.length === 0)) return null;
+  const v = all.master;
 
+  const others = (
+    <>
+      {all.others.map(({ status: o, debt: d }) => (
+        <Link key={o.limit.id} href="/batas-pengeluaran" className="block space-y-1.5 rounded-2xl border border-border/70 bg-card p-3 shadow-xs transition-all active:scale-[0.99]">
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <span className="min-w-0 truncate font-extrabold">{o.limit.name} <span className="font-semibold text-muted-foreground">· {rp(o.limit.amount)} {PERIOD_SHORT[o.limit.period]}</span></span>
+            <span className={`shrink-0 font-bold ${o.level === "lewat" ? "text-rose-600 dark:text-rose-400" : o.level === "hampir" ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>{o.remaining >= 0 ? `Sisa ${rp(o.remaining)}` : `Lebih ${rp(-o.remaining)}`}</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${BAR[o.level]}`} style={{ width: `${Math.min(100, o.pct)}%` }} /></div>
+          {d && d.debtAfterToday > 0 && <p className="text-[11px] font-semibold text-amber-800 dark:text-amber-300">🧾 Utang batas {rp(d.debtAfterToday)}: besok jatah {rp(Math.max(0, d.allowance - d.debtAfterToday))}.</p>}
+        </Link>
+      ))}
+    </>
+  );
+  if (!v) return <section aria-label="Batas pengeluaran" className="space-y-2">{others}</section>;
   const { debt, statuses } = v;
   const cap = debt.available; // jatah hari ini setelah dipotong utang
   const used = debt.spentToday;
@@ -71,6 +88,7 @@ export function DailyQuotaCard() {
           </span>
         </Link>
       )}
+      {others}
     </section>
   );
 }

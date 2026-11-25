@@ -56,3 +56,28 @@ export async function getMasterView(): Promise<MasterView | null> {
   const txs = (await getTransactions({ startDate: from, endDate: today })).map((t) => ({ type: t.type, amount: Number(t.amount), date: t.date, category_id: t.category_id }));
   return { limit: m, statuses: masterStatuses(m, txs, today), debt: debtView(m, txs, startDebt, today) };
 }
+
+export type LimitCard = { status: Status; /** Utang batas, hanya untuk batas harian. */ debt: DebtView | null };
+export type HomeLimits = { master: MasterView | null; others: LimitCard[] };
+
+/** Semua batas aktif untuk Beranda: batas utama (lingkaran) + batas lain (kartu kecil, per kategori atau periode lain). */
+export async function getHomeLimits(): Promise<HomeLimits> {
+  const rows = (await getLimits()).filter((r) => r.is_active);
+  if (rows.length === 0) return { master: null, others: [] };
+  const today = todayJakarta();
+  const withDate = rows.map((r) => ({ ...toLimit(r), created_at: r.created_at }));
+  const m = masterLimit(withDate);
+  const floor = addDaysStr(today, -60);
+  const startOf = (l: { created_at?: string }) => { const cd = createdDateWib(l.created_at); return cd && cd > floor ? cd : floor; };
+  const starts = [today, periodRange("bulanan", today).from, periodRange("mingguan", today).from, ...withDate.map(startOf)];
+  const from = starts.sort()[0];
+  const txs = (await getTransactions({ startDate: from, endDate: today })).map((t) => ({ type: t.type, amount: Number(t.amount), date: t.date, category_id: t.category_id }));
+  const master: MasterView | null = m ? { limit: m, statuses: masterStatuses(m, txs, today), debt: debtView(m, txs, startOf(m), today) } : null;
+  const others: LimitCard[] = withDate.filter((l) => l.id !== m?.id).map((l) => {
+    const cats = new Set(l.category_ids);
+    const mine = cats.size === 0 ? txs : txs.filter((t) => t.category_id !== null && cats.has(t.category_id));
+    const [status] = limitStatuses([l], txs, today);
+    return { status, debt: l.period === "harian" ? debtView(l, mine, startOf(l), today) : null };
+  });
+  return { master, others };
+}
