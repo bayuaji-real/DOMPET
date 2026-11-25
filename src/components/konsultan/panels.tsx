@@ -45,7 +45,7 @@ export function Skor({ s }: { s: FinanceSnapshot }) {
           <li key={p.key} className="flex items-start gap-2 rounded-2xl border border-border/70 bg-card p-2.5 text-[11px] shadow-xs"><span aria-hidden className="text-sm leading-none">{EMO[i % EMO.length]}</span><span><b className="font-extrabold">{p.label}:</b> <span className="text-muted-foreground">{p.tip}</span></span></li>
         ))}
       </ul>
-      <Notice tone="sky" emoji="🧮">{s.basisNote ?? `Dihitung dari rata-rata ${s.monthsCovered ?? 3} bulan data`}: pemasukan {formatRupiah(s.monthlyIncome)}, pengeluaran tetap {formatRupiah(s.monthlyExpense)}, uang bebas pakai {formatRupiah(s.freeCash ?? s.liquidSavings)} (di luar dompet tabungan dan investasi). Cicilan utang dari menu Utang.</Notice>
+      <Notice tone="sky" emoji="🧮">{s.basisNote ?? `Dihitung dari rata-rata ${s.monthsCovered ?? 3} bulan data`}: pemasukan {formatRupiah(s.monthlyIncome)}, pengeluaran {formatRupiah(s.monthlyExpense)}, uang bebas pakai {formatRupiah(s.freeCash ?? s.liquidSavings)} (di luar dompet tabungan dan investasi). Cicilan utang dari menu Utang.</Notice>
     </div>
   );
 }

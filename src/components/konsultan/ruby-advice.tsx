@@ -31,7 +31,7 @@ export function RubyAdvice({ question }: { question: string }) {
   };
 
   return (
-    <div className="space-y-3 rounded-3xl border border-border/70 bg-background/50 px-3.5 py-4 shadow-xs">
+    <div className="space-y-3 py-2">
       <Bubble msg={{ role: "model", text: "Skor di atas dihitung dari angkamu. Mau aku jelaskan artinya dan beri saran singkat?", time: openedAt }} first profile={profile} />
       {state === "idle" || state === "error" ? (
         <ReplyBubble>
