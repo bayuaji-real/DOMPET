@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { PageHero, Tabs, Pill, Stat, IconBox, chipCls, type PillTone } from "@/components/ui/form-kit";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { TopHeader } from "@/components/layout/top-header";
@@ -42,6 +43,7 @@ export default function AdminPage() {
           <>
             {role === "superadmin" && mfa && <MfaSwitch status={mfa} onChange={reload} />}
             <p className="text-xs text-muted-foreground">Peranmu: {role === "superadmin" ? "Superadmin" : "Admin"}. Semua tindakan dicatat.</p>
+            <Link href="/admin/performa-marketing" className="block rounded-2xl border border-teal-500/30 bg-teal-500/10 p-3 text-sm font-bold text-teal-700 dark:text-teal-300">Performa marketing · Creative →</Link>
             <Tabs value={tab} onChange={setTab} label="Bagian admin" options={TABS.map((t) => ({ value: t.id, label: t.label, icon: t.icon }))} />
             {tab === "api" && <ApiTab isSuper={role === "superadmin"} />}
             {tab === "pengguna" && <UsersTab isSuper={role === "superadmin"} />}

@@ -565,6 +565,8 @@ export interface Database {
       };
     };
     Functions: {
+      admin_import_marketing_creative: { Args: { p_start: string; p_end: string; p_rows: Json }; Returns: number };
+      admin_latest_marketing_creative: { Args: Record<string, never>; Returns: Json };
       ensure_default_wallet: { Args: Record<string, never>; Returns: string };
       delete_wallet: {
         Args: { p_wallet_id: string; p_move_to: string };
