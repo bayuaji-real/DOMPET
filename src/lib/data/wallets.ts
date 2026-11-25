@@ -65,6 +65,15 @@ export const SAMPLE_WALLETS: WalletBalance[] = [
 ];
 
 export async function getWallets(): Promise<WalletBalance[]> {
+  // Mode demo lokal: langsung kembalikan sampel agar tidak terjebak loading spinner saat screenshot
+  if (
+    typeof document !== "undefined" &&
+    document.cookie.includes("dompet_dev_mode=true") &&
+    process.env.NODE_ENV !== "production"
+  ) {
+    return SAMPLE_WALLETS;
+  }
+
   if (!isSupabaseConfigured()) {
     return USE_SAMPLE_DATA ? SAMPLE_WALLETS : [];
   }
