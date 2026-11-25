@@ -109,8 +109,8 @@ export function SettingsView({ top }: { top?: React.ReactNode | ((slots: { secon
 
   // Profile state
   const [profile, setProfile] = React.useState<UserProfile>({
-    name: "Sobat Finansial",
-    email: "user@dompetku.id",
+    name: "Bayu Aji",
+    email: "bayuaji@dompetku.id",
     avatarUrl: null,
     avatarEmoji: "🧑‍💻",
     avatarBg: "#0d9488",
@@ -1013,7 +1013,7 @@ export function SettingsView({ top }: { top?: React.ReactNode | ((slots: { secon
               <Input
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                placeholder="Contoh: Sobat Finansial"
+                placeholder="Contoh: Bayu Aji"
                 required
                 className="h-10 text-xs rounded-xl font-bold"
                 autoFocus

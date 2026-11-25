@@ -9,8 +9,8 @@ export interface UserProfile {
 }
 
 const DEFAULT_PROFILE: UserProfile = {
-  name: "Sobat Finansial",
-  email: "user@dompetku.id",
+  name: "Bayu Aji",
+  email: "bayuaji@dompetku.id",
   avatarUrl: null,
   avatarEmoji: "🧑‍💻",
   avatarBg: "#0d9488",
@@ -39,6 +39,9 @@ export async function getUserProfile(): Promise<UserProfile> {
       const stored = localStorage.getItem("dompetku_user_profile");
       if (stored) {
         const parsed = JSON.parse(stored);
+        if (parsed.name === "Sobat Finansial") {
+          delete parsed.name;
+        }
         profile = { ...profile, ...parsed };
       }
     } catch (e) {
@@ -56,16 +59,12 @@ export async function getUserProfile(): Promise<UserProfile> {
     if (session?.user) {
       const meta = session.user.user_metadata || {};
       const email = session.user.email || profile.email;
-      let name =
+      const name =
         meta.full_name ||
         meta.name ||
         (profile.name !== DEFAULT_PROFILE.name
           ? profile.name
           : email.split("@")[0]);
-
-      if (name && (name.includes("Bayu") || name.includes("Aji"))) {
-        name = "Sobat Finansial";
-      }
 
       // PEMBERSIHAN OTOMATIS: Jika cookie sebelumnya menyimpan base64 gambar yang besar,
       // bersihkan segera agar tidak memicu error 494 Request Header Too Large di Vercel!

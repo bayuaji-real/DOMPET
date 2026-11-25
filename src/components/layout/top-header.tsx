@@ -23,12 +23,12 @@ export function TopHeader(props: TopHeaderProps) {
   );
 }
 
-function TopHeaderInner({ title, subtitle }: TopHeaderProps) {
+function TopHeaderInner({ title }: TopHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [profile, setProfile] = React.useState<UserProfile>({
-    name: "Sobat Finansial",
-    email: "user@dompetku.id",
+    name: "Bayu Aji",
+    email: "bayuaji@dompetku.id",
     avatarUrl: null,
     avatarEmoji: "🧑‍💻",
     avatarBg: "#0d9488",
@@ -59,8 +59,7 @@ function TopHeaderInner({ title, subtitle }: TopHeaderProps) {
     return () => window.removeEventListener("profile_updated", handleProfileUpdate);
   }, []);
 
-  const rawName = profile.name || "Sobat Finansial";
-  const displayName = rawName.toLowerCase().includes("bayu") ? "Sobat Finansial" : rawName;
+  const displayName = profile.name || "Bayu Aji";
   const isSub = Boolean(title) && pathname !== "/";
 
   return (
@@ -68,62 +67,52 @@ function TopHeaderInner({ title, subtitle }: TopHeaderProps) {
       className="sticky top-0 z-30 flex items-center justify-between border-b border-border/50 bg-background/90 px-4 pb-3.5 backdrop-blur-md"
       style={{ paddingTop: "max(env(safe-area-inset-top, 0px) + 0.5rem, 1.25rem)" }}
     >
-      {/* Kiri: (tombol kembali di halaman dalam) + Judul Halaman (di subhalaman) ATAU avatar & sapaan (di beranda) */}
-      <div className="flex min-w-0 items-center gap-2.5">
+      {/* Kiri: (tombol kembali di halaman dalam) + avatar & sapaan — sapaan tetap tampil */}
+      <div className="flex min-w-0 items-center gap-2">
         {isSub ? (
-          <>
-            <button
-              type="button"
-              onClick={() => router.back()}
-              aria-label="Kembali"
-              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border/60 bg-muted/40 text-foreground transition-colors hover:bg-muted active:scale-95"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <div className="min-w-0">
-              <h1 className="truncate text-base font-extrabold leading-tight tracking-tight text-foreground">
-                {title}
-              </h1>
-              {subtitle && (
-                <p className="truncate text-[11px] text-muted-foreground">{subtitle}</p>
-              )}
-            </div>
-          </>
-        ) : (
-          <Link
-            href="/more"
-            className="group flex min-w-0 items-center gap-3 transition-transform active:scale-[0.98]"
-            title="Buka Pengaturan Akun"
+          <button
+            type="button"
+            onClick={() => router.back()}
+            aria-label="Kembali"
+            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border/60 bg-muted/40 text-foreground transition-colors hover:bg-muted active:scale-95"
           >
-            <div className="relative shrink-0">
-              {profile.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.avatarUrl}
-                  alt={displayName}
-                  className="h-10 w-10 rounded-2xl object-cover shadow-sm ring-2 ring-teal-500/30 transition-all group-hover:ring-teal-500/60"
-                />
-              ) : (
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-2xl text-lg font-bold shadow-sm ring-2 ring-teal-500/30 transition-all group-hover:ring-teal-500/60"
-                  style={{ backgroundColor: profile.avatarBg || "#0d9488" }}
-                >
-                  {profile.avatarEmoji || displayName.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-background" />
-            </div>
-            <div className="min-w-0">
-              <p className="mb-0.5 text-xs font-semibold leading-none text-teal-600 dark:text-teal-400">
-                {greeting}
-              </p>
-              <h1 className="truncate text-sm font-extrabold leading-tight tracking-tight text-foreground">
-                {displayName}
-                {isPro && <span role="img" aria-label="Pengguna Pro" className="ml-1">👑</span>}
-              </h1>
-            </div>
-          </Link>
-        )}
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        ) : null}
+
+        <Link
+          href="/more"
+          className="group flex min-w-0 items-center gap-3 transition-transform active:scale-[0.98]"
+          title="Buka Pengaturan Akun"
+        >
+          <div className="relative shrink-0">
+            {profile.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profile.avatarUrl}
+                alt={displayName}
+                className="h-10 w-10 rounded-2xl object-cover shadow-sm ring-2 ring-teal-500/30 transition-all group-hover:ring-teal-500/60"
+              />
+            ) : (
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-2xl text-lg font-bold shadow-sm ring-2 ring-teal-500/30 transition-all group-hover:ring-teal-500/60"
+                style={{ backgroundColor: profile.avatarBg || "#0d9488" }}
+              >
+                {profile.avatarEmoji || displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-background" />
+          </div>
+          <div className="min-w-0">
+            <p className="mb-1 text-xs font-semibold leading-none text-teal-600 dark:text-teal-400">
+              {greeting}
+            </p>
+            <h1 className="truncate text-sm font-extrabold leading-tight tracking-tight text-foreground">
+              {displayName}
+              {isPro && <span role="img" aria-label="Pengguna Pro" className="ml-1">👑</span>}
+            </h1>
+          </div>
+        </Link>
       </div>
 
       {/* Kanan: Pusat Bantuan & tema */}

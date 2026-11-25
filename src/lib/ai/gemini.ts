@@ -155,7 +155,11 @@ export function usageOf(x: unknown): UsageInfo | undefined {
 export async function generateJson<T>(parts: GeminiPart[], opts: GenerateOptions & { responseSchema: Record<string, unknown> }): Promise<T> {
   const { text, usage } = await generateTextWithUsage(parts, opts);
   try {
-    const parsed = JSON.parse(text) as T;
+    // Toleran pada pagar kode atau teks di luar JSON.
+    const cleaned = text.replace(/```(?:json)?/gi, "").trim();
+    const a = cleaned.indexOf("{");
+    const b = cleaned.lastIndexOf("}");
+    const parsed = JSON.parse(a !== -1 && b > a ? cleaned.slice(a, b + 1) : cleaned) as T;
     if (parsed && typeof parsed === "object") usageMap.set(parsed as object, usage);
     return parsed;
   } catch {
@@ -210,7 +214,8 @@ async function callChatModel(model: string, turns: ChatTurn[], opts: ChatOptions
     contents: turns.map((t) => ({ role: t.role, parts: [{ text: t.text }] })),
     generationConfig: {
       temperature: opts.temperature ?? 0.4,
-      maxOutputTokens: opts.maxOutputTokens ?? 500,
+      // Tanpa batas bila tidak diisi (jawaban JSON jangan sampai terpotong).
+      ...(opts.maxOutputTokens ? { maxOutputTokens: opts.maxOutputTokens } : {}),
       ...(opts.responseSchema ? { responseMimeType: "application/json", responseSchema: opts.responseSchema } : {}),
     },
   };
