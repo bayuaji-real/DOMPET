@@ -98,7 +98,7 @@ function TargetBeliInner() {
     <div className="fixed inset-x-0 top-0 z-30 mx-auto flex max-w-[430px] flex-col bg-background" style={{ bottom: "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
       {dialog}
       <TopHeader title="Target Beli" subtitle="Ketik barang dan harganya" />
-      <div className="flex-1 overflow-y-auto bg-[#efeae2] px-3 py-3 dark:bg-[#0b141a]">
+      <div className="flex-1 overflow-y-auto bg-background/50 px-3.5 py-4 space-y-3">
         <Bubble msg={{ role: "model", text: "Mau beli apa? Ketik barang dan harganya, nanti aku hitung mampu atau tidak.", time: openedAt || undefined }} first profile={profile} />
         {msgs.length === 0 && (
           <ReplyBubble>

@@ -7,27 +7,27 @@ export function LandingRealityCheck() {
   const comparisons = [
     {
       category: "Pencatatan",
-      problem: "Form 10 kolom melelahkan",
+      problem: "Catat 10 transaksi satu persatu",
       solution: "Foto struk & voice note 3 detik",
     },
     {
       category: "AI & Pendamping",
-      problem: "Angka kaku tidak sesuai keuanganmu",
+      problem: "Penghitungan AI tidak menggunakan data keuangan aslimu",
       solution: "Didampingi asisten pribadi Ruby AI sesuai keuanganmu",
     },
     {
       category: "Evaluasi",
-      problem: "Grafik bikin panik akhir bulan",
+      problem: "Analisis grafik yang tidak dijelaskan dan sulit dipahami",
       solution: "Insight & audit kebocoran danamu ada di mana",
     },
     {
       category: "Alokasi Gaji",
-      problem: "Gaji cepat ludes tanpa pos",
+      problem: "Gaji langsung habis tidak sempat disimpan",
       solution: "Mode Gajian membantumu membagi uangmu",
     },
     {
       category: "Makan Bareng",
-      problem: "Pusing hitung pajak & diskon resto",
+      problem: "Pusing hitung pajak, diskon, dan bagi satu-satu",
       solution: "Split bill tinggal foto struk sudah otomatis kebagi ke temenmu",
     },
     {

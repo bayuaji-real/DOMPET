@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { Send, RotateCcw } from "lucide-react";
 import { TopHeader } from "@/components/layout/top-header";
 import { Bubble, ReplyBubble, ReplyRow, nowLabel, type Msg } from "@/components/ai/ai-chat";
@@ -68,14 +67,14 @@ export function GuidedChat({ flow, prefill }: { flow: Flow; prefill?: () => Prom
   return (
     <div className="fixed inset-x-0 top-0 z-30 mx-auto flex max-w-[430px] flex-col bg-background" style={{ bottom: "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
       <TopHeader title={flow.title} subtitle={flow.subtitle} />
-      <div className="flex-1 overflow-y-auto bg-[#efeae2] px-3 py-3 dark:bg-[#0b141a]">
+      <div className="flex-1 overflow-y-auto bg-background/50 px-3.5 py-4 space-y-3">
         <Bubble msg={{ role: "model", text: flow.greeting, time: openedAt || undefined }} first profile={profile} />
         {msgs.map((m, i) => (<Bubble key={i} msg={m} first={i === 0 ? true : msgs[i - 1].role !== m.role} profile={profile} />))}
         {(chips.length > 0 || (done && !!flow.links?.length)) && (
           <ReplyBubble>
-            <p className="mb-1.5">{done ? (flow.links?.length ? "Mau hitung lagi atau buka fitur lain?" : "Mau hitung lagi?") : "Ketuk salah satu, atau ketik sendiri di bawah ya:"}</p>
-            <div className="flex flex-col gap-1.5">
-              {chips.map((c) => (<ReplyRow key={c.label} label={c.label} onClick={c.run} icon={c.label === "Hitung lagi" ? <RotateCcw className="h-3 w-3" aria-hidden="true" /> : undefined} />))}
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{done ? (flow.links?.length ? "Mau hitung lagi atau buka fitur lain?" : "Mau hitung lagi?") : "Ketuk salah satu, atau ketik sendiri di bawah ya:"}</p>
+            <div className="flex flex-col gap-2">
+              {chips.map((c) => (<ReplyRow key={c.label} label={c.label} onClick={c.run} icon={c.label === "Hitung lagi" ? <RotateCcw className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" aria-hidden="true" /> : undefined} />))}
               {done && flow.links?.map((l) => (<ReplyRow key={l.href + l.text} label={l.text} href={l.href} />))}
             </div>
           </ReplyBubble>
@@ -83,9 +82,9 @@ export function GuidedChat({ flow, prefill }: { flow: Flow; prefill?: () => Prom
         <div ref={endRef} />
       </div>
       <p className="bg-background px-3 pt-1.5 text-center text-[10px] leading-tight text-muted-foreground">{flow.footer}</p>
-      <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex shrink-0 items-center gap-2 border-t border-border/60 bg-background px-3 py-2.5">
-        <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={100} aria-label={`Pesan ${flow.title}`} placeholder={done ? "Ketuk Hitung lagi" : (step?.placeholder ?? "Ketik jawabanmu di sini")} disabled={done} className="h-10 flex-1 rounded-full border border-border bg-muted/40 px-4 text-xs outline-none focus:ring-2 focus:ring-teal-500/40 disabled:opacity-50" />
-        <button type="submit" disabled={done || !input.trim()} aria-label="Kirim" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-sm disabled:opacity-40"><Send className="h-4 w-4" /></button>
+      <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="p-3 bg-card/90 border-t border-border/80 flex items-center gap-2 shrink-0 backdrop-blur-md">
+        <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={100} aria-label={`Pesan ${flow.title}`} placeholder={done ? "Ketuk Hitung lagi" : (step?.placeholder ?? "Ketik jawabanmu di sini")} disabled={done} className="flex-1 bg-muted/40 border border-border/70 rounded-xl px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-teal-500/40 disabled:opacity-50 transition-all" />
+        <button type="submit" disabled={done || !input.trim()} aria-label="Kirim" className="size-10 rounded-xl bg-teal-600 text-white flex items-center justify-center hover:bg-teal-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs shrink-0 cursor-pointer"><Send className="size-4" /></button>
       </form>
     </div>
   );

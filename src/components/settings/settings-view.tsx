@@ -1013,7 +1013,7 @@ export function SettingsView({ top }: { top?: React.ReactNode | ((slots: { secon
               <Input
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                placeholder="Contoh: Bayu Aji"
+                placeholder="Contoh: Sobat Finansial"
                 required
                 className="h-10 text-xs rounded-xl font-bold"
                 autoFocus

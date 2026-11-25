@@ -22,7 +22,7 @@ export function LandingFeaturesGrid() {
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
 
-  const AUTO_INTERVAL_MS = 3000;
+  const AUTO_INTERVAL_MS = 7000;
 
   const features = [
     {
@@ -144,15 +144,12 @@ export function LandingFeaturesGrid() {
           onMouseLeave={() => setIsPaused(false)}
         >
           {/* Smartphone Chassis with true full phone aspect ratio (390:844) */}
-          <div className="relative w-full max-w-[340px] sm:max-w-[370px] aspect-[390/844] rounded-[3rem] p-2.5 sm:p-3 bg-gradient-to-b from-neutral-800 via-neutral-900 to-neutral-950 border-[3.5px] border-neutral-700/90 shadow-2xl shadow-teal-950/50 flex flex-col overflow-hidden">
-            {/* Dynamic Island / Notch */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-5 rounded-full bg-black z-30 flex items-center justify-between px-2.5 shadow-sm">
-              <span className="size-2 rounded-full bg-neutral-900 border border-neutral-800" />
-              <span className="size-1.5 rounded-full bg-teal-500/60" />
-            </div>
+          <div className="relative w-full max-w-[340px] sm:max-w-[370px] aspect-[390/844] rounded-[2.8rem] p-2 sm:p-2.5 bg-neutral-950 border-[3.5px] border-neutral-700/80 shadow-2xl shadow-teal-950/40 flex flex-col overflow-hidden">
+            {/* Top Speaker in Bezel (Doesn't block any screen content) */}
+            <div className="w-14 h-1 rounded-full bg-neutral-800 mx-auto mb-1 shrink-0" />
 
-            {/* Inner Phone Screen displaying Full Screen without cutting off bottom navigation */}
-            <div className="relative flex-1 w-full rounded-[2.3rem] overflow-hidden bg-background border border-neutral-800/80">
+            {/* Inner Phone Screen: 100% Full Screen displaying edge-to-edge UI */}
+            <div className="relative flex-1 w-full rounded-[2.2rem] overflow-hidden bg-background">
               {features.map((f, idx) => (
                 <div
                   key={f.id}
@@ -169,53 +166,51 @@ export function LandingFeaturesGrid() {
                     fill
                     unoptimized
                     sizes="(max-width: 1024px) 100vw, 420px"
-                    className="object-contain object-top"
+                    className="object-cover object-top"
                     priority={idx === 0}
                   />
                 </div>
               ))}
+            </div>
+          </div>
 
-              {/* Bottom Subtle Glass Indicator Bar */}
-              <div className="absolute inset-x-0 bottom-2.5 px-3 z-30 pointer-events-none">
-                <div className="p-2 rounded-2xl bg-black/75 backdrop-blur-md border border-white/10 shadow-lg flex items-center justify-between text-white text-[11px] pointer-events-auto">
-                  <div className="flex items-center gap-2 truncate">
-                    <span className="font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-[10px] shrink-0">
-                      #{activeIndex + 1}
-                    </span>
-                    <span className="font-bold text-[11px] truncate">
-                      {features[activeIndex].tag}
-                    </span>
-                  </div>
+          {/* Controls & Indicator Bar Placed Outside Below Phone (Full Screen Never Cut Off) */}
+          <div className="w-full max-w-[340px] sm:max-w-[370px] mt-3 px-3.5 py-2 rounded-2xl bg-card border border-border/70 shadow-sm flex items-center justify-between text-foreground text-xs">
+            <div className="flex items-center gap-2 truncate">
+              <span className="font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-white text-[10px] shrink-0">
+                #{activeIndex + 1}
+              </span>
+              <span className="font-bold text-[11px] truncate text-muted-foreground">
+                {features[activeIndex].tag}
+              </span>
+            </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    {/* Dots indicator */}
-                    <div className="flex gap-1">
-                      {features.map((_, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setActiveIndex(idx)}
-                          className={cn(
-                            "h-1.5 rounded-full transition-all",
-                            idx === activeIndex
-                              ? "w-4 bg-teal-400"
-                              : "w-1.5 bg-white/30 hover:bg-white/60"
-                          )}
-                        />
-                      ))}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setIsPaused((prev) => !prev)}
-                      title={isPaused ? "Lanjutkan Auto-Slide" : "Jeda Demo"}
-                      className="size-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-                    >
-                      {isPaused ? <Play className="size-3" /> : <Pause className="size-3" />}
-                    </button>
-                  </div>
-                </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Dots indicator */}
+              <div className="flex gap-1">
+                {features.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveIndex(idx)}
+                    className={cn(
+                      "h-1.5 rounded-full transition-all cursor-pointer",
+                      idx === activeIndex
+                        ? "w-4 bg-teal-500"
+                        : "w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/60"
+                    )}
+                  />
+                ))}
               </div>
+
+              <button
+                type="button"
+                onClick={() => setIsPaused((prev) => !prev)}
+                title={isPaused ? "Lanjutkan Auto-Slide" : "Jeda Demo"}
+                className="size-6 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center text-foreground transition-colors cursor-pointer"
+              >
+                {isPaused ? <Play className="size-3" /> : <Pause className="size-3" />}
+              </button>
             </div>
           </div>
         </div>
