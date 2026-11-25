@@ -2,55 +2,15 @@
 
 import * as React from "react";
 import Image from "next/image";
-import {
-  XCircle,
-  CheckCircle2,
-  Sparkles,
-  Camera,
-  Bot,
-  Activity,
-  Sliders,
-  Receipt,
-  Calculator,
-  Check,
-  TrendingUp,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { XCircle, CheckCircle2 } from "lucide-react";
 
 export function LandingRealityCheck() {
   const comparisons = [
     // 1. Struk
     {
       id: "struk",
-      ui: (
-        <div className="h-full flex flex-col justify-between p-2.5 rounded-xl bg-card/90 border border-teal-500/20 text-[10px] relative overflow-hidden shadow-inner">
-          <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
-            <span className="font-extrabold text-foreground flex items-center gap-1">
-              <Camera className="size-3 text-teal-600 dark:text-teal-400" />
-              Scan Struk AI
-            </span>
-            <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold">
-              99.8% Akurat
-            </span>
-          </div>
-
-          <div className="space-y-1 my-1">
-            <div className="flex items-center justify-between text-muted-foreground text-[9px]">
-              <span>Indomaret Point</span>
-              <span>14:32</span>
-            </div>
-            <div className="flex items-center justify-between font-mono font-bold text-foreground bg-muted/60 px-1.5 py-1 rounded">
-              <span className="truncate max-w-[80px]">Roti + Susu</span>
-              <span className="text-teal-700 dark:text-teal-300">Rp82.500</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1 border-t border-border/40">
-            <Check className="size-2.5" />
-            <span>Tercatat otomatis</span>
-          </div>
-        </div>
-      ),
+      screenshot: "/screenshots/scan-struk.png",
+      featureTag: "Scan Struk AI",
       problemTitle: "Ribet Input Form 10 Kolom Tiap Belanja",
       problemDesc:
         "Beli kebutuhan bulanan harus ketik manual satu per satu: item, tanggal, nominal, dan kategori. Bikin malas dan cepat menyerah.",
@@ -61,33 +21,8 @@ export function LandingRealityCheck() {
     // 2. Asisten pribadi
     {
       id: "ruby",
-      ui: (
-        <div className="h-full flex flex-col justify-between p-2.5 rounded-xl bg-card/90 border border-teal-500/20 text-[10px] relative overflow-hidden shadow-inner">
-          <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
-            <span className="font-extrabold text-foreground flex items-center gap-1">
-              <Bot className="size-3 text-teal-600 dark:text-teal-400" />
-              Asisten Ruby
-            </span>
-            <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-300 font-bold">
-              Online
-            </span>
-          </div>
-
-          <div className="space-y-1 my-1">
-            <div className="p-1 rounded-md bg-muted/70 text-[9px] text-muted-foreground leading-tight">
-              &ldquo;Aman beli sepatu 700rb?&rdquo;
-            </div>
-            <div className="p-1 rounded-md bg-teal-500/10 border border-teal-500/20 text-[9px] text-teal-700 dark:text-teal-300 font-medium leading-tight">
-              &ldquo;Aman, sisa jajan Rp1.2jt ✨&rdquo;
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1 border-t border-border/40">
-            <Sparkles className="size-2.5" />
-            <span>Nasihat proaktif harian</span>
-          </div>
-        </div>
-      ),
+      screenshot: "/screenshots/chat-ruby.png",
+      featureTag: "Asisten Ruby AI",
       problemTitle: "Bingung Evaluasi Keuangan Sendiri Tanpa Pendamping",
       problemDesc:
         "Aplikasi biasa cuma menampilkan angka kaku tanpa ada yang mendampingi dan memberi arahan saat kamu bingung mengelola saldo.",
@@ -98,37 +33,8 @@ export function LandingRealityCheck() {
     // 3. Insight dan Konsultasi keuangan
     {
       id: "insight",
-      ui: (
-        <div className="h-full flex flex-col justify-between p-2.5 rounded-xl bg-card/90 border border-teal-500/20 text-[10px] relative overflow-hidden shadow-inner">
-          <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
-            <span className="font-extrabold text-foreground flex items-center gap-1">
-              <Activity className="size-3 text-teal-600 dark:text-teal-400" />
-              Skor Kesehatan
-            </span>
-            <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold">
-              88/100 Sehat
-            </span>
-          </div>
-
-          <div className="space-y-1 my-1 text-[9px]">
-            <div className="flex justify-between text-muted-foreground">
-              <span>Rasio Tabungan</span>
-              <span className="font-bold text-teal-700 dark:text-teal-300">32% (Ideal)</span>
-            </div>
-            <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-              <div className="bg-teal-500 h-full w-[32%]" />
-            </div>
-            <p className="text-[8.5px] text-muted-foreground leading-tight">
-              Bocor: 12% di Kopi &amp; Camilan
-            </p>
-          </div>
-
-          <div className="flex items-center gap-1 text-[9px] text-teal-700 dark:text-teal-300 font-semibold pt-1 border-t border-border/40">
-            <TrendingUp className="size-2.5" />
-            <span>Audit pola belanja real-time</span>
-          </div>
-        </div>
-      ),
+      screenshot: "/screenshots/kesehatan.png",
+      featureTag: "Kesehatan Finansial",
       problemTitle: "Sekadar 'Kuburan Angka' Tanpa Nasihat dan Solusi",
       problemDesc:
         "Cuma disuguhi grafik merah yang bikin cemas di akhir bulan tanpa tahu cara menghentikan boncos dan ragu apakah aman belanja.",
@@ -139,39 +45,8 @@ export function LandingRealityCheck() {
     // 4. Rencanakan kebutuhan yang disesuaikan pemasukanmu
     {
       id: "gajian",
-      ui: (
-        <div className="h-full flex flex-col justify-between p-2.5 rounded-xl bg-card/90 border border-teal-500/20 text-[10px] relative overflow-hidden shadow-inner">
-          <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
-            <span className="font-extrabold text-foreground flex items-center gap-1">
-              <Sliders className="size-3 text-teal-600 dark:text-teal-400" />
-              Mode Gajian
-            </span>
-            <span className="text-[9px] font-mono font-bold text-foreground">
-              Rp8.500.000
-            </span>
-          </div>
-
-          <div className="space-y-1 my-1 text-[9px]">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Kebutuhan (45%)</span>
-              <span className="font-bold text-foreground">Rp3.825.000</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Tabungan (25%)</span>
-              <span className="font-bold text-teal-700 dark:text-teal-300">Rp2.125.000</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Bebas Jajan (15%)</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">Rp1.275.000</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1 border-t border-border/40">
-            <Check className="size-2.5" />
-            <span>Pos terbagi otomatis</span>
-          </div>
-        </div>
-      ),
+      screenshot: "/screenshots/beranda-wallet.png",
+      featureTag: "Mode Gajian & Pos",
       problemTitle: "Gaji Numpang Lewat Tanpa Alokasi Pasti",
       problemDesc:
         "Uang gaji masuk lalu cepat ludes karena tidak dipisahkan sejak awal antara kebutuhan hidup pokok, tabungan, dan uang jajan.",
@@ -182,35 +57,8 @@ export function LandingRealityCheck() {
     // 5. Split bill
     {
       id: "split",
-      ui: (
-        <div className="h-full flex flex-col justify-between p-2.5 rounded-xl bg-card/90 border border-teal-500/20 text-[10px] relative overflow-hidden shadow-inner">
-          <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
-            <span className="font-extrabold text-foreground flex items-center gap-1">
-              <Receipt className="size-3 text-teal-600 dark:text-teal-400" />
-              Split Bill Resto
-            </span>
-            <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-300 font-bold">
-              PPN 11% + Serv 5%
-            </span>
-          </div>
-
-          <div className="space-y-1 my-1 text-[9px]">
-            <div className="flex justify-between items-center bg-muted/60 px-1.5 py-0.5 rounded">
-              <span>Kamu</span>
-              <span className="font-mono font-bold text-foreground">Rp65.000</span>
-            </div>
-            <div className="flex justify-between items-center bg-muted/60 px-1.5 py-0.5 rounded">
-              <span>Andi &amp; Siti</span>
-              <span className="font-mono font-bold text-foreground">Rp100.000</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold pt-1 border-t border-border/40">
-            <Check className="size-2.5" />
-            <span>Porsi pajak adil otomatis</span>
-          </div>
-        </div>
-      ),
+      screenshot: "/screenshots/split-bill.png",
+      featureTag: "Split Bill Resto",
       problemTitle: "Drama Split Bill & Hitung Pajak Manual",
       problemDesc:
         "Makan bareng teman, struk resto panjang, lalu repot buka kalkulator untuk membagi diskon, service charge 5%, dan PPN 11%.",
@@ -221,38 +69,8 @@ export function LandingRealityCheck() {
     // 6. Simulasi investasi, cicilan, hingga paylater
     {
       id: "cicilan",
-      ui: (
-        <div className="h-full flex flex-col justify-between p-2.5 rounded-xl bg-card/90 border border-teal-500/20 text-[10px] relative overflow-hidden shadow-inner">
-          <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
-            <span className="font-extrabold text-foreground flex items-center gap-1">
-              <Calculator className="size-3 text-teal-600 dark:text-teal-400" />
-              Simulasi Cicilan
-            </span>
-            <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold">
-              Aman Cashflow
-            </span>
-          </div>
-
-          <div className="space-y-1 my-1 text-[9px]">
-            <div className="flex justify-between text-muted-foreground">
-              <span>Target Laptop</span>
-              <span className="font-bold text-foreground">Rp12.000.000</span>
-            </div>
-            <div className="flex justify-between font-mono">
-              <span className="text-muted-foreground">Beban Tenor 12x</span>
-              <span className="font-bold text-teal-700 dark:text-teal-300">Rp1.050.000/bln</span>
-            </div>
-            <p className="text-[8.5px] text-muted-foreground leading-tight">
-              Beban 12% dari gaji bulanan
-            </p>
-          </div>
-
-          <div className="flex items-center gap-1 text-[9px] text-teal-700 dark:text-teal-300 font-semibold pt-1 border-t border-border/40">
-            <Sparkles className="size-2.5" />
-            <span>Ketahui bunga sebelum beli</span>
-          </div>
-        </div>
-      ),
+      screenshot: "/screenshots/cicilan-utang.png",
+      featureTag: "Simulasi Cicilan",
       problemTitle: "Terjebak Bunga Cicilan & Paylater Tanpa Perhitungan",
       problemDesc:
         "Asal ambil cicilan atau paylater tanpa tahu total bunga yang menumpuk dan bagaimana dampaknya terhadap kesehatan cashflow bulananmu.",
@@ -283,15 +101,39 @@ export function LandingRealityCheck() {
           {comparisons.map((c) => (
             <div
               key={c.id}
-              className="rounded-2xl sm:rounded-3xl border border-border/80 bg-card hover:border-teal-500/40 transition-all shadow-xs flex flex-col sm:flex-row items-stretch overflow-hidden group"
+              className="rounded-2xl sm:rounded-3xl border border-border/80 bg-card hover:border-teal-500/40 transition-all shadow-xs flex flex-row items-stretch overflow-hidden group min-h-[175px] sm:min-h-[195px]"
             >
-              {/* Left Side: Mock UI Preview stretching top to bottom */}
-              <div className="w-full sm:w-44 md:w-48 shrink-0 bg-muted/30 border-b sm:border-b-0 sm:border-r border-border/60 p-3 sm:p-3.5 flex flex-col justify-center">
-                {c.ui}
+              {/* Left Side: Authentic Mobile Phone Mockup */}
+              <div className="w-28 sm:w-36 md:w-40 shrink-0 bg-gradient-to-b from-muted/50 to-muted/20 border-r border-border/60 p-2 sm:p-2.5 flex items-center justify-center">
+                {/* Mini Phone Chassis */}
+                <div className="w-full h-full max-h-[175px] rounded-[1.4rem] sm:rounded-[1.6rem] p-1 sm:p-1.5 bg-neutral-900 border-2 border-neutral-700/80 shadow-md flex flex-col relative overflow-hidden">
+                  {/* Dynamic Island / Notch */}
+                  <div className="w-9 sm:w-11 h-2 rounded-full bg-black mx-auto mb-1 shrink-0 flex items-center justify-center">
+                    <span className="size-1 rounded-full bg-neutral-800" />
+                  </div>
+
+                  {/* Phone Screen with Real App UI Screenshot */}
+                  <div className="relative flex-1 w-full rounded-[1rem] overflow-hidden bg-background">
+                    <Image
+                      src={c.screenshot}
+                      alt={c.featureTag}
+                      fill
+                      sizes="(max-width: 768px) 120px, 160px"
+                      className="object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                    />
+
+                    {/* Gradient overlay at bottom with tag */}
+                    <div className="absolute inset-x-0 bottom-0 pt-4 pb-1 px-1 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-center justify-center">
+                      <span className="text-[8px] sm:text-[9px] font-extrabold text-white/95 leading-none px-1.5 py-0.5 rounded-full bg-teal-600/90 backdrop-blur-xs">
+                        {c.featureTag}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Right Side: Problem (Top) & Solution (Bottom) stacked tightly to the top */}
-              <div className="flex-1 p-3.5 sm:p-4 flex flex-col justify-start gap-2.5">
+              <div className="flex-1 p-3 sm:p-4 flex flex-col justify-start gap-2 sm:gap-2.5">
                 {/* Problem Side (Red X) */}
                 <div className="flex items-start gap-2">
                   <XCircle className="size-4.5 shrink-0 text-rose-500 mt-0.5" />

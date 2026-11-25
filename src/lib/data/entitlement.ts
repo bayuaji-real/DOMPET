@@ -4,6 +4,15 @@ import { USE_SAMPLE_DATA } from "./sample-mode";
 
 /** Paket pengguna dari database. Tanpa Supabase (mode demo lokal) = Pro supaya semua layar bisa diuji. */
 export async function getEntitlement(): Promise<Entitlement> {
+  // Mode demo lokal: bypass ke Pro agar screenshot dan pengujian fitur Pro lengkap
+  if (
+    typeof document !== "undefined" &&
+    document.cookie.includes("dompet_dev_mode=true") &&
+    process.env.NODE_ENV !== "production"
+  ) {
+    return parseEntitlement({ plan: "pro", source: "paid", ai_limit: 1000, ai_used: 0 });
+  }
+
   if (!isSupabaseConfigured()) {
     return parseEntitlement(USE_SAMPLE_DATA ? { plan: "pro", source: "paid", ai_limit: 1000, ai_used: 0 } : null);
   }

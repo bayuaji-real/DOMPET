@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import {
   Wallet,
   Users,
@@ -10,33 +11,23 @@ import {
   Compass,
   Smartphone,
   Download,
-  Eye,
-  EyeOff,
   CheckCircle2,
   Sparkles,
-  ArrowRight,
-  TrendingUp,
-  ShieldCheck,
   Pause,
   Play,
-  Clock,
-  FileSpreadsheet,
-  Check,
-  Percent,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function LandingFeaturesGrid() {
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
-  const [showBalance, setShowBalance] = React.useState(true);
-  const [selectedWallet, setSelectedWallet] = React.useState<"bca" | "gopay" | "mandiri">("bca");
 
   const AUTO_INTERVAL_MS = 3000;
 
   const features = [
     {
       id: "multi-dompet",
+      screenshot: "/screenshots/beranda-wallet.png",
       icon: Wallet,
       tag: "Multi-Dompet Real-Time",
       title: "Bank, E-Wallet, & Tunai Terhubung Tanpa Password",
@@ -46,6 +37,7 @@ export function LandingFeaturesGrid() {
     },
     {
       id: "split-bill",
+      screenshot: "/screenshots/split-bill.png",
       icon: Users,
       tag: "Split Bill Resto",
       title: "Makan Bareng Teman Tanpa Drama Hitung Manual",
@@ -55,6 +47,7 @@ export function LandingFeaturesGrid() {
     },
     {
       id: "target-impian",
+      screenshot: "/screenshots/tabungan.png",
       icon: PiggyBank,
       tag: "Target Impian",
       title: "Proyeksi Tanggal Tabungan Tercapai Secara Realistis",
@@ -64,6 +57,7 @@ export function LandingFeaturesGrid() {
     },
     {
       id: "tagihan-rutin",
+      screenshot: "/screenshots/berulang.png",
       icon: Calendar,
       tag: "Tagihan Berulang",
       title: "Jangan Pernah Ketinggalan Tagihan Rutin Bulanan",
@@ -73,6 +67,7 @@ export function LandingFeaturesGrid() {
     },
     {
       id: "analisis-kas",
+      screenshot: "/screenshots/analisis.png",
       icon: PieChart,
       tag: "Analisis Arus Kas",
       title: "Pahami Pola Belanja Tanpa Pusing Membaca Tabel",
@@ -82,6 +77,7 @@ export function LandingFeaturesGrid() {
     },
     {
       id: "perencana-masa-depan",
+      screenshot: "/screenshots/financial-freedom.png",
       icon: Compass,
       tag: "Perencana Masa Depan",
       title: "Kalkulator Financial Freedom, Pensiun, & Zakat",
@@ -91,6 +87,7 @@ export function LandingFeaturesGrid() {
     },
     {
       id: "hemat-memori",
+      screenshot: "/screenshots/beranda-wallet.png",
       icon: Smartphone,
       tag: "Hemat Memori",
       title: "Enteng, Cepat, & Bisa Dipasang Tanpa App Store",
@@ -100,6 +97,7 @@ export function LandingFeaturesGrid() {
     },
     {
       id: "kontrol-data",
+      screenshot: "/screenshots/cicilan-utang.png",
       icon: Download,
       tag: "Kontrol Data 100%",
       title: "Datamu Milikmu: Ekspor CSV & Backup JSON Penuh",
@@ -137,510 +135,92 @@ export function LandingFeaturesGrid() {
         </p>
       </div>
 
-      {/* Main Two-Column Interactive Showcase */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-        {/* LEFT COLUMN: Animated UI Demo (Never Static) */}
+      {/* Main Two-Column Showcase: Left = Phone Mockup aligned from #1 to #8 */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
+        {/* LEFT COLUMN: Real Phone Mockup Matching Height with Right List (aligned top to bottom) */}
         <div
-          className="lg:col-span-5 sticky top-24"
+          className="lg:col-span-5 flex flex-col justify-stretch self-stretch"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          <div className="rounded-[2.5rem] p-3 sm:p-4 bg-gradient-to-b from-card via-card/90 to-card border-2 border-teal-500/30 shadow-2xl shadow-teal-900/15 relative overflow-hidden backdrop-blur-xl">
-            {/* Top Device Header */}
-            <div className="flex items-center justify-between px-3 pt-1 pb-3 text-xs text-muted-foreground border-b border-border/50">
-              <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-foreground">
-                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>09:41</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-300 font-extrabold text-[10px]">
-                  Demo Fitur #{activeIndex + 1}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setIsPaused((prev) => !prev)}
-                  title={isPaused ? "Lanjutkan Auto-Slide" : "Jeda Demo"}
-                  className="size-6 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {isPaused ? <Play className="size-3" /> : <Pause className="size-3" />}
-                </button>
-              </div>
+          {/* Smartphone Chassis stretching exactly to match right column */}
+          <div className="relative w-full h-full min-h-[580px] sm:min-h-[640px] rounded-[2.8rem] sm:rounded-[3.2rem] p-2.5 sm:p-3 bg-gradient-to-b from-neutral-800 via-neutral-900 to-neutral-950 border-[3px] border-neutral-700/80 shadow-2xl shadow-teal-950/40 flex flex-col justify-between overflow-hidden">
+            {/* Dynamic Island / Notch */}
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-5 rounded-full bg-black z-30 flex items-center justify-between px-2.5 shadow-sm">
+              <span className="size-2 rounded-full bg-neutral-900 border border-neutral-800" />
+              <span className="size-1.5 rounded-full bg-teal-500/60" />
             </div>
 
-            {/* Simulated App Screen (Dynamic based on activeIndex) */}
-            <div className="mt-3 rounded-[1.75rem] bg-background/95 border border-border/70 p-4 sm:p-5 min-h-[460px] sm:min-h-[490px] flex flex-col justify-between relative overflow-hidden">
-              {/* FEATURE 0: Multi-Dompet Real-Time */}
-              {activeIndex === 0 && (
-                <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                        Total Saldo (Semua)
-                      </span>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-2xl font-black text-foreground">
-                          {showBalance ? "Rp14.850.000" : "••••••••"}
-                        </span>
+            {/* Inner Phone Screen with Stacked Screenshots for Zero-Flicker Transitions */}
+            <div className="relative flex-1 w-full rounded-[2.2rem] sm:rounded-[2.5rem] overflow-hidden bg-background border border-neutral-800/80">
+              {features.map((f, idx) => (
+                <div
+                  key={f.id}
+                  className={cn(
+                    "absolute inset-0 transition-opacity duration-300",
+                    idx === activeIndex
+                      ? "opacity-100 z-10"
+                      : "opacity-0 pointer-events-none z-0"
+                  )}
+                >
+                  <Image
+                    src={f.screenshot}
+                    alt={f.title}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 450px"
+                    className="object-cover object-top"
+                    priority={idx === 0}
+                  />
+                </div>
+              ))}
+
+              {/* Bottom Subtle Glass Indicator Bar */}
+              <div className="absolute inset-x-0 bottom-2.5 px-3 z-30 pointer-events-none">
+                <div className="p-2 rounded-2xl bg-black/65 backdrop-blur-md border border-white/10 shadow-lg flex items-center justify-between text-white text-[11px] pointer-events-auto">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-[10px] shrink-0">
+                      #{activeIndex + 1}
+                    </span>
+                    <span className="font-bold text-[11px] truncate">
+                      {features[activeIndex].tag}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {/* Dots indicator */}
+                    <div className="flex gap-1">
+                      {features.map((_, idx) => (
                         <button
+                          key={idx}
                           type="button"
-                          onClick={() => setShowBalance(!showBalance)}
-                          className="size-6 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground"
-                        >
-                          {showBalance ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                        </button>
-                      </div>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
-                      Mode Privasi
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 pt-2">
-                    <span className="text-[11px] font-bold text-muted-foreground">Pilih Dompet:</span>
-                    <div
-                      onClick={() => setSelectedWallet("bca")}
-                      className={cn(
-                        "p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between",
-                        selectedWallet === "bca"
-                          ? "border-teal-500 bg-teal-500/10 shadow-xs"
-                          : "border-border/60 bg-card/60"
-                      )}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="size-8 rounded-xl bg-blue-600/20 text-blue-600 dark:text-blue-400 flex items-center justify-center font-black text-xs">
-                          BCA
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-foreground">BCA Utama (Gaji)</p>
-                          <p className="text-[10px] text-muted-foreground">Tabungan &amp; Operasional</p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold font-mono text-foreground">
-                        {showBalance ? "Rp8.250.000" : "••••••"}
-                      </span>
+                          onClick={() => setActiveIndex(idx)}
+                          className={cn(
+                            "h-1.5 rounded-full transition-all",
+                            idx === activeIndex
+                              ? "w-4 bg-teal-400"
+                              : "w-1.5 bg-white/30 hover:bg-white/60"
+                          )}
+                        />
+                      ))}
                     </div>
 
-                    <div
-                      onClick={() => setSelectedWallet("gopay")}
-                      className={cn(
-                        "p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between",
-                        selectedWallet === "gopay"
-                          ? "border-teal-500 bg-teal-500/10 shadow-xs"
-                          : "border-border/60 bg-card/60"
-                      )}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="size-8 rounded-xl bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-xs">
-                          GP
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-foreground">GoPay Jajan</p>
-                          <p className="text-[10px] text-muted-foreground">Transport &amp; Kopi</p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold font-mono text-foreground">
-                        {showBalance ? "Rp450.000" : "••••••"}
-                      </span>
-                    </div>
-
-                    <div
-                      onClick={() => setSelectedWallet("mandiri")}
-                      className={cn(
-                        "p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between",
-                        selectedWallet === "mandiri"
-                          ? "border-teal-500 bg-teal-500/10 shadow-xs"
-                          : "border-border/60 bg-card/60"
-                      )}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="size-8 rounded-xl bg-amber-600/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xs">
-                          MDR
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-foreground">Mandiri Darurat</p>
-                          <p className="text-[10px] text-muted-foreground">Dana Darurat 6 Bulan</p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold font-mono text-foreground">
-                        {showBalance ? "Rp6.150.000" : "••••••"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-muted/60 border border-border/50 text-[10px] text-muted-foreground flex items-center gap-2">
-                    <ShieldCheck className="size-4 text-emerald-500 shrink-0" />
-                    <span>100% Bebas Kredensial: Tidak pernah meminta password atau OTP bank.</span>
-                  </div>
-                </div>
-              )}
-
-              {/* FEATURE 1: Split Bill Resto */}
-              {activeIndex === 1 && (
-                <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                  <div className="flex items-center justify-between pb-2 border-b border-border/60">
-                    <div>
-                      <p className="text-xs font-extrabold text-foreground">Warung Pasta &amp; Grill</p>
-                      <p className="text-[10px] text-muted-foreground">Makan Siang Bareng Kantor</p>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-300 text-[10px] font-bold">
-                      Struk Terbaca
-                    </span>
-                  </div>
-
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between text-muted-foreground text-[11px]">
-                      <span>1x Aglio Olio (Kamu)</span>
-                      <span className="font-mono">Rp45.000</span>
-                    </div>
-                    <div className="flex justify-between text-muted-foreground text-[11px]">
-                      <span>1x Margherita Pizza (Andi &amp; Siti)</span>
-                      <span className="font-mono">Rp75.000</span>
-                    </div>
-                    <div className="flex justify-between text-muted-foreground text-[11px]">
-                      <span>3x Lemon Tea</span>
-                      <span className="font-mono">Rp45.000</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-foreground text-xs pt-1 border-t border-border/40">
-                      <span>Pajak Resto 11% + Serv 5%</span>
-                      <span className="text-teal-700 dark:text-teal-300 font-mono">+Rp26.400</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-2xl bg-teal-500/10 border border-teal-500/20 space-y-2">
-                    <p className="text-[11px] font-extrabold text-teal-700 dark:text-teal-300">
-                      Porsi Tagihan Terbagi Rata Otomatis:
-                    </p>
-                    <div className="space-y-1 text-[11px]">
-                      <div className="flex justify-between items-center bg-card/80 px-2 py-1 rounded-lg">
-                        <span className="font-medium text-foreground">Kamu (Aglio + 1 Teh)</span>
-                        <span className="font-mono font-bold text-teal-700 dark:text-teal-300">Rp69.600 ✓</span>
-                      </div>
-                      <div className="flex justify-between items-center bg-card/80 px-2 py-1 rounded-lg">
-                        <span className="font-medium text-foreground">Andi (1/2 Pizza + Teh)</span>
-                        <span className="font-mono font-bold text-foreground">Rp60.900</span>
-                      </div>
-                      <div className="flex justify-between items-center bg-card/80 px-2 py-1 rounded-lg">
-                        <span className="font-medium text-foreground">Siti (1/2 Pizza + Teh)</span>
-                        <span className="font-mono font-bold text-foreground">Rp60.900</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-[10px] text-center text-muted-foreground">
-                    ⚡ Tidak ada yang nombokin pajak atau pusing hitung manual.
-                  </p>
-                </div>
-              )}
-
-              {/* FEATURE 2: Target Impian */}
-              {activeIndex === 2 && (
-                <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-teal-500/15 via-emerald-500/10 to-card border border-teal-500/30">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-black text-foreground flex items-center gap-1.5">
-                        🛡️ Dana Darurat 6 Bulan
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-600 text-white">
-                        65% Tercapai
-                      </span>
-                    </div>
-                    <div className="flex items-baseline justify-between font-mono my-2">
-                      <span className="text-lg font-black text-teal-700 dark:text-teal-300">
-                        Rp19.500.000
-                      </span>
-                      <span className="text-xs text-muted-foreground">/ Rp30.000.000</span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                      <div className="bg-gradient-to-r from-teal-500 to-emerald-400 h-full w-[65%] rounded-full animate-pulse" />
-                    </div>
-                    <div className="flex justify-between text-[10px] text-muted-foreground mt-2">
-                      <span>Setoran: Rp1.500.000 / gajian</span>
-                      <span className="font-bold text-foreground">Sisa 7x setoran</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-2xl border border-border/70 bg-card/60 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                        ✈️ Liburan ke Labuan Bajo
-                      </span>
-                      <span className="text-[10px] text-muted-foreground font-mono">Rp7.2jt / Rp12jt</span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-teal-500 h-full w-[60%] rounded-full" />
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-teal-500/10 border border-teal-500/20 text-[10px] text-teal-700 dark:text-teal-300 flex items-center gap-2 font-medium">
-                    <Sparkles className="size-4 shrink-0 text-teal-500" />
-                    <span>Proyeksi cerdas: Target Dana Darurat tercapai tepat pada 25 Oktober 2026!</span>
-                  </div>
-                </div>
-              )}
-
-              {/* FEATURE 3: Tagihan Berulang */}
-              {activeIndex === 3 && (
-                <div className="space-y-3.5 animate-in fade-in zoom-in-95 duration-300">
-                  <div className="flex items-center justify-between pb-1 border-b border-border/60">
-                    <span className="text-xs font-extrabold text-foreground">
-                      Tagihan Rutin Bulan Ini
-                    </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 font-bold">
-                      2 Mendekati Tempo
-                    </span>
-                  </div>
-
-                  <div className="p-3 rounded-2xl border border-rose-500/30 bg-rose-500/5 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="size-7 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center font-bold text-[10px]">
-                          WIFI
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-foreground">Indihome 50Mbps</p>
-                          <p className="text-[10px] text-rose-500 font-semibold">Jatuh tempo dlm 2 hari</p>
-                        </div>
-                      </div>
-                      <span className="font-mono font-bold text-xs text-foreground">Rp385.000</span>
-                    </div>
                     <button
                       type="button"
-                      className="w-full py-1.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-[10px] font-black tracking-wide transition-all shadow-xs"
+                      onClick={() => setIsPaused((prev) => !prev)}
+                      title={isPaused ? "Lanjutkan Auto-Slide" : "Jeda Demo"}
+                      className="size-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                     >
-                      Catat Otomatis ke Dompet BCA
+                      {isPaused ? <Play className="size-3" /> : <Pause className="size-3" />}
                     </button>
                   </div>
-
-                  <div className="p-2.5 rounded-2xl border border-border/70 bg-card/60 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="size-7 rounded-lg bg-red-600/20 text-red-600 flex items-center justify-center font-bold text-[10px]">
-                        NFLX
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-foreground">Netflix 4K Premium</p>
-                        <p className="text-[10px] text-muted-foreground">Jatuh tempo 28 Nov</p>
-                      </div>
-                    </div>
-                    <span className="font-mono font-bold text-xs text-foreground">Rp186.000</span>
-                  </div>
-
-                  <div className="p-2.5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="size-7 rounded-lg bg-emerald-500/20 text-emerald-600 flex items-center justify-center font-bold text-[10px]">
-                        BPJS
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-foreground">BPJS Kesehatan Kelas 1</p>
-                        <p className="text-[10px] text-emerald-600 font-semibold">Sudah dibayar ✓</p>
-                      </div>
-                    </div>
-                    <span className="font-mono font-bold text-xs text-muted-foreground">Rp150.000</span>
-                  </div>
-                </div>
-              )}
-
-              {/* FEATURE 4: Analisis Arus Kas */}
-              {activeIndex === 4 && (
-                <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                  <div className="p-3 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground font-semibold">Skor Kesehatan Finansial</p>
-                      <p className="text-xl font-black text-teal-700 dark:text-teal-300">88 / 100</p>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-black text-xs">
-                      Kondisi Sehat ✨
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs font-bold text-muted-foreground">
-                      <span>Porsi Pengeluaran Terbesar</span>
-                      <span>Bulan Ini</span>
-                    </div>
-
-                    <div className="space-y-2 text-xs">
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-foreground font-medium">🍔 Makan &amp; Minum (42%)</span>
-                          <span className="font-mono text-muted-foreground">Rp3.200.000</span>
-                        </div>
-                        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                          <div className="bg-amber-500 h-full w-[42%]" />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-foreground font-medium">🛒 Kebutuhan Bulanan (28%)</span>
-                          <span className="font-mono text-muted-foreground">Rp2.150.000</span>
-                        </div>
-                        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                          <div className="bg-teal-500 h-full w-[28%]" />
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-foreground font-medium">🛵 Transport &amp; Bensin (18%)</span>
-                          <span className="font-mono text-muted-foreground">Rp1.400.000</span>
-                        </div>
-                        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                          <div className="bg-blue-500 h-full w-[18%]" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-card border border-border/70 text-[10px] text-muted-foreground">
-                    💡 <strong className="text-foreground">Insight Ruby:</strong> Pengeluaran kopi harian
-                    mengambil 8% cashflowmu. Batasi 1 cup/hari bisa menghemat Rp450rb/bulan!
-                  </div>
-                </div>
-              )}
-
-              {/* FEATURE 5: Perencana Masa Depan */}
-              {activeIndex === 5 && (
-                <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/15 via-card to-card border border-indigo-500/30">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
-                      Target Financial Freedom
-                    </span>
-                    <div className="my-1.5">
-                      <span className="text-xl font-black text-foreground">Rp2.250.000.000</span>
-                      <p className="text-[10px] text-muted-foreground">Rule of 25 • Bebas Finansial</p>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2 overflow-hidden my-2">
-                      <div className="bg-gradient-to-r from-indigo-500 to-teal-400 h-full w-[22%]" />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      Aset terkumpul: <strong className="text-foreground">Rp495.000.000 (22%)</strong>
-                    </p>
-                  </div>
-
-                  <div className="p-3 rounded-2xl border border-border/70 bg-card/60 space-y-1.5 text-xs">
-                    <p className="font-extrabold text-foreground">Kalkulator Zakat &amp; Pensiun</p>
-                    <div className="flex justify-between text-[11px] text-muted-foreground">
-                      <span>Nisab Zakat Emas (85 gr)</span>
-                      <span className="font-mono text-foreground font-bold">Telah Melebihi Nisab</span>
-                    </div>
-                    <div className="flex justify-between text-[11px] text-muted-foreground">
-                      <span>Kewajiban Zakat Mal (2.5%)</span>
-                      <span className="font-mono font-bold text-teal-700 dark:text-teal-300">
-                        Rp12.375.000 / thn
-                      </span>
-                    </div>
-                  </div>
-
-                  <p className="text-[10px] text-center text-muted-foreground">
-                    Hitungan otomatis disesuaikan dengan harga emas harian dan siklus haul 1 tahun.
-                  </p>
-                </div>
-              )}
-
-              {/* FEATURE 6: Hemat Memori */}
-              {activeIndex === 6 && (
-                <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300 text-center py-2">
-                  <div className="size-16 rounded-3xl bg-teal-600/15 text-teal-600 dark:text-teal-400 mx-auto flex items-center justify-center border border-teal-500/25">
-                    <Smartphone className="size-8" />
-                  </div>
-
-                  <div className="space-y-1">
-                    <h4 className="text-base font-extrabold text-foreground">
-                      Ukuran Super Ramping: &lt;5MB
-                    </h4>
-                    <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                      Tanpa harus unduh 200MB+ dari App Store. Pasang langsung ke beranda HP dalam 2 detik.
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-left pt-2">
-                    <div className="p-2.5 rounded-xl bg-card border border-border/60">
-                      <p className="text-[10px] text-muted-foreground">Kecepatan Buka</p>
-                      <p className="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                        0.28 Detik
-                      </p>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-card border border-border/60">
-                      <p className="text-[10px] text-muted-foreground">Konsumsi RAM</p>
-                      <p className="text-sm font-black text-teal-700 dark:text-teal-300 font-mono">
-                        Sangat Hemat
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-teal-500/10 text-[10px] text-teal-700 dark:text-teal-300 font-semibold">
-                    ✓ Bekerja cepat dan responsif bahkan di koneksi internet lemah
-                  </div>
-                </div>
-              )}
-
-              {/* FEATURE 7: Kontrol Data 100% */}
-              {activeIndex === 7 && (
-                <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                  <div className="p-3.5 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-center space-y-2">
-                    <FileSpreadsheet className="size-8 text-teal-600 dark:text-teal-400 mx-auto" />
-                    <div>
-                      <p className="text-xs font-extrabold text-foreground">Pusat Ekspor Data Mandiri</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        Unduh mutasi lengkap kapan saja tanpa batasan
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="p-3 rounded-2xl border border-border/70 bg-card/60 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-bold text-foreground">File CSV (Microsoft Excel)</p>
-                        <p className="text-[10px] text-muted-foreground">Format UTF-8 BOM rapi tanpa teks rusak</p>
-                      </div>
-                      <span className="px-2 py-1 rounded-lg bg-teal-600 text-white text-[10px] font-bold">
-                        Download
-                      </span>
-                    </div>
-
-                    <div className="p-3 rounded-2xl border border-border/70 bg-card/60 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-bold text-foreground">Backup JSON Penuh</p>
-                        <p className="text-[10px] text-muted-foreground">Semua dompet, target, dan tagihan</p>
-                      </div>
-                      <span className="px-2 py-1 rounded-lg bg-muted text-foreground text-[10px] font-bold">
-                        Backup
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-muted/60 text-[10px] text-muted-foreground text-center">
-                    🔒 Keamanan database PostgreSQL Row Level Security (RLS) terisolasi.
-                  </div>
-                </div>
-              )}
-
-              {/* Bottom Progress Bar on the Mockup Phone */}
-              <div className="pt-3 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
-                <span className="font-semibold">{features[activeIndex].tag}</span>
-                <div className="flex gap-1">
-                  {features.map((_, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setActiveIndex(idx)}
-                      className={cn(
-                        "h-1.5 rounded-full transition-all",
-                        idx === activeIndex
-                          ? "w-6 bg-teal-500"
-                          : "w-2 bg-muted hover:bg-muted-foreground/40"
-                      )}
-                    />
-                  ))}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: 8 Features List (Clickable & Auto-Advances) */}
-        <div className="lg:col-span-7 space-y-3">
+        {/* RIGHT COLUMN: 8 Features List (Clickable & Synchronized from #1 to #8) */}
+        <div className="lg:col-span-7 flex flex-col justify-between gap-2.5">
           {features.map((f, i) => {
             const isActive = i === activeIndex;
             const Icon = f.icon;
@@ -655,15 +235,15 @@ export function LandingFeaturesGrid() {
                 className={cn(
                   "rounded-2xl transition-all duration-300 cursor-pointer overflow-hidden relative",
                   isActive
-                    ? "bg-card border-2 border-teal-500 shadow-xl shadow-teal-900/10 p-4 sm:p-5 scale-[1.01]"
-                    : "bg-card/40 hover:bg-card/90 border border-border/60 hover:border-teal-500/40 p-3.5 sm:p-4"
+                    ? "bg-card border-2 border-teal-500 shadow-xl shadow-teal-900/10 p-3.5 sm:p-4 scale-[1.01]"
+                    : "bg-card/40 hover:bg-card/90 border border-border/60 hover:border-teal-500/40 p-2.5 sm:p-3"
                 )}
               >
                 <div className="flex items-start gap-3 sm:gap-4">
                   {/* Number Badge */}
                   <div
                     className={cn(
-                      "size-8 sm:size-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-colors",
+                      "size-7 sm:size-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-colors",
                       isActive
                         ? "bg-teal-600 text-white shadow-md shadow-teal-600/30"
                         : "bg-muted text-muted-foreground"
@@ -673,18 +253,18 @@ export function LandingFeaturesGrid() {
                   </div>
 
                   {/* Title & Content */}
-                  <div className="flex-1 space-y-1">
+                  <div className="flex-1 space-y-0.5">
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <Icon
                           className={cn(
-                            "size-4 shrink-0",
+                            "size-3.5 shrink-0",
                             isActive ? "text-teal-600 dark:text-teal-400" : "text-muted-foreground"
                           )}
                         />
                         <span
                           className={cn(
-                            "text-xs font-bold uppercase tracking-wider",
+                            "text-[10px] sm:text-[11px] font-bold uppercase tracking-wider",
                             isActive
                               ? "text-teal-700 dark:text-teal-300 font-extrabold"
                               : "text-muted-foreground"
@@ -705,26 +285,26 @@ export function LandingFeaturesGrid() {
 
                     <h3
                       className={cn(
-                        "text-sm sm:text-base font-extrabold leading-snug transition-colors",
+                        "text-xs sm:text-sm font-extrabold leading-tight transition-colors",
                         isActive ? "text-foreground" : "text-foreground/85"
                       )}
                     >
                       {f.title}
                     </h3>
 
-                    {/* Description visible when active or compact on hover */}
+                    {/* Description visible when active */}
                     {isActive ? (
-                      <div className="space-y-2 pt-1 animate-in fade-in duration-200">
-                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                      <div className="space-y-1.5 pt-1 animate-in fade-in duration-200">
+                        <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
                           {f.description}
                         </p>
-                        <div className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 dark:text-teal-300">
-                          <CheckCircle2 className="size-3.5" />
+                        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-teal-700 dark:text-teal-300">
+                          <CheckCircle2 className="size-3" />
                           <span>{f.highlight}</span>
                         </div>
                       </div>
                     ) : (
-                      <p className="text-xs text-muted-foreground line-clamp-1">
+                      <p className="text-[11px] text-muted-foreground line-clamp-1">
                         {f.description}
                       </p>
                     )}
