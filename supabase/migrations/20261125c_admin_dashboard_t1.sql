@@ -50,6 +50,7 @@ on conflict (key) do nothing;
 --    SECURITY DEFINER agar peladen (authenticated / service_role) bisa membaca
 --    meskipun tabel app_settings tidak terbuka langsung.
 -- =========================================================================
+drop function if exists public.get_ai_runtime_guard();
 create or replace function public.get_ai_runtime_guard()
 returns jsonb
 language plpgsql stable security definer set search_path = public as $$
@@ -108,6 +109,7 @@ end $$;
 -- 4. Fungsi admin_dashboard_summary(p_from, p_to)
 --    Menghitung ringkasan KPI agregat untuk kartu Ringkasan.
 -- =========================================================================
+drop function if exists public.admin_dashboard_summary(timestamptz, timestamptz);
 create or replace function public.admin_dashboard_summary(
   p_from timestamptz default null,
   p_to timestamptz default null
@@ -221,6 +223,7 @@ end $$;
 -- =========================================================================
 -- 5. Ubah admin_confirm_payment: Aturan 7 hari & bulan kalender
 -- =========================================================================
+drop function if exists public.admin_confirm_payment(uuid);
 create or replace function public.admin_confirm_payment(p_id uuid) returns void
 language plpgsql security definer set search_path = public as $$
 declare
@@ -276,6 +279,7 @@ end $$;
 -- =========================================================================
 -- 6. Fungsi admin_list_prices() & admin_set_price(p_months, p_amount)
 -- =========================================================================
+drop function if exists public.admin_list_prices();
 create or replace function public.admin_list_prices()
 returns table (months integer, amount integer)
 language plpgsql stable security definer set search_path = public as $$
@@ -284,6 +288,8 @@ begin
   return query select p.months, p.amount from public.payment_prices p order by p.months;
 end $$;
 
+drop function if exists public.admin_set_price(integer, integer);
+drop function if exists public.admin_set_price(integer, numeric);
 create or replace function public.admin_set_price(p_months integer, p_amount integer)
 returns void
 language plpgsql security definer set search_path = public as $$
@@ -384,6 +390,7 @@ end $$;
 -- =========================================================================
 -- 8. Fungsi admin_get_ai_controls() & admin_set_ai_controls(p_controls, p_usd)
 -- =========================================================================
+drop function if exists public.admin_get_ai_controls();
 create or replace function public.admin_get_ai_controls()
 returns jsonb
 language plpgsql stable security definer set search_path = public as $$
@@ -414,6 +421,8 @@ begin
   );
 end $$;
 
+drop function if exists public.admin_set_ai_controls(jsonb, numeric);
+drop function if exists public.admin_set_ai_controls(jsonb);
 create or replace function public.admin_set_ai_controls(
   p_controls jsonb,
   p_usd_idr_rate numeric default null
