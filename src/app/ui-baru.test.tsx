@@ -150,11 +150,13 @@ describe("Paket", () => {
 describe("Kesehatan Finansial dan Prediksi", () => {
   it("skor kesehatan tampil di rentang 0-100 dengan 4 bagian", async () => {
     render(<KesehatanPage />);
+    fireEvent.click(await screen.findByRole("button", { name: /Pakai biaya tetap saja/ }));
     const n = Number((await screen.findByTestId("skor-total")).textContent); expect(n).toBeGreaterThanOrEqual(0); expect(n).toBeLessThanOrEqual(100);
     expect(screen.getAllByRole("progressbar").length).toBe(4);
   });
   it("proyeksi 3 bulan", async () => {
     render(<PrediksiPage />);
+    fireEvent.click(await screen.findByRole("button", { name: /Pakai biaya tetap saja/ }));
     expect(await screen.findByText(/tetap positif/)).toBeTruthy();
     expect(screen.getAllByText(/Bulan ke-/).length).toBe(3);
   });
@@ -239,5 +241,16 @@ describe("Gerbang Money Planner (gaya chat)", () => {
     expect(await screen.findByText(/belum terbaca/)).toBeTruthy();
     expect(screen.getByText(/Gajimu belum diatur/)).toBeTruthy();
     planCtx.v = null;
+  });
+});
+
+describe("Gerbang: pengeluaran nyata di atas biaya tetap", () => {
+  it("bertanya dulu, lalu memakai pengeluaran nyata bila dipilih", async () => {
+    render(<PrediksiPage />);
+    expect(await screen.findByText(/lebih besar dari biaya tetapmu/)).toBeTruthy();
+    expect(screen.queryByText(/Bulan ke-/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Pakai pengeluaran nyata/ }));
+    expect(await screen.findByText(/pengeluaran memakai rata-rata nyata pilihanmu/)).toBeTruthy();
+    expect(screen.getAllByText(/Bulan ke-/).length).toBe(3);
   });
 });

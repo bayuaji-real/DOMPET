@@ -20,7 +20,8 @@ function loadBasis(): Promise<Basis> {
     try {
       const ctx = await loadPlanContext(snap.monthlyExpense);
       const r = resolvePlanBasis(ctx.basisInput, {});
-      if (r.ok) return { snap: { ...snap, monthlyIncome: r.incomeMonthly, monthlyExpense: Math.max(0, r.fixedMonthly - ctx.basisInput.debtMonthly) }, debt };
+      // Pengeluaran nyata jauh di atas biaya tetap: skor dari biaya tetap saja terlalu optimistis dan pilihannya perlu konfirmasi (di halaman Kesehatan), jadi pakai skor asal.
+      if (r.ok && snap.monthlyExpense - Math.max(0, r.fixedMonthly - ctx.basisInput.debtMonthly) < 100_000) return { snap: { ...snap, monthlyIncome: r.incomeMonthly, monthlyExpense: Math.max(0, r.fixedMonthly - ctx.basisInput.debtMonthly) }, debt };
     } catch { /* data rencana belum bisa dimuat */ }
     return { snap, debt };
   });
