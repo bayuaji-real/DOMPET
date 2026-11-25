@@ -128,10 +128,10 @@ export function LandingInteractiveDemos() {
           <span>Demo Interaktif Tanpa Instalasi</span>
         </div>
         <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-foreground">
-          Coba Langsung Kehebatan AI Dompetku di Sini
+          Coba Langsung Kehebatan AI Dompetku
         </h2>
         <p className="text-sm sm:text-base text-muted-foreground">
-          Uji bagaimana kecerdasan buatan Dompetku menghemat waktu harianmu dari mencatat manual.
+          lihat bagaimana AI mempermudah pekerjaanmu tanpa kamu ribet nulis apapun
         </p>
 
         {/* Tab Switcher */}

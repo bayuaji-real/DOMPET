@@ -2,51 +2,15 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Check, Sparkles, ArrowRight, ShieldCheck, HelpCircle } from "lucide-react";
-import { cn, formatRupiah } from "@/lib/utils";
+import { Check, Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface LandingPricingProps {
   isLoggedIn?: boolean;
 }
 
 export function LandingPricing({ isLoggedIn = false }: LandingPricingProps) {
-  const [selectedDuration, setSelectedDuration] = React.useState<"12" | "6" | "1">("12");
-
-  const plans = [
-    {
-      months: 1,
-      name: "Pro 1 Bulan",
-      price: 15000,
-      period: "per bulan",
-      daily: "Rp500 / hari",
-      badge: "Coba Dulu Sebulan",
-      highlight: false,
-      description: "Sangat terjangkau untuk kamu yang ingin mencoba kenyamanan hidup tanpa ribet nyatet.",
-      ctaText: "Pilih 1 Bulan",
-    },
-    {
-      months: 12,
-      name: "Pro 12 Bulan (1 Tahun)",
-      price: 99000,
-      period: "per tahun",
-      daily: "Cuma Rp271 / hari",
-      badge: "✨ Paling Hemat & Populer (Hemat 45%)",
-      highlight: true,
-      description: "Pilihan terbaik. Cuma seharga 3 cangkir kopi untuk ketenangan finansial setahun penuh.",
-      ctaText: "Mulai Coba Gratis 7 Hari",
-    },
-    {
-      months: 6,
-      name: "Pro 6 Bulan",
-      price: 50000,
-      period: "per 6 bulan",
-      daily: "Cuma Rp277 / hari",
-      badge: "Hemat 44%",
-      highlight: false,
-      description: "Pilihan pas untuk komitmen rencana keuangan setengah tahun yang terarah.",
-      ctaText: "Pilih 6 Bulan",
-    },
-  ];
+  const [selectedPlan, setSelectedPlan] = React.useState<"basic" | "1" | "6" | "12">("12");
 
   const proFeatures = [
     "Unlimited catat transaksi pakai foto struk (OCR AI)",
@@ -68,14 +32,90 @@ export function LandingPricing({ isLoggedIn = false }: LandingPricingProps) {
     "Ekspor mutasi ke CSV untuk Excel",
   ];
 
+  const plans = [
+    {
+      id: "basic" as const,
+      name: "Basic",
+      crown: false,
+      tag: "Paket Pemula",
+      badge: "Gratis Selamanya",
+      price: "Rp0",
+      period: "selamanya",
+      daily: null,
+      description: "Untuk kamu yang baru mau mulai membiasakan diri mencatat aliran uang.",
+      features: basicFeatures,
+      primaryCta: {
+        text: isLoggedIn ? "Buka Dashboard" : "Daftar Gratis",
+        href: "/login",
+      },
+      secondaryCta: null,
+    },
+    {
+      id: "1" as const,
+      name: "Pro 1 Bulan",
+      crown: true,
+      tag: "Fleksibel",
+      badge: "Bebas Komitmen",
+      price: "Rp15.000",
+      period: "/ bulan",
+      daily: "Cuma Rp500 / hari, coba dulu sebulan",
+      description: "Sangat terjangkau untuk kamu yang ingin mencoba kenyamanan hidup tanpa ribet.",
+      features: proFeatures,
+      primaryCta: {
+        text: "Pilih Pro 1 Bulan",
+        href: "/login",
+      },
+      secondaryCta: {
+        text: "Mulai Coba Gratis 7 Hari",
+        href: "/login",
+      },
+    },
+    {
+      id: "6" as const,
+      name: "Pro 6 Bulan",
+      crown: true,
+      tag: "Setengah Tahun",
+      badge: "Hemat 44%",
+      price: "Rp50.000",
+      period: "/ 6 bulan",
+      daily: "Cuma Rp277 / hari",
+      description: "Pilihan pas untuk komitmen rencana keuangan setengah tahun yang terarah.",
+      features: proFeatures,
+      primaryCta: {
+        text: "Pilih Pro 6 Bulan",
+        href: "/login",
+      },
+      secondaryCta: {
+        text: "Mulai Coba Gratis 7 Hari",
+        href: "/login",
+      },
+    },
+    {
+      id: "12" as const,
+      name: "Pro 12 Bulan",
+      crown: true,
+      tag: "Akses 1 Tahun",
+      badge: "Hemat 45%",
+      price: "Rp99.000",
+      period: "/ tahun",
+      daily: "✨ Cuma Rp271 / hari",
+      description: "Paling hemat. Cuma seharga 3 cup kopi untuk ketenangan finansial setahun penuh.",
+      features: proFeatures,
+      primaryCta: {
+        text: "Pilih Pro 12 Bulan",
+        href: "/login",
+      },
+      secondaryCta: {
+        text: "Mulai Coba Gratis 7 Hari",
+        href: "/login",
+      },
+    },
+  ];
+
   return (
     <section id="paket" className="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto space-y-3 mb-12 sm:mb-16">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/10 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-500/25">
-          <Sparkles className="size-3.5" />
-          <span>Harga Jujur, Transparan, Tanpa Jebakan</span>
-        </div>
         <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-foreground">
           Investasi Terkecil untuk Ketenangan Finansial Jangka Panjang
         </h2>
@@ -84,196 +124,136 @@ export function LandingPricing({ isLoggedIn = false }: LandingPricingProps) {
         </p>
       </div>
 
-      {/* Main Pricing Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
-        {/* Basic Plan (Free) */}
-        <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-8 flex flex-col justify-between shadow-xs">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Paket Pemula
-              </span>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-muted text-muted-foreground">
-                Gratis Selamanya
-              </span>
-            </div>
+      {/* 4 Blocks Grid (From Basic leftmost to 12 Bulan rightmost) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 items-stretch">
+        {plans.map((p) => {
+          const isSelected = selectedPlan === p.id;
+          const is12 = p.id === "12";
 
-            <h3 className="text-2xl font-extrabold text-foreground">Basic</h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Untuk kamu yang baru mau mulai membiasakan diri mencatat aliran uang.
-            </p>
-
-            <div className="mt-6 mb-6">
-              <span className="text-3xl sm:text-4xl font-black text-foreground">Rp0</span>
-              <span className="text-xs text-muted-foreground ml-1.5">selamanya</span>
-            </div>
-
-            <ul className="space-y-3 text-xs sm:text-sm text-foreground/80">
-              {basicFeatures.map((f, i) => (
-                <li key={i} className="flex items-start gap-2.5">
-                  <Check className="size-4 text-muted-foreground shrink-0 mt-0.5" />
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="pt-8">
-            <Link
-              href="/login"
-              className="w-full flex items-center justify-center py-3.5 rounded-2xl border border-border/80 bg-muted/50 hover:bg-muted text-foreground text-xs font-bold transition-all active:scale-98"
+          return (
+            <div
+              key={p.id}
+              onClick={() => setSelectedPlan(p.id)}
+              className={cn(
+                "rounded-3xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-200 cursor-pointer relative",
+                isSelected
+                  ? "border-2 border-teal-500 bg-gradient-to-b from-teal-500/10 via-card to-card shadow-xl shadow-teal-500/10 scale-[1.01]"
+                  : "border border-border/80 bg-card hover:border-teal-500/50 hover:shadow-md hover:bg-card/90"
+              )}
             >
-              <span>{isLoggedIn ? "Buka Dashboard" : "Daftar Gratis"}</span>
-            </Link>
-          </div>
-        </div>
+              {/* Special Badge for 12 Bulan */}
+              {is12 && (
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 text-white text-[10px] font-black shadow-md flex items-center gap-1 whitespace-nowrap">
+                  <Sparkles className="size-3" />
+                  <span>PALING HEMAT & POPULER</span>
+                </div>
+              )}
 
-        {/* Pro 12 Bulan (The Hero / Main Plan) */}
-        <div className="rounded-3xl border-2 border-teal-500 bg-gradient-to-b from-teal-500/10 via-card to-card p-6 sm:p-8 flex flex-col justify-between shadow-xl relative order-first lg:order-none">
-          {/* Top Badge */}
-          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 text-white text-[11px] font-extrabold shadow-md flex items-center gap-1.5">
-            <Sparkles className="size-3" />
-            <span>PALING HEMAT & POPULER</span>
-          </div>
+              <div>
+                {/* Card Sub-Header */}
+                <div className="flex items-center justify-between mb-3 mt-1">
+                  <span
+                    className={cn(
+                      "text-[10px] font-bold uppercase tracking-wider",
+                      isSelected ? "text-teal-700 dark:text-teal-300" : "text-muted-foreground"
+                    )}
+                  >
+                    {p.tag}
+                  </span>
+                  <span
+                    className={cn(
+                      "px-2 py-0.5 rounded-full text-[10px] font-bold",
+                      isSelected && is12
+                        ? "bg-teal-600 text-white"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {p.badge}
+                  </span>
+                </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-300">
-                Akses Penuh 1 Tahun
-              </span>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-teal-600 text-white">
-                Hemat 45%
-              </span>
-            </div>
+                {/* Plan Name */}
+                <h3 className="text-xl font-extrabold text-foreground flex items-center gap-1.5">
+                  <span>{p.name}</span>
+                  {p.crown && <span className="text-sm">👑</span>}
+                </h3>
+                <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                  {p.description}
+                </p>
 
-            <h3 className="text-2xl font-extrabold text-foreground flex items-center gap-2">
-              <span>Pro 12 Bulan</span>
-              <span className="text-base">👑</span>
-            </h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Cuma seharga 3 cup kopi untuk ketenangan finansial setahun penuh.
-            </p>
+                {/* Price */}
+                <div className="mt-5 mb-1">
+                  <span className="text-2xl sm:text-3xl font-black text-foreground">
+                    {p.price}
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-1">{p.period}</span>
+                </div>
 
-            <div className="mt-6 mb-2">
-              <span className="text-3xl sm:text-4xl font-black text-foreground">Rp99.000</span>
-              <span className="text-xs text-muted-foreground ml-1.5">/ tahun</span>
-            </div>
-            <p className="text-xs font-extrabold text-teal-600 dark:text-teal-400 mb-6">
-              ✨ Cuma Rp271 per hari
-            </p>
+                {/* Daily Cost Note */}
+                <div className="h-5 mb-4">
+                  {p.daily ? (
+                    <p
+                      className={cn(
+                        "text-[11px] font-bold leading-tight",
+                        isSelected ? "text-teal-600 dark:text-teal-400" : "text-muted-foreground"
+                      )}
+                    >
+                      {p.daily}
+                    </p>
+                  ) : (
+                    <span className="text-[11px] text-muted-foreground block">
+                      Tanpa biaya selamanya
+                    </span>
+                  )}
+                </div>
 
-            <ul className="space-y-3 text-xs sm:text-sm text-foreground">
-              {proFeatures.map((f, i) => (
-                <li key={i} className="flex items-start gap-2.5">
-                  <Check className="size-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" strokeWidth={2.5} />
-                  <span className="font-medium">{f}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+                {/* Features List */}
+                <ul className="space-y-2.5 text-xs text-foreground/85 border-t border-border/60 pt-4">
+                  {p.features.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <Check
+                        className={cn(
+                          "size-3.5 shrink-0 mt-0.5",
+                          isSelected
+                            ? "text-teal-600 dark:text-teal-400"
+                            : "text-muted-foreground"
+                        )}
+                        strokeWidth={2.5}
+                      />
+                      <span className="leading-tight text-[11px]">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-          <div className="pt-8 space-y-2">
-            <Link
-              href="/login"
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-gradient-to-r from-teal-700 to-emerald-700 hover:from-teal-800 hover:to-emerald-800 text-white text-xs font-black shadow-lg shadow-teal-700/25 active:scale-98 transition-all"
-            >
-              <Sparkles className="size-4" />
-              <span>Mulai Coba Gratis 7 Hari</span>
-              <ArrowRight className="size-4" />
-            </Link>
-            <p className="text-[10px] text-center text-muted-foreground">
-              🎁 Gratis 7 hari pertama. Bisa batalkan kapan saja.
-            </p>
-          </div>
-        </div>
+              {/* Action Buttons */}
+              <div className="pt-6 space-y-2 mt-auto">
+                <Link
+                  href={p.primaryCta.href}
+                  className={cn(
+                    "w-full flex items-center justify-center gap-1.5 py-3 rounded-2xl text-xs font-black transition-all active:scale-98 shadow-xs",
+                    isSelected
+                      ? "bg-gradient-to-r from-teal-700 to-emerald-700 hover:from-teal-800 hover:to-emerald-800 text-white shadow-md shadow-teal-700/20"
+                      : "bg-muted/70 hover:bg-muted text-foreground border border-border/80"
+                  )}
+                >
+                  {is12 && <Sparkles className="size-3.5" />}
+                  <span>{p.primaryCta.text}</span>
+                  {isSelected && <ArrowRight className="size-3.5" />}
+                </Link>
 
-        {/* Pro 1 Bulan & 6 Bulan Options */}
-        <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-8 flex flex-col justify-between shadow-xs">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Fleksibel & Santai
-              </span>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-muted text-muted-foreground">
-                Bebas Komitmen
-              </span>
-            </div>
-
-            <h3 className="text-2xl font-extrabold text-foreground flex items-center gap-2">
-              <span>Pro Bulanan</span>
-              <span className="text-base">👑</span>
-            </h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Bebas pilih masa aktif sesuai anggaran dan kebutuhanmu.
-            </p>
-
-            {/* Sub-duration toggle */}
-            <div className="mt-5 mb-5 p-1 rounded-2xl bg-muted/80 border border-border/60 grid grid-cols-2 gap-1 text-center">
-              <button
-                type="button"
-                onClick={() => setSelectedDuration("1")}
-                className={cn(
-                  "py-2 rounded-xl text-xs font-bold transition-all",
-                  selectedDuration === "1"
-                    ? "bg-card text-foreground shadow-xs border border-border/40"
-                    : "text-muted-foreground hover:text-foreground"
+                {p.secondaryCta && (
+                  <Link
+                    href={p.secondaryCta.href}
+                    className="w-full flex items-center justify-center py-2 text-[11px] font-bold text-teal-700 dark:text-teal-300 hover:underline transition-all"
+                  >
+                    <span>{p.secondaryCta.text}</span>
+                  </Link>
                 )}
-              >
-                1 Bulan (Rp15rb)
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedDuration("6")}
-                className={cn(
-                  "py-2 rounded-xl text-xs font-bold transition-all",
-                  selectedDuration === "6"
-                    ? "bg-card text-foreground shadow-xs border border-border/40"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                6 Bulan (Rp50rb)
-              </button>
+              </div>
             </div>
-
-            <div className="mb-6">
-              <span className="text-3xl sm:text-4xl font-black text-foreground">
-                {selectedDuration === "1" ? "Rp15.000" : "Rp50.000"}
-              </span>
-              <span className="text-xs text-muted-foreground ml-1.5">
-                {selectedDuration === "1" ? "/ bulan" : "/ 6 bulan"}
-              </span>
-              <p className="text-xs text-muted-foreground mt-1">
-                {selectedDuration === "1"
-                  ? "Cuma Rp500 per hari, coba dulu sebulan"
-                  : "Cuma Rp277 per hari · Hemat 44%"}
-              </p>
-            </div>
-
-            <ul className="space-y-3 text-xs sm:text-sm text-foreground/80">
-              <li className="flex items-start gap-2.5">
-                <Check className="size-4 text-teal-600 shrink-0 mt-0.5" />
-                <span>Semua fitur Pro & AI Ruby aktif tanpa batas</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <Check className="size-4 text-teal-600 shrink-0 mt-0.5" />
-                <span>Foto struk & pesan suara tanpa batas</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <Check className="size-4 text-teal-600 shrink-0 mt-0.5" />
-                <span>Bebas perpanjang kapan saja lewat QRIS</span>
-              </li>
-            </ul>
-          </div>
-
-          <div className="pt-8">
-            <Link
-              href="/login"
-              className="w-full flex items-center justify-center py-3.5 rounded-2xl border border-teal-500/50 bg-teal-500/10 hover:bg-teal-500/15 text-teal-700 dark:text-teal-300 text-xs font-bold transition-all active:scale-98"
-            >
-              <span>Pilih Pro {selectedDuration === "1" ? "1 Bulan" : "6 Bulan"}</span>
-            </Link>
-          </div>
-        </div>
+          );
+        })}
       </div>
 
       {/* Trust & Guarantee Callout */}

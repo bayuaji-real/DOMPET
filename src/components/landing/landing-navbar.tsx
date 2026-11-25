@@ -43,24 +43,17 @@ export function LandingNavbar({ isLoggedIn = false }: LandingNavbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Brand */}
         <Link href="/landing" className="flex items-center gap-2.5 group">
-          <div className="relative size-9 sm:size-10 rounded-2xl bg-teal-600/10 dark:bg-teal-500/20 flex items-center justify-center p-1.5 border border-teal-500/30 group-hover:scale-105 transition-transform">
-            <Image
-              src="/logo.svg"
-              alt="Logo Dompetku"
-              width={32}
-              height={32}
-              className="w-full h-full object-contain"
-            />
-          </div>
+          <Image
+            src="/logo.svg"
+            alt="Logo Dompetku"
+            width={34}
+            height={34}
+            className="size-8 sm:size-9 object-contain group-hover:scale-105 transition-transform drop-shadow-sm"
+          />
           <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-base sm:text-lg tracking-tight text-foreground">
-                Dompetku
-              </span>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-500/30">
-                PWA
-              </span>
-            </div>
+            <span className="font-extrabold text-base sm:text-lg tracking-tight text-foreground">
+              Dompetku
+            </span>
             <span className="text-[10px] text-muted-foreground hidden sm:block">
               Keuangan Pribadi & AI
             </span>

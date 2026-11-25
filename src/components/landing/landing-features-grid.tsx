@@ -94,10 +94,10 @@ export function LandingFeaturesGrid() {
           <span>Fitur Lengkap Dirancang untuk Indonesia</span>
         </div>
         <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-foreground">
-          Semua yang Kamu Butuhkan untuk Mencapai Ketenangan Finansial
+          Semua yang Kamu Butuhkan untuk Mencapai Financial Freedom
         </h2>
         <p className="text-sm sm:text-base text-muted-foreground">
-          Dibangun khusus dengan memperhatikan kebiasaan masyarakat Indonesia: dari kebiasaan
+          Dibangun khusus dengan memperhatikan kebiasaan masyarakat Indonesia mulai dari kebiasaan
           jajan pinggir jalan, siklus gajian bulanan, hingga urusan split bill makan bareng.
         </p>
       </div>

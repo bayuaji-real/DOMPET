@@ -64,7 +64,7 @@ export function LandingFooter({ isLoggedIn = false }: LandingFooterProps) {
                 Tanpa Konek Rekening Bank
               </span>
               <span>•</span>
-              <span>Ringan & Cepat (PWA)</span>
+              <span>Ringan & Cepat</span>
               <span>•</span>
               <span>Batalkan Kapan Saja</span>
             </div>
@@ -76,15 +76,13 @@ export function LandingFooter({ isLoggedIn = false }: LandingFooterProps) {
           {/* Brand Info */}
           <div className="md:col-span-2 space-y-3">
             <Link href="/landing" className="flex items-center gap-2.5">
-              <div className="size-8 rounded-xl bg-teal-600/10 flex items-center justify-center p-1 border border-teal-500/20">
-                <Image
-                  src="/logo.svg"
-                  alt="Logo Dompetku"
-                  width={28}
-                  height={28}
-                  className="w-full h-full object-contain"
-                />
-              </div>
+              <Image
+                src="/logo.svg"
+                alt="Logo Dompetku"
+                width={30}
+                height={30}
+                className="size-7 sm:size-8 object-contain drop-shadow-sm"
+              />
               <span className="font-extrabold text-lg tracking-tight text-foreground">
                 Dompetku
               </span>
@@ -92,8 +90,7 @@ export function LandingFooter({ isLoggedIn = false }: LandingFooterProps) {
 
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-sm">
               Aplikasi pencatatan dan perencanaan keuangan pribadi modern berbahasa Indonesia.
-              Dirancang mobile-first dengan teknologi PWA dan integrasi kecerdasan buatan Google
-              Gemini untuk kenyamanan harian.
+              Dirancang mobile-first dengan integrasi kecerdasan buatan cerdas untuk kenyamanan harianmu.
             </p>
 
             <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">

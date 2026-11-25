@@ -41,9 +41,9 @@ describe("Landing Page Components & User Flow", () => {
 
     // Differentiator / Reality Check section
     expect(
-      screen.getByText(/Bukan Aplikasi Finansial Biasa yang Bikin Kamu Malas Nyatet/i)
+      screen.getByText(/Bukan Aplikasi Finansial Ribet tapi Asisten & Penasihat/i)
     ).toBeDefined();
-    expect(screen.getByText(/100% Bebas Akses Kredensial Perbankan/i)).toBeDefined();
+    expect(screen.getAllByText(/Cukup Foto Struk atau Ngomong 3 Detik/i).length).toBeGreaterThan(0);
   });
 
   it("allows toggling balance privacy (hide/show) in phone preview", () => {
@@ -83,7 +83,7 @@ describe("Landing Page Components & User Flow", () => {
     const gajianTab = screen.getByText(/3\. Mode Gajian/i);
     fireEvent.click(gajianTab);
     expect(screen.getByText(/Geser untuk Menguji Nominal Gajianmu/i)).toBeDefined();
-    expect(screen.getByText(/Kebutuhan Pokok/i)).toBeDefined();
+    expect(screen.getAllByText(/Kebutuhan Pokok/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Saldo Bebas Jajan/i).length).toBeGreaterThan(0);
   });
 
@@ -101,22 +101,23 @@ describe("Landing Page Components & User Flow", () => {
     expect(screen.getByText(/pengeluaran terbesarku bocor di mana\?/i)).toBeDefined();
   });
 
-  it("displays accurate pricing cards with honest Indonesian rates", () => {
+  it("displays accurate pricing cards with honest Indonesian rates across 4 blocks", () => {
     render(<LandingClient isLoggedIn={false} />);
 
     // Basic (Rp0)
     expect(screen.getByText("Rp0")).toBeDefined();
 
+    // Pro 1 Bulan (Rp15.000)
+    expect(screen.getByText("Rp15.000")).toBeDefined();
+
+    // Pro 6 Bulan (Rp50.000)
+    expect(screen.getByText("Rp50.000")).toBeDefined();
+
     // Pro 12 Bulan (Rp99.000)
     expect(screen.getByText("Rp99.000")).toBeDefined();
-    expect(screen.getByText(/Cuma Rp271 per hari/i)).toBeDefined();
+    expect(screen.getByText(/Rp271/i)).toBeDefined();
     expect(screen.getByText(/PALING HEMAT & POPULER/i)).toBeDefined();
-
-    // Pro 1 Bulan / 6 Bulan toggle
-    expect(screen.getByText("Rp50.000")).toBeDefined();
-    const toggle1Mo = screen.getByText(/1 Bulan \(Rp15rb\)/i);
-    fireEvent.click(toggle1Mo);
-    expect(screen.getByText("Rp15.000")).toBeDefined();
+    expect(screen.getByText(/Pilih Pro 12 Bulan/i)).toBeDefined();
   });
 
   it("expands and collapses FAQ accordion items", () => {

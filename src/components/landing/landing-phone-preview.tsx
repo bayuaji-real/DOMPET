@@ -477,14 +477,14 @@ export function LandingPhonePreview() {
 
       <div className="hidden sm:block absolute -bottom-5 -left-8 lg:-left-12 z-20">
         <div className="rounded-2xl border border-border/80 bg-background/90 backdrop-blur-md px-3.5 py-2 shadow-lg flex items-center gap-2.5">
-          <div className="size-7 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-xs">
-            100%
+          <div className="size-7 rounded-xl bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-xs">
+            📊
           </div>
           <div>
             <p className="text-[11px] font-extrabold text-foreground leading-tight">
-              Bebas Akses Rekening
+              Rencanakan Kebutuhanmu
             </p>
-            <p className="text-[9px] text-muted-foreground">Tanpa OTP & password bank</p>
+            <p className="text-[9px] text-muted-foreground">Kami hitung sesuai pemasukanmu</p>
           </div>
         </div>
       </div>

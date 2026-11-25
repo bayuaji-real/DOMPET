@@ -1,41 +1,63 @@
 "use client";
 
 import * as React from "react";
-import { XCircle, CheckCircle2, AlertTriangle, Sparkles, Shield, HeartHandshake } from "lucide-react";
+import { XCircle, CheckCircle2 } from "lucide-react";
 
 export function LandingRealityCheck() {
   const comparisons = [
+    // 1. Struk
     {
-      problemTitle: "Ribet Input Form 10 Kolom",
+      problemTitle: "Ribet Input Form 10 Kolom Tiap Belanja",
       problemDesc:
-        "Beli gorengan Rp5.000 atau parkir Rp2.000 harus isi nama, kategori, dompet, tanggal, dan catatan manual. Hasilnya: malas mencatat setelah 3 hari.",
+        "Beli kebutuhan bulanan atau jajan harus ketik manual satu per satu: item, tanggal, nominal, kategori. Bikin malas dan cepat berhenti mencatat.",
       solutionTitle: "Cukup Foto Struk atau Ngomong 3 Detik",
       solutionDesc:
-        "Jepret struk belanjaanmu atau ucapkan voice note: 'Beli bensin 30rb tunai dan kopi 20rb gopay'. AI otomatis memisahkan nominal, dompet, dan kategorinya.",
+        "Jepret struk belanjaanmu atau ucapkan voice note santai. AI otomatis membaca merchant, rincian item belanja, diskon promo, dan total bayar ke dompetmu.",
     },
+    // 2. Assisten pribadi
     {
-      problemTitle: "Cemas Minta Login & Password Bank",
+      problemTitle: "Bingung Evaluasi Keuangan Sendiri Tanpa Pendamping",
       problemDesc:
-        "Aplikasi lain memaksa koneksi Open Finance, meminta username dan PIN mobile banking yang berisiko jika server mereka terkena data breach.",
-      solutionTitle: "100% Bebas Akses Kredensial Perbankan",
+        "Aplikasi biasa cuma menampilkan angka kaku tanpa ada yang mendampingi dan memberi arahan saat kamu bingung mengelola saldo.",
+      solutionTitle: "Didampingi Asisten Pribadi Ruby",
       solutionDesc:
-        "Dompetku tidak pernah meminta password rekening atau kode OTP apapun. Keuanganmu tetap rapi tanpa pernah mengorbankan privasi dan keamanan asetmu.",
+        "Kamu akan dapat asisten pribadi (Ruby) yang siap diajak ngobrol kapan saja, memahami kebiasaanmu, dan memberi rekomendasi agar keuanganmu lebih sehat.",
     },
+    // 3. Insight dan Konsultasi keuangan
     {
-      problemTitle: "Sekadar 'Kuburan Angka' Tanpa Aksi",
+      problemTitle: "Sekadar 'Kuburan Angka' Tanpa Nasihat dan Solusi",
       problemDesc:
-        "Cuma disuguhi grafik merah yang bikin cemas di akhir bulan tanpa tahu bagaimana cara menghentikan kebiasaan boncos.",
-      solutionTitle: "Asisten Pribadi Ruby & Mode Gajian",
+        "Cuma disuguhi grafik merah yang bikin cemas di akhir bulan tanpa tahu cara menghentikan boncos dan ragu apakah aman membeli sesuatu.",
+      solutionTitle: "Insight dan Konsultasi Keuangan Berdasarkan Datamu",
       solutionDesc:
-        "Ruby siap ditanya kapan saja: 'Aman gak beli gadget minggu ini?'. Plus Mode Gajian yang otomatis mengalokasikan tabungan sebelum uangmu habis terpakai.",
+        "Tanya apa saja ke Ruby: 'Aman gak beli sepatu 700rb?', 'Bulan ini bocor di mana?'. Nasihat dan rekomendasi dihitung objektif dari data transaksimu sendiri.",
     },
+    // 4. Rencanakan kebutuhan yang disesuaikan pemasukanmu
+    {
+      problemTitle: "Gaji Numpang Lewat Tanpa Alokasi Pasti",
+      problemDesc:
+        "Uang gaji masuk lalu cepat ludes karena tidak dipisahkan sejak awal antara kebutuhan hidup pokok, tabungan, dan uang jajan.",
+      solutionTitle: "Rencanakan Kebutuhan yang Disesuaikan Pemasukanmu",
+      solutionDesc:
+        "Mode Gajian otomatis menghitung dan membagi pos kebutuhan pokok (45%), tabungan impian (25%), tagihan rutin (15%), dan saldo bebas jajan (15%).",
+    },
+    // 5. Split bill
     {
       problemTitle: "Drama Split Bill & Hitung Pajak Manual",
       problemDesc:
         "Makan bareng teman, struk resto panjang, lalu repot buka kalkulator untuk membagi diskon, service charge 5%, dan PPN 11%.",
       solutionTitle: "Split Bill Struk Otomatis Sekali Jepret",
       solutionDesc:
-        "Foto struk restoran, tandai pesanan masing-masing, sistem menghitung porsi pajak dan diskon secara proporsional sampai rupiah terakhir.",
+        "Foto struk restoran, tandai pesanan masing-masing, sistem membagi porsi pajak dan diskon secara proporsional dan adil sampai ke rupiah terakhir.",
+    },
+    // 6. Simulasi investasi, cicilan, hingga paylater
+    {
+      problemTitle: "Terjebak Bunga Cicilan & Paylater Tanpa Perhitungan",
+      problemDesc:
+        "Asal ambil cicilan atau paylater tanpa tahu total bunga yang menumpuk dan bagaimana dampaknya terhadap kesehatan cashflow bulananmu.",
+      solutionTitle: "Simulasi Investasi, Cicilan, hingga Paylater",
+      solutionDesc:
+        "Simulasikan beban cicilan sebelum membeli, ukur kelayakan target barang impian, dan proyeksikan pertumbuhan aset investasimu secara realistis.",
     },
   ];
 
@@ -47,14 +69,15 @@ export function LandingRealityCheck() {
             <span>💡 Kenapa Dompetku Dibuat Berbeda?</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-foreground">
-            Bukan Aplikasi Finansial Biasa yang Bikin Kamu Malas Nyatet
+            Bukan Aplikasi Finansial Ribet tapi Asisten & Penasihat Finansial Khususmu
           </h2>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Kebanyakan orang gagal mengatur keuangan bukan karena kurang niat, melainkan karena
-            alat yang dipakai terlalu rumit dan menuntut waktu.
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
+            Kamu akan dapat assistant (Ruby) yang bakal ngasih kamu rekomendasi dan nasihat dari
+            transaksimu. Jadi keuanganmu akan lebih sehat.
           </p>
         </div>
 
+        {/* 3 Rows x 2 Columns = 6 Feature Blocks */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
           {comparisons.map((c, i) => (
             <div
@@ -62,31 +85,33 @@ export function LandingRealityCheck() {
               className="rounded-3xl border border-border/80 bg-card p-5 sm:p-6 shadow-xs flex flex-col justify-between hover:border-teal-500/30 transition-colors"
             >
               {/* Problem Side */}
-              <div className="pb-5 border-b border-border/60">
-                <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-bold text-xs mb-1.5">
-                  <XCircle className="size-4 shrink-0" />
-                  <span>Cara Konvensional yang Melelahkan</span>
+              <div className="pb-4 border-b border-border/60">
+                <div className="flex items-start gap-2.5">
+                  <XCircle className="size-5 shrink-0 text-rose-500 mt-0.5" />
+                  <div>
+                    <h3 className="text-sm sm:text-base font-extrabold text-rose-600 dark:text-rose-400">
+                      {c.problemTitle}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-1">
+                      {c.problemDesc}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-base font-extrabold text-foreground mb-1">
-                  {c.problemTitle}
-                </h3>
-                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                  {c.problemDesc}
-                </p>
               </div>
 
               {/* Solution Side */}
-              <div className="pt-5">
-                <div className="flex items-center gap-2 text-teal-600 dark:text-teal-400 font-bold text-xs mb-1.5">
-                  <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
-                  <span>Pendekatan Dompetku</span>
+              <div className="pt-4">
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="size-5 shrink-0 text-emerald-500 mt-0.5" />
+                  <div>
+                    <h3 className="text-sm sm:text-base font-extrabold text-teal-700 dark:text-teal-300">
+                      {c.solutionTitle}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed mt-1">
+                      {c.solutionDesc}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-base font-extrabold text-teal-700 dark:text-teal-300 mb-1">
-                  {c.solutionTitle}
-                </h3>
-                <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed">
-                  {c.solutionDesc}
-                </p>
               </div>
             </div>
           ))}
