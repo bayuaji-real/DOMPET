@@ -98,6 +98,7 @@ export function DailyQuotaCard() {
   const items = buildItems(all);
   const sel = items.find((i) => i.id === pick) ?? items[0];
   const hutang = sel.debt ? sel.debt.debtAfterToday : 0;
+  const over = sel.spent > sel.cap;
   const besok = sel.debt && hutang > 0 ? Math.max(0, sel.debt.allowance - hutang) : null;
 
   return (
@@ -136,9 +137,9 @@ export function DailyQuotaCard() {
             <span className={`shrink-0 font-bold tabular-nums ${TEXT[sel.level]}`}>{rp(sel.spent)}</span>
           </li>
           <li className="flex items-center gap-2 text-[11px]">
-            <span className="size-2.5 shrink-0 rounded-full bg-amber-500" />
-            <span className="min-w-0 flex-1 truncate font-semibold">Hutang</span>
-            <span className={`shrink-0 font-bold tabular-nums ${hutang > 0 ? "text-amber-600 dark:text-amber-400" : ""}`}>{rp(hutang)}</span>
+            <span className={`size-2.5 shrink-0 rounded-full ${over ? "bg-rose-500" : "bg-teal-500"}`} />
+            <span className="min-w-0 flex-1 truncate font-semibold">{over ? "Lebih" : "Sisa"}</span>
+            <span className={`shrink-0 font-bold tabular-nums ${over ? "text-rose-600 dark:text-rose-400" : ""}`}>{rp(over ? sel.spent - sel.cap : sel.cap - sel.spent)}</span>
           </li>
           {besok !== null && <li className="pl-[18px] text-[10px] font-semibold text-muted-foreground">Besok jatah {rp(besok)}</li>}
         </ul>
