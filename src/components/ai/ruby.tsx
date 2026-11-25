@@ -38,9 +38,9 @@ export function RubyBubble({
       >
         {showName && (
           <div className="mb-1.5 flex items-center gap-1.5">
-            <span className="text-xs font-extrabold text-foreground">Ruby</span>
-            <span className="rounded-full bg-teal-500/15 px-1.5 py-0.2 text-[9px] font-bold text-teal-700 dark:text-teal-300">
-              AI Asisten
+            <span className="text-xs sm:text-[13px] font-black tracking-tight text-foreground">Ruby</span>
+            <span className="rounded-full bg-teal-500/15 px-2 py-0.5 text-[9px] font-bold text-teal-700 dark:text-teal-300 tracking-tight">
+              Personal Finance AI Assistant
             </span>
           </div>
         )}

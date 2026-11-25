@@ -286,9 +286,9 @@ export function Bubble({
       >
         {first && (
           <div className="flex items-center gap-1.5 pb-0.5">
-            <span className="font-extrabold text-xs text-foreground">Ruby</span>
-            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-300">
-              AI Asisten
+            <span className="font-black text-xs sm:text-[13px] tracking-tight text-foreground">Ruby</span>
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-300 tracking-tight">
+              Personal Finance AI Assistant
             </span>
           </div>
         )}
@@ -444,8 +444,6 @@ interface AiChatProps {
   suggestions?: string[];
   /** Tambahkan daftar fitur lain di bubble pilihan cepat Ruby (dipakai di Tanya AI). */
   showMenu?: boolean;
-  /** Tampilkan header Ruby ala preview (otomatis aktif di mode advisor). */
-  showHeader?: boolean;
   /** Kartu hasil (mis. kelayakan tabungan) yang tampil di bawah percakapan. */
   renderProposal?: (proposal: SavingsProposal, reset: () => void) => React.ReactNode;
 }
@@ -457,7 +455,6 @@ export function AiChat({
   placeholder,
   suggestions,
   showMenu,
-  showHeader,
   renderProposal,
 }: AiChatProps) {
   const [messages, setMessages] = React.useState<Msg[]>([]);
@@ -468,8 +465,6 @@ export function AiChat({
   const [profile, setProfile] = React.useState<UserProfile | null>(null);
   const [openedAt, setOpenedAt] = React.useState<string>("");
   const endRef = React.useRef<HTMLDivElement>(null);
-
-  const shouldShowHeader = showHeader ?? (mode === "advisor");
 
   React.useEffect(() => {
     setOpenedAt(nowLabel());
@@ -530,31 +525,6 @@ export function AiChat({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      {shouldShowHeader && (
-        <div className="px-4 py-3 bg-card/80 border-b border-border/80 flex items-center justify-between shrink-0 backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            <div className="relative size-10 rounded-2xl bg-gradient-to-tr from-teal-700 to-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-              <Sparkles className="size-5" />
-              <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-emerald-500 border-2 border-background" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-sm text-foreground">Ruby</span>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-teal-500/15 text-teal-700 dark:text-teal-300">
-                  AI Asisten Dompetku
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground">Aktif · Mengetahui data dompetmu</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
-            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Online</span>
-          </div>
-        </div>
-      )}
-
       <div className="flex-1 overflow-y-auto bg-background/50 px-3.5 py-4 space-y-3">
         {all.map((m, i) => (
           <React.Fragment key={i}>
