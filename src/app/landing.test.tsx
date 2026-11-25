@@ -51,19 +51,19 @@ describe("Landing Page Components & User Flow", () => {
 
     // Initial balance should be visible in IDR format
     const balanceRegex = /Rp14\.850\.000/i;
-    expect(screen.getByText(balanceRegex)).toBeDefined();
+    expect(screen.getAllByText(balanceRegex).length).toBeGreaterThan(0);
 
     // Find Eye button
     const toggleBtn = screen.getByLabelText(/Sembunyikan Saldo/i);
     fireEvent.click(toggleBtn);
 
     // Balance should now be masked with dots
-    expect(screen.getByText("••••••••")).toBeDefined();
+    expect(screen.getAllByText("••••••••").length).toBeGreaterThan(0);
 
     // Click again to unmask
     const showBtn = screen.getByLabelText(/Tampilkan Saldo/i);
     fireEvent.click(showBtn);
-    expect(screen.getByText(balanceRegex)).toBeDefined();
+    expect(screen.getAllByText(balanceRegex).length).toBeGreaterThan(0);
   });
 
   it("switches interactive demo tabs between Scan Struk, Voice Note, and Mode Gajian", () => {

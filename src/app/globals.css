@@ -164,3 +164,16 @@
     @apply font-sans;
   }
 }
+
+@keyframes featureProgress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.animate-feature-progress {
+  animation: featureProgress 3000ms linear forwards;
+}
