@@ -91,6 +91,61 @@ export type MfaStatus = { role: "admin" | "superadmin" | null; require_mfa: bool
 export const getMfaStatus = async (): Promise<MfaStatus> => (await rpc(c().rpc("admin_mfa_status"))) as unknown as MfaStatus;
 export const setRequireMfa = (on: boolean) => rpc(c().rpc("admin_set_require_mfa", { p_on: on }));
 
+export type AdminHelpReport = {
+  id: string;
+  user_id: string;
+  email: string | null;
+  kind: "bug" | "usul";
+  title: string;
+  body: string;
+  page: string | null;
+  status: "baru" | "dibaca" | "dikerjakan" | "selesai";
+  image_path: string | null;
+  created_at: string;
+};
+
+export const listHelpReports = async (): Promise<AdminHelpReport[]> => {
+  try {
+    const res = await fetch("/api/admin/reports");
+    if (!res.ok) {
+      const { data, error } = await c().from("help_reports").select("*").order("created_at", { ascending: false });
+      if (error) return [];
+      return (data ?? []).map((r: any) => ({ ...r, email: null }));
+    }
+    const json = await res.json();
+    return json.data ?? [];
+  } catch {
+    return [];
+  }
+};
+
+export const updateHelpReportStatus = async (id: string, status: string): Promise<void> => {
+  const res = await fetch("/api/admin/reports", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, status }),
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json.error || "Gagal memperbarui status laporan");
+  }
+};
+
+export const getHelpReportAttachmentUrl = async (imagePath: string): Promise<string | null> => {
+  try {
+    const res = await fetch("/api/admin/reports", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "signed_url", imagePath }),
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.signedUrl ?? null;
+  } catch {
+    return null;
+  }
+};
+
 const MSG: Record<string, string> = {
   MFA_WAJIB: "Masukkan kode 6 angka dari aplikasi authenticator dulu.",
   MFA_BELUM_AKTIF: "Aktifkan MFA di menu Keamanan dan masukkan kodenya dulu, baru wajibkan untuk admin.",
