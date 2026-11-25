@@ -1,10 +1,11 @@
 "use client";
 import * as React from "react";
 import { getDebts } from "@/lib/data/debts";
-import { healthScore } from "@/lib/konsultan/health-score";
+import { healthScore, explainHealth } from "@/lib/konsultan/health-score";
 import { forecastCashflow } from "@/lib/konsultan/cashflow-forecast";
 import { formatRupiah } from "@/lib/utils";
 import type { FinanceSnapshot } from "@/lib/data/finance-snapshot";
+import { RubyAdvice } from "@/components/konsultan/ruby-advice";
 import { EmptyState, Notice, Pill, IconBox } from "@/components/ui/form-kit";
 
 export const Empty = () => <EmptyState emoji="📝">Belum ada catatan 3 bulan terakhir. Catat beberapa transaksi dulu supaya hitungannya berarti.</EmptyState>;
@@ -46,6 +47,7 @@ export function Skor({ s }: { s: FinanceSnapshot }) {
         ))}
       </ul>
       <Notice tone="sky" emoji="🧮">{s.basisNote ?? `Dihitung dari rata-rata ${s.monthsCovered ?? 3} bulan data`}: pemasukan {formatRupiah(s.monthlyIncome)}, pengeluaran {formatRupiah(s.monthlyExpense)}, uang bebas pakai {formatRupiah(s.freeCash ?? s.liquidSavings)} (di luar dompet tabungan dan investasi). Cicilan utang dari menu Utang.</Notice>
+      <RubyAdvice text={explainHealth({ monthlyIncome: s.monthlyIncome, monthlyExpense: s.monthlyExpense, liquidSavings: s.freeCash ?? s.liquidSavings, monthlyDebtPayment: debt }, r)} />
     </div>
   );
 }

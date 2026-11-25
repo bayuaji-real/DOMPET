@@ -1,3 +1,4 @@
+import { formatRupiah } from "@/lib/utils";
 import type { FinancialHealth, HealthStatus } from "@/types/analytics";
 export interface HealthInput { monthlyIncome: number; monthlyExpense: number; liquidSavings: number; monthlyDebtPayment: number }
 export interface HealthPart { key: "tabung" | "darurat" | "utang" | "arus"; label: string; score: number; max: number; tip: string }
@@ -47,4 +48,40 @@ export function unifyHealth(fh: FinancialHealth, snap: SnapLike | null, monthlyD
     emergencyFundMonths: exp > 0 ? Math.round((free / exp) * 10) / 10 : 0,
     emergencyStatus: part("darurat"),
   };
+}
+
+/**
+ * Penjelasan skor dalam bahasa biasa, dari angka yang sama dengan skor (tanpa AI, gratis, hasil selalu sama untuk angka yang sama).
+ * Menyebut bagian yang paling lemah lebih dulu, lengkap dengan selisih rupiahnya.
+ */
+export function explainHealth(i: HealthInput, r: HealthResult): string {
+  const income = Math.max(i.monthlyIncome, 0);
+  const exp = Math.max(i.monthlyExpense, 0);
+  const rp = (n: number) => formatRupiah(Math.round(n));
+  const level = r.level === "sehat" ? "sehat" : r.level === "cukup" ? "cukup baik, masih ada yang bisa dirapikan" : "perlu perhatian";
+  const lines: string[] = [`Skormu ${r.total} dari 100, kondisi ${level}.`];
+  const weak = [...r.parts].filter((p) => p.score / p.max < 0.7).sort((a, b) => a.score / a.max - b.score / b.max);
+  const detail = (p: HealthPart): string => {
+    if (p.key === "tabung") {
+      const left = income - exp;
+      const target = income * 0.2;
+      return `Sisa uang tiap bulan ${rp(Math.max(left, 0))} (${income > 0 ? Math.round((Math.max(left, 0) / income) * 100) : 0}% pemasukan). Targetnya sekitar 20%, yaitu ${rp(target)}${left < target ? `, jadi masih kurang ${rp(target - Math.max(left, 0))} per bulan` : ""}.`;
+    }
+    if (p.key === "darurat") {
+      const months = exp > 0 ? i.liquidSavings / exp : 0;
+      const target = exp * 3;
+      return `Dana darurat setara ${months.toFixed(1).replace(".", ",")} bulan pengeluaran. Minimal 3 bulan, yaitu ${rp(target)}${i.liquidSavings < target ? `, jadi masih kurang ${rp(target - i.liquidSavings)}` : ""}.`;
+    }
+    if (p.key === "utang") {
+      return `Cicilan ${rp(i.monthlyDebtPayment)} per bulan, ${income > 0 ? Math.round((i.monthlyDebtPayment / income) * 100) : 0}% dari pemasukan. Usahakan di bawah sekitar 30%.`;
+    }
+    return `Pengeluaran ${rp(exp)} melebihi pemasukan ${rp(income)}, selisih ${rp(Math.max(exp - income, 0))} per bulan.`;
+  };
+  if (weak.length === 0) {
+    lines.push("Semua bagian sudah baik. Pertahankan kebiasaanmu dan tinjau lagi tiap bulan.");
+  } else {
+    lines.push(`Yang paling berpengaruh: ${weak[0].label.toLowerCase()}.`);
+    weak.slice(0, 3).forEach((p, idx) => lines.push(`${idx + 1}. ${detail(p)}`));
+  }
+  return lines.join("\n");
 }

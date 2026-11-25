@@ -117,7 +117,7 @@ export function MoneyBasisGate({ snap, children }: { snap: FinanceSnapshot; chil
   const options = cur.options;
 
   return (
-    <div className="flex flex-col pb-20">
+    <div className="flex min-h-[calc(100dvh-17rem)] flex-col pb-20">
       <div className="space-y-3 py-2">
         {log.map((m, i) => (<Bubble key={i} msg={m} first={i === 0 || log[i - 1].role !== m.role} profile={profile} />))}
         <Bubble msg={{ role: "model", text: cur.question, time: openedAt || undefined }} first={log.length === 0 || log[log.length - 1].role !== "model"} profile={profile} />
@@ -130,9 +130,9 @@ export function MoneyBasisGate({ snap, children }: { snap: FinanceSnapshot; chil
           </ReplyBubble>
         )}
         {msg && <p role="alert" className="text-xs font-semibold text-rose-700 dark:text-rose-300">{msg}</p>}
-        <div ref={endRef} />
+        <div ref={endRef} className="scroll-mb-28" />
       </div>
-      <form onSubmit={submit} className="sticky z-20 -mx-4 flex shrink-0 items-center gap-2 border-t border-border/80 bg-card/90 p-3 backdrop-blur-md" style={{ bottom: "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
+      <form onSubmit={submit} className="sticky z-20 -mx-4 mt-auto flex shrink-0 items-center gap-2 border-t border-border/80 bg-card/90 p-3 backdrop-blur-md" style={{ bottom: "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
         <input value={text} onChange={(e) => setText(e.target.value)} maxLength={100} aria-label="Jawabanmu" placeholder="Ketik jawabanmu di sini…" className="flex-1 rounded-xl border border-border/70 bg-muted/40 px-3.5 py-2.5 text-xs text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-teal-500/40" />
         <button type="submit" disabled={!text.trim()} aria-label="Kirim" className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-teal-600 text-white shadow-xs transition-all hover:bg-teal-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"><Send className="size-4" /></button>
       </form>
