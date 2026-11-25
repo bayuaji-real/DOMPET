@@ -7,7 +7,7 @@ describe("explainHealth (penjelasan tanpa AI)", () => {
     const t = explainHealth(i, healthScore(i));
     expect(t).toMatch(/Skormu \*\*\d+ dari 100\*\*/);
     expect(t).toMatch(/Yang paling perlu digarap/);
-    expect(t).toMatch(/Masih kurang Rp/);
+    expect(t).toMatch(/masih kurang Rp/);
     expect(t).toMatch(/Cicilan utangmu Rp\s?2\.000\.000/);
     expect(t.match(/\*\*[^*]+\(\d+\/\d+\)\*\*/g)?.length).toBe(4);
   });
@@ -15,7 +15,7 @@ describe("explainHealth (penjelasan tanpa AI)", () => {
     const i = { monthlyIncome: 10_000_000, monthlyExpense: 3_000_000, liquidSavings: 30_000_000, monthlyDebtPayment: 0 };
     const t = explainHealth(i, healthScore(i));
     expect(t).toMatch(/semua bagian penuh/);
-    expect(t).toMatch(/Sisa uangmu sudah di atas target/);
+    expect(t).toMatch(/sudah di atas target 20%/);
     expect(t).not.toMatch(/Yang paling perlu digarap/);
   });
   it("angka sama menghasilkan teks sama, dan pengeluaran melebihi pemasukan disebut", () => {

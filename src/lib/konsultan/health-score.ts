@@ -69,20 +69,20 @@ export function explainHealth(i: HealthInput, r: HealthResult): string {
     if (p.key === "tabung") {
       const left = income - exp;
       const target = income * 0.2;
-      if (income <= 0) body = "Belum ada pemasukan yang terhitung, jadi belum ada sisa uang yang bisa dinilai.";
-      else if (left <= 0) body = `Pemasukanmu ${rp(income)} per bulan, sedangkan pengeluaranmu ${rp(exp)}. Berarti tidak ada sisa, dan nilainya nol. Targetnya menyisihkan sekitar 20% pemasukan, yaitu ${rp(target)}.`;
-      else body = `Pemasukanmu ${rp(income)} per bulan, pengeluaranmu ${rp(exp)}, jadi sisa ${rp(left)} (${pct(left, income)}% dari pemasukan). Targetnya sekitar 20%, yaitu ${rp(target)}. ${left >= target ? "Sisa uangmu sudah di atas target, jadi nilainya penuh." : `Masih kurang ${rp(target - left)} per bulan dari target, jadi nilainya belum penuh.`}`;
+      if (income <= 0) body = "Belum ada pemasukan yang terhitung, jadi belum bisa dinilai.";
+      else if (left <= 0) body = `Pengeluaranmu per bulan (${rp(exp)}) sudah menghabiskan pemasukan (${rp(income)}), jadi tidak ada sisa.`;
+      else body = `Dari pemasukan ${rp(income)} per bulan, sisa ${rp(left)} setelah pengeluaran ${rp(exp)} (${pct(left, income)}%). ${left >= target ? "Itu sudah di atas target 20%, bagus." : `Targetnya 20% (${rp(target)}), jadi masih kurang ${rp(target - left)}.`}`;
     } else if (p.key === "darurat") {
       const months = exp > 0 ? i.liquidSavings / exp : i.liquidSavings > 0 ? 6 : 0;
-      if (exp <= 0) body = `Uang bebas pakaimu ${rp(i.liquidSavings)} (di luar tabungan dan investasi). Pengeluaran belum terhitung, jadi lama bertahannya belum bisa dihitung.`;
-      else body = `Uang bebas pakaimu ${rp(i.liquidSavings)} (di luar tabungan dan investasi). Pengeluaranmu ${rp(exp)} per bulan, jadi uang itu cukup untuk ${dec(months)} bulan. Idealnya 3 sampai 6 bulan; nilai penuh di 6 bulan (${rp(exp * 6)}). ${months >= 6 ? "Kamu sudah di atas itu." : months >= 3 ? `Kamu sudah di atas minimal 3 bulan, tinggal ${rp(exp * 6 - i.liquidSavings)} lagi untuk nilai penuh.` : `Masih kurang ${rp(exp * 3 - i.liquidSavings)} untuk mencapai minimal 3 bulan.`}`;
+      if (exp <= 0) body = `Saldo yang bisa dipakai ${rp(i.liquidSavings)}. Pengeluaran belum terhitung, jadi belum bisa dinilai.`;
+      else body = `Saldo yang bisa dipakai ${rp(i.liquidSavings)}, cukup untuk ${dec(months)} bulan pengeluaran. ${months >= 6 ? "Itu sudah di atas target 6 bulan, bagus." : `Idealnya 3 sampai 6 bulan, jadi ${months >= 3 ? "kamu sudah aman, tinggal menambah" : "masih kurang"} ${rp(Math.max(exp * (months >= 3 ? 6 : 3) - i.liquidSavings, 0))}.`}`;
     } else if (p.key === "utang") {
-      if (i.monthlyDebtPayment <= 0) body = "Tidak ada cicilan utang tercatat, jadi tidak ada beban cicilan dan nilainya penuh.";
-      else body = `Cicilan utangmu ${rp(i.monthlyDebtPayment)} per bulan, sama dengan ${pct(i.monthlyDebtPayment, income)}% dari pemasukan ${rp(income)}. Di bawah 15% nilainya penuh, makin tinggi makin turun, dan di 50% nilainya nol. ${pct(i.monthlyDebtPayment, income) <= 15 ? "Bebanmu masih ringan." : pct(i.monthlyDebtPayment, income) <= 30 ? "Bebanmu masih wajar, tapi usahakan tidak naik." : "Bebanmu sudah berat, sebaiknya jangan tambah cicilan baru."}`;
+      if (i.monthlyDebtPayment <= 0) body = "Tidak ada cicilan utang, jadi nilainya penuh.";
+      else body = `Cicilan utangmu ${rp(i.monthlyDebtPayment)} per bulan, ${pct(i.monthlyDebtPayment, income)}% dari pemasukan. ${pct(i.monthlyDebtPayment, income) <= 15 ? "Masih ringan." : pct(i.monthlyDebtPayment, income) <= 30 ? "Masih wajar, usahakan tidak naik." : "Sudah berat, jangan tambah cicilan baru."}`;
     } else {
-      if (income <= 0) body = "Belum ada pemasukan yang terhitung, jadi arus kas belum bisa dinilai.";
-      else if (exp <= income) body = `Pengeluaranmu ${rp(exp)} masih di bawah pemasukan ${rp(income)}, jadi arus kas positif ${rp(income - exp)} per bulan dan nilainya penuh.`;
-      else body = `Pengeluaranmu ${rp(exp)} lebih besar dari pemasukan ${rp(income)}, selisih ${rp(exp - income)} per bulan. Artinya uangmu berkurang tiap bulan, jadi nilainya turun.`;
+      if (income <= 0) body = "Belum ada pemasukan yang terhitung, jadi belum bisa dinilai.";
+      else if (exp <= income) body = `Pengeluaran lebih kecil dari pemasukan, jadi tiap bulan uangmu bertambah ${rp(income - exp)}.`;
+      else body = `Pengeluaran lebih besar dari pemasukan, jadi tiap bulan uangmu berkurang ${rp(exp - income)}.`;
     }
     out.push(`${head}\n${body}`);
   }
