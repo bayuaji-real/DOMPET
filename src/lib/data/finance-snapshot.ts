@@ -4,11 +4,16 @@ import { getBudgets } from "./budgets";
 import { getRecurringTransactions } from "./recurring";
 import { getCategories } from "./categories";
 import { todayJakarta } from "./sample-mode";
+import { getSavingsGoals } from "./goals";
 
 export interface FinanceSnapshot {
   monthlyIncome: number; monthlyExpense: number; liquidSavings: number; fixedBills: number;
   /** Uang yang bebas dipakai: di luar dompet tabungan dan investasi (dasar hitung dana darurat). */
   freeCash?: number;
+  /** Dana darurat yang sudah disisihkan pengguna lewat tabungan bertanda dana darurat. Saldo dompet biasa TIDAK dianggap dana darurat. */
+  emergencyFund?: number;
+  /** Pengguna sudah membuat tabungan dana darurat? */
+  hasEmergencyGoal?: boolean;
   /** Berapa bulan data yang benar-benar ada (1 sampai 3). Rata-rata dibagi angka ini, bukan selalu 3. */
   monthsCovered?: number;
   /** Bila diisi, angka pemasukan/pengeluaran berasal dari Money Planner (gaji dikurangi biaya tetap), bukan rata-rata. Isinya penjelasan sumbernya. */
@@ -24,9 +29,9 @@ const shift = (d: string, days: number) => { const x = new Date(d + "T00:00:00Z"
 /** Ringkasan angka untuk fitur konsultan. Rata-rata dari 90 hari terakhir, dibagi jumlah bulan data yang ada (1 sampai 3). Semua dihitung di perangkat, tanpa AI. */
 export async function getFinanceSnapshot(): Promise<FinanceSnapshot> {
   const today = todayJakarta();
-  const [txs, wallets, recurring, cats] = await Promise.all([
+  const [txs, wallets, recurring, cats, goals] = await Promise.all([
     getTransactions({ startDate: shift(today, -90), endDate: today }),
-    getWallets(), getRecurringTransactions(), getCategories().catch(() => []),
+    getWallets(), getRecurringTransactions(), getCategories().catch(() => []), getSavingsGoals().catch(() => []),
   ]);
   const month = today.slice(0, 7);
   const budgets = await getBudgets(month).catch(() => []);
@@ -40,10 +45,13 @@ export async function getFinanceSnapshot(): Promise<FinanceSnapshot> {
   const spanDays = Math.max(1, Math.round((Date.parse(today + "T00:00:00Z") - Date.parse(earliest + "T00:00:00Z")) / 86_400_000) + 1);
   const monthsCovered = Math.min(3, Math.max(1, Math.ceil(spanDays / 30)));
   const active = wallets.filter((w) => !w.is_archived);
+  const emGoals = goals.filter((g) => (g.is_emergency_fund || /darurat/i.test(g.name)) && g.status !== "dibatalkan");
   return {
     monthsCovered,
     monthlyIncome: Math.round(sum("income") / monthsCovered),
     monthlyExpense: Math.round(sum("expense") / monthsCovered),
+    emergencyFund: emGoals.reduce((s, g) => s + Number(g.saved ?? 0), 0),
+    hasEmergencyGoal: emGoals.length > 0,
     freeCash: active.filter((w) => w.type !== "investasi" && w.type !== "tabungan").reduce((s, w) => s + Number(w.balance), 0),
     liquidSavings: wallets.filter((w) => !w.is_archived && w.type !== "investasi").reduce((s, w) => s + Number(w.balance), 0),
     fixedBills: recurring.filter((r) => r.is_active && r.type === "expense").reduce((s, r) => s + Number(r.amount) * (r.rule === "biweekly" ? 26 / 12 : 1), 0),

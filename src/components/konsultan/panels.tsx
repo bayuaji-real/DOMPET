@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import Link from "next/link";
 import { getDebts } from "@/lib/data/debts";
 import { healthScore, explainHealthParts } from "@/lib/konsultan/health-score";
 import { forecastCashflow } from "@/lib/konsultan/cashflow-forecast";
@@ -13,8 +14,8 @@ export function Skor({ s }: { s: FinanceSnapshot }) {
   const [debt, setDebt] = React.useState(0);
   React.useEffect(() => { getDebts().then((d) => setDebt(d.reduce((x, r) => x + Number(r.min_payment), 0))).catch(() => {}); }, []);
   if (!s.hasData) return <Empty />;
-  const r = healthScore({ monthlyIncome: s.monthlyIncome, monthlyExpense: s.monthlyExpense, liquidSavings: s.freeCash ?? s.liquidSavings, monthlyDebtPayment: debt });
-  const ex = explainHealthParts({ monthlyIncome: s.monthlyIncome, monthlyExpense: s.monthlyExpense, liquidSavings: s.freeCash ?? s.liquidSavings, monthlyDebtPayment: debt }, r);
+  const r = healthScore({ monthlyIncome: s.monthlyIncome, monthlyExpense: s.monthlyExpense, liquidSavings: s.emergencyFund ?? 0, monthlyDebtPayment: debt, hasEmergencyFund: s.hasEmergencyGoal ?? false });
+  const ex = explainHealthParts({ monthlyIncome: s.monthlyIncome, monthlyExpense: s.monthlyExpense, liquidSavings: s.emergencyFund ?? 0, monthlyDebtPayment: debt, hasEmergencyFund: s.hasEmergencyGoal ?? false }, r);
   const lvTone = r.level === "sehat" ? "neon" : r.level === "cukup" ? "amber" : "rose";
   const face = r.level === "sehat" ? "😄" : r.level === "cukup" ? "🙂" : "😟";
   const BAR = ["bg-teal-500", "bg-indigo-500", "bg-amber-500", "bg-sky-500", "bg-violet-500"];
@@ -41,6 +42,12 @@ export function Skor({ s }: { s: FinanceSnapshot }) {
           ))}
         </ul>
       </div>
+      {!(s.hasEmergencyGoal ?? false) && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs shadow-xs">
+          <span className="leading-relaxed"><b className="font-extrabold">Kamu belum punya dana darurat.</b> Mau buat dana darurat sekarang?</span>
+          <Link href="/tabungan" className="shrink-0 rounded-xl bg-teal-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-teal-700">Buat dana darurat</Link>
+        </div>
+      )}
       <ul className="space-y-1.5">
         {ex.items.map((x, i) => (
           <li key={x.key} className="flex items-start gap-2 rounded-2xl border border-border/70 bg-card p-2.5 text-[11px] shadow-xs"><span aria-hidden className="text-sm leading-none">{EMO[i % EMO.length]}</span><span className="min-w-0"><b className="block text-xs font-extrabold">{x.label} ({x.score}/{x.max})</b><span className="mt-0.5 block leading-relaxed text-muted-foreground">{x.text}</span>{x.action && <span className="mt-1 block leading-relaxed"><b className="font-extrabold text-teal-700 dark:text-teal-300">Langkahnya:</b> {x.action}</span>}</span></li>

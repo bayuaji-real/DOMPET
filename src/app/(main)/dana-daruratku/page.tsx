@@ -12,7 +12,7 @@ async function prefill() {
   const em = goals.filter((g) => (g.is_emergency_fund || /darurat/i.test(g.name)) && g.status !== "dibatalkan");
   const cur = em.reduce((s, g) => s + Number(g.saved ?? 0), 0);
   if (!(snap.monthlyExpense > 0) && cur <= 0) return null;
-  return { label: `pengeluaran rata-rata ${formatRupiah(Math.round(snap.monthlyExpense))} per bulan, dana darurat di Tabungan ${formatRupiah(Math.round(cur))}`, values: { exp: Math.round(snap.monthlyExpense), cur: Math.round(cur) } };
+  return { label: `pengeluaran rata-rata ${formatRupiah(Math.round(snap.monthlyExpense))} per bulan, dana darurat yang sudah kamu sisihkan khusus di Tabungan ${formatRupiah(Math.round(cur))} (saldo dompet biasa tidak dihitung)`, values: { exp: Math.round(snap.monthlyExpense), cur: Math.round(cur) } };
 }
 
 export default function Page() {

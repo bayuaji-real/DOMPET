@@ -23,4 +23,12 @@ describe("solusi yang bisa dijalankan", () => {
     expect(lines).toMatch(/Pilihan menabung/);
     expect(lines).toMatch(/3 bulan = /);
   });
+  it("belum punya tabungan dana darurat: dijelaskan jujur dan langkahnya membuat tabungan", () => {
+    const i = { monthlyIncome: 6_000_000, monthlyExpense: 2_000_000, liquidSavings: 0, monthlyDebtPayment: 0, hasEmergencyFund: false };
+    const d = explainHealthParts(i, healthScore(i)).items.find((x) => x.key === "darurat")!;
+    expect(d.text).toMatch(/belum membuat tabungan dana darurat/);
+    expect(d.text).toMatch(/tidak dianggap dana darurat/);
+    expect(d.action).toMatch(/Buat tabungan Dana Darurat/);
+    expect(d.action).toMatch(/Rp\s?6\.000\.000/);
+  });
 });

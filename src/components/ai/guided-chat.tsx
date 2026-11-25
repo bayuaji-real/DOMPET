@@ -27,7 +27,7 @@ export function GuidedChat({ flow, prefill }: { flow: Flow; prefill?: () => Prom
     getUserProfile().then(setProfile).catch(() => {});
     prefill?.().then((p) => setPre(p)).catch(() => {});
   }, [prefill]);
-  React.useEffect(() => { endRef.current?.scrollIntoView?.({ behavior: "smooth", block: "end" }); }, [msgs]);
+  React.useEffect(() => { const id = requestAnimationFrame(() => endRef.current?.scrollIntoView?.({ block: "end" })); return () => cancelAnimationFrame(id); }, [msgs]);
 
   const done = idx >= steps.length;
   const step = done ? null : steps[idx];
@@ -67,7 +67,8 @@ export function GuidedChat({ flow, prefill }: { flow: Flow; prefill?: () => Prom
   return (
     <div className="fixed inset-x-0 top-0 z-30 mx-auto flex max-w-[430px] flex-col bg-background" style={{ bottom: "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
       <TopHeader title={flow.title} subtitle={flow.subtitle} />
-      <div className="flex-1 overflow-y-auto bg-background/50 px-3.5 py-4 space-y-3">
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-background/50 px-3.5 py-4">
+        <div className="flex-1" aria-hidden />
         <Bubble msg={{ role: "model", text: flow.greeting, time: openedAt || undefined }} first profile={profile} />
         {msgs.map((m, i) => (<Bubble key={i} msg={m} first={i === 0 ? true : msgs[i - 1].role !== m.role} profile={profile} />))}
         {(chips.length > 0 || (done && !!flow.links?.length)) && (

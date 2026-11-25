@@ -11,6 +11,6 @@ export async function getPurchases(): Promise<PurchaseRow[]> {
   const { data, error } = await c().from("purchase_goals").select("*").neq("status", "batal").order("created_at", { ascending: false });
   ok(error); return (data ?? []) as PurchaseRow[];
 }
-export async function addPurchase(x: Ins) { const { error } = await c().from("purchase_goals").insert(x); ok(error); }
+export async function addPurchase(x: Ins): Promise<string | null> { const { data, error } = await c().from("purchase_goals").insert(x).select("id").single(); ok(error); return (data as { id: string } | null)?.id ?? null; }
 export async function updatePurchase(id: string, x: Upd) { const { error } = await c().from("purchase_goals").update(x).eq("id", id); ok(error); }
 export async function deletePurchase(id: string) { const { error } = await c().from("purchase_goals").delete().eq("id", id); ok(error); }

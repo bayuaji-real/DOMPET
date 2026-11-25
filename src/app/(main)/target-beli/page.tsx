@@ -88,6 +88,7 @@ function TargetBeliInner() {
   const [hints, setHints] = React.useState<PlanHints>({});
   const [awaitBasis, setAwaitBasis] = React.useState<{ kind: AskKind; question: string } | null>(null);
   const [incomeAvg, setIncomeAvg] = React.useState(false);
+  const [offer, setOffer] = React.useState<{ id: string; row: Omit<PurchaseRow, "id" | "status">; amount: number; basis: QueueBasis | null; today: string } | null>(null);
   const [askField, setAskField] = React.useState<Field | null>(null);
   const [profile, setProfile] = React.useState<UserProfile | null>(null);
   const [msgs, setMsgs] = React.useState<Msg[]>([]);
@@ -114,7 +115,11 @@ function TargetBeliInner() {
     getBenchmarks().then((b) => { const x = b.find((r) => r.code === "inflasi_yoy"); if (x) setInfl(Number(x.value)); }).catch(() => {});
     getUserProfile().then(setProfile).catch(() => {});
   }, [load]);
-  React.useEffect(() => { endRef.current?.scrollIntoView?.({ behavior: "smooth", block: "end" }); }, [msgs, busy, showList]);
+  React.useEffect(() => {
+    // Tunggu layout selesai (tombol pilihan baru muncul), lalu gulir ke bawah supaya pertanyaan dan tombolnya selalu terlihat.
+    const id = requestAnimationFrame(() => endRef.current?.scrollIntoView?.({ block: "end" }));
+    return () => cancelAnimationFrame(id);
+  }, [msgs, busy, showList, awaitBasis?.kind, pending]);
 
   const reply = (text: string) => setMsgs((m) => [...m, { role: "model", text, time: nowLabel() }]);
 
@@ -140,12 +145,21 @@ function TargetBeliInner() {
     const rate = cicil ? (merged.ratePct ?? 0) : null;
     const today = s.today;
     const row = { name: merged.name!, price: merged.price!, mode: cicil ? "cicilan" as const : "tunai" as const, down_payment: dp, months, rate_pct: rate, saved: merged.saved ?? 0, target_date: merged.targetMonths ? addMonths(today, merged.targetMonths) : null };
-    await addPurchase(row);
+    const newId = await addPurchase(row);
     setPending(null); setAwaitBasis(null); setHints({}); setAskField(null); setIncomeAvg(false);
     const g = { ...row, id: "", status: "aktif" } as unknown as PurchaseRow;
     const r = analyze(g, today, infl, bp.basis);
     const head = `**${row.name}** ${rp(row.price)}, ${cicil ? `cicilan ${months} bulan` : "tunai"}: ${LABEL[r.verdict]}.`;
     reply([head, ...quickSummary(r, rp, fmtDate).map((x) => `- ${x}`)].join("\n"));
+    // Saldo dompet adalah uang pengguna. Tidak dianggap dana darurat kecuali pengguna sendiri membuat tabungan dana darurat
+    // (dompet tabungan dan investasi sudah tidak ikut terhitung di freeCash).
+    const wallet = s.freeCash ?? s.liquidSavings;
+    const room = Math.max(0, r.cashNeeded - Number(row.saved));
+    const usable = Math.floor(Math.min(wallet, room) / 100_000) * 100_000;
+    if (newId && Number(row.saved) === 0 && usable >= 100_000) {
+      setOffer({ id: newId, row: row as unknown as Omit<PurchaseRow, "id" | "status">, amount: usable, basis: bp.basis, today });
+      reply(`Saldo dompetmu ${rp(wallet)}. Mau dipakai ${rp(usable)} sebagai modal awal ${row.name}? Kalau iya, sisanya tinggal ditabung dari gaji.`);
+    }
     await load();
   };
 
@@ -154,6 +168,20 @@ function TargetBeliInner() {
     if (awaitBasis.kind === "gaji" && (snap?.monthlyIncome ?? 0) > 0) chips.push({ label: `Pakai rata-rata (${rp(snap!.monthlyIncome)})`, run: () => { setIncomeAvg(true); void finish(pending, hints, true); } });
     if (awaitBasis.kind === "biaya_hidup" && (ctx?.basisInput.avgMonthlyExpense ?? 0) > 0) chips.push({ label: `Pakai rata-rata (${rp(ctx!.basisInput.avgMonthlyExpense)})`, run: () => { const n = { ...hints, living_use_average: true }; setHints(n); void finish(pending, n); } });
     if (awaitBasis.kind === "komitmen_rutin") chips.push({ label: "Tidak ada", run: () => { const n = { ...hints, other_fixed_monthly: 0 }; setHints(n); void finish(pending, n); } });
+  }
+  const applyWalletAsSeed = async () => {
+    if (!offer) return;
+    const o = offer;
+    setOffer(null);
+    await updatePurchase(o.id, { saved: o.amount });
+    const g = { ...o.row, saved: o.amount, id: o.id, status: "aktif" } as unknown as PurchaseRow;
+    const r = analyze(g, o.today, infl, o.basis);
+    reply([`Siap, ${rp(o.amount)} dari saldo dompet jadi modal awal **${g.name}**: ${LABEL[r.verdict]}.`, ...quickSummary(r, rp, fmtDate).map((x) => `- ${x}`)].join("\n"));
+    await load();
+  };
+  if (offer && !busy) {
+    chips.push({ label: `Pakai saldo dompet sebagai modal awal (${rp(offer.amount)})`, run: () => { void applyWalletAsSeed(); } });
+    chips.push({ label: "Tidak, tabung dari gaji saja", run: () => { setOffer(null); reply("Siap, tetap ditabung dari gaji."); } });
   }
   const pickChip = async (label: string, run: () => void) => {
     if (busy) return;
@@ -165,6 +193,7 @@ function TargetBeliInner() {
   const send = async (raw: string) => {
     const text = raw.trim().slice(0, 300);
     if (!text || busy) return;
+    setOffer(null);
     setMsgs((m) => [...m, { role: "user", text, time: nowLabel() }]);
     setInput("");
     setBusy(true);
@@ -212,7 +241,8 @@ function TargetBeliInner() {
     <div className="fixed inset-x-0 top-0 z-30 mx-auto flex max-w-[430px] flex-col bg-background" style={{ bottom: "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
       {dialog}
       <TopHeader title="Target Beli" subtitle="Ketik barang dan harganya" />
-      <div className="flex-1 overflow-y-auto bg-background/50 px-3.5 py-4 space-y-3">
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-background/50 px-3.5 py-4">
+        <div className="flex-1" aria-hidden />
         <Bubble msg={{ role: "model", text: "Mau beli apa? Ketik barang dan harganya, nanti aku bantu budgetingnya.", time: openedAt || undefined }} first profile={profile} />
         {msgs.length === 0 && (
           <ReplyBubble>

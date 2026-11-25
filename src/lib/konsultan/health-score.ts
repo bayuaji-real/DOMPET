@@ -1,6 +1,6 @@
 import { formatRupiah } from "@/lib/utils";
 import type { FinancialHealth, HealthStatus } from "@/types/analytics";
-export interface HealthInput { monthlyIncome: number; monthlyExpense: number; liquidSavings: number; monthlyDebtPayment: number }
+export interface HealthInput { monthlyIncome: number; monthlyExpense: number; liquidSavings: number; monthlyDebtPayment: number; /** false bila pengguna belum membuat tabungan dana darurat (default true). */ hasEmergencyFund?: boolean }
 export interface HealthPart { key: "tabung" | "darurat" | "utang" | "arus"; label: string; score: number; max: number; tip: string }
 export interface HealthResult { total: number; level: "perlu perhatian" | "cukup" | "sehat"; parts: HealthPart[] }
 
@@ -22,16 +22,17 @@ export function healthScore(i: HealthInput): HealthResult {
   return { total, level: total >= 70 ? "sehat" : total >= 40 ? "cukup" : "perlu perhatian", parts };
 }
 
-type SnapLike = { hasData: boolean; monthlyIncome: number; monthlyExpense: number; freeCash?: number; liquidSavings: number };
+type SnapLike = { hasData: boolean; monthlyIncome: number; monthlyExpense: number; freeCash?: number; liquidSavings: number; emergencyFund?: number; hasEmergencyGoal?: boolean };
 
 /**
  * SATU RUMUS untuk semua halaman: status di Analisis dan Beranda memakai healthScore() yang sama dengan
- * halaman Kesehatan Finansial (rata-rata bulanan, dana darurat dari uang bebas pakai di luar tabungan dan investasi).
+ * halaman Kesehatan Finansial (rata-rata bulanan, dana darurat hanya dari tabungan yang dibuat pengguna sebagai dana darurat).
  * sehat >= 70, cukup (tampil "waspada") >= 40, sisanya "kritis".
  */
 export function unifyHealth(fh: FinancialHealth, snap: SnapLike | null, monthlyDebtPayment: number): FinancialHealth {
   if (!snap || !snap.hasData) return fh;
-  const free = snap.freeCash ?? snap.liquidSavings;
+  // Dana darurat = hanya tabungan yang dibuat pengguna sebagai dana darurat. Saldo dompet biasa tidak dianggap dana darurat.
+  const free = snap.emergencyFund ?? 0;
   const r = healthScore({ monthlyIncome: snap.monthlyIncome, monthlyExpense: snap.monthlyExpense, liquidSavings: free, monthlyDebtPayment });
   const part = (k: HealthPart["key"]): HealthStatus => {
     const p = r.parts.find((x) => x.key === k)!;
@@ -71,6 +72,7 @@ export function explainHealthParts(i: HealthInput, r: HealthResult): { intro: st
     }
     if (k === "darurat") {
       if (exp <= 0) return "Catat pengeluaranmu dulu supaya bisa dihitung.";
+      if (i.hasEmergencyFund === false) return `Buat tabungan Dana Darurat dengan target minimal ${rp(exp * 3)} (3 bulan pengeluaran). Menabung ${rp(Math.ceil((exp * 3) / 12 / 1000) * 1000)} per bulan, tercapai dalam 12 bulan.`;
       const target = i.liquidSavings / exp >= 3 ? exp * 6 : exp * 3;
       const need = Math.max(0, target - i.liquidSavings);
       const per = Math.ceil(need / 12 / 1000) * 1000;
@@ -94,8 +96,9 @@ export function explainHealthParts(i: HealthInput, r: HealthResult): { intro: st
       else body = `Dari pemasukan ${rp(income)} per bulan, sisa ${rp(left)} setelah pengeluaran ${rp(exp)} (${pct(left, income)}%). ${left >= target ? "Itu sudah di atas target 20%, bagus." : `Targetnya 20% (${rp(target)}), jadi masih kurang ${rp(target - left)}.`}`;
     } else if (p.key === "darurat") {
       const months = exp > 0 ? i.liquidSavings / exp : i.liquidSavings > 0 ? 6 : 0;
-      if (exp <= 0) body = `Saldo yang bisa dipakai ${rp(i.liquidSavings)}. Pengeluaran belum terhitung, jadi belum bisa dinilai.`;
-      else body = `Saldo yang bisa dipakai ${rp(i.liquidSavings)}, cukup untuk ${dec(months)} bulan pengeluaran. ${months >= 6 ? "Itu sudah di atas target 6 bulan, bagus." : `Idealnya 3 sampai 6 bulan, jadi ${months >= 3 ? "kamu sudah aman, tinggal menambah" : "masih kurang"} ${rp(Math.max(exp * (months >= 3 ? 6 : 3) - i.liquidSavings, 0))}.`}`;
+      if (i.hasEmergencyFund === false) body = "Kamu belum membuat tabungan dana darurat, jadi bagian ini belum terhitung. Saldo dompet biasa tidak dianggap dana darurat.";
+      else if (exp <= 0) body = `Dana darurat yang sudah kamu sisihkan ${rp(i.liquidSavings)}. Pengeluaran belum terhitung, jadi belum bisa dinilai.`;
+      else body = `Dana darurat yang sudah kamu sisihkan ${rp(i.liquidSavings)}, cukup untuk ${dec(months)} bulan pengeluaran. ${months >= 6 ? "Itu sudah di atas target 6 bulan, bagus." : `Idealnya 3 sampai 6 bulan, jadi ${months >= 3 ? "kamu sudah aman, tinggal menambah" : "masih kurang"} ${rp(Math.max(exp * (months >= 3 ? 6 : 3) - i.liquidSavings, 0))}.`}`;
     } else if (p.key === "utang") {
       if (i.monthlyDebtPayment <= 0) body = "Tidak ada cicilan utang, jadi nilainya penuh.";
       else body = `Cicilan utangmu ${rp(i.monthlyDebtPayment)} per bulan, ${pct(i.monthlyDebtPayment, income)}% dari pemasukan. ${pct(i.monthlyDebtPayment, income) <= 15 ? "Masih ringan." : pct(i.monthlyDebtPayment, income) <= 30 ? "Masih wajar, usahakan tidak naik." : "Sudah berat, jangan tambah cicilan baru."}`;
@@ -108,7 +111,7 @@ export function explainHealthParts(i: HealthInput, r: HealthResult): { intro: st
   }
 
   const weak = [...r.parts].filter((p) => p.score < p.max).sort((a, b) => a.score / a.max - b.score / b.max)[0];
-  const closing = weak ? `Yang paling perlu digarap: ${weak.label.toLowerCase()} (${weak.score} dari ${weak.max}). ${weak.tip}` : "Semua bagian penuh. Pertahankan kebiasaanmu dan tinjau lagi tiap bulan.";
+  const closing = weak ? `Yang paling perlu digarap: ${weak.label.toLowerCase()} (${weak.score} dari ${weak.max}). Mulai dari langkah di atas.` : "Semua bagian penuh. Pertahankan kebiasaanmu dan tinjau lagi tiap bulan.";
   return { intro: `Skormu ${r.total} dari 100, kondisi ${level}.`, items, closing };
 }
 

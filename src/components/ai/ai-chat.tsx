@@ -527,7 +527,8 @@ export function AiChat({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      <div className="flex-1 overflow-y-auto bg-background/50 px-3.5 py-4 space-y-3">
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-background/50 px-3.5 py-4">
+        <div className="flex-1" aria-hidden />
         {all.map((m, i) => (
           <React.Fragment key={i}>
             <Bubble msg={m} first={i === 0 || all[i - 1].role !== m.role} profile={profile} />
