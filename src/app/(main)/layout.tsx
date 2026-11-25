@@ -12,7 +12,7 @@ export default function MainLayout({
 }) {
   return (
     <MobileFrame>
-      <div className="flex-1 flex flex-col pb-[5.25rem]"><MountGate>{children}</MountGate></div>
+      <div className="flex-1 flex flex-col pb-[5.25rem] has-[[data-admin-root]]:pb-0"><MountGate>{children}</MountGate></div>
       <React.Suspense fallback={null}>
         <BottomNav />
       </React.Suspense>

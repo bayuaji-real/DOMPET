@@ -363,15 +363,7 @@ begin
 end $$;
 
 -- Pembungkus tanda tangan lama untuk kompatibilitas panggilan internal (misal dari script/rpc lama)
-create or replace function public.admin_set_plan(
-  p_user uuid,
-  p_plan text,
-  p_days integer
-) returns void
-language plpgsql security definer set search_path = public as $$
-begin
-  perform public.admin_set_plan(p_user, p_plan, p_days, 'Diatur melalui sistem admin');
-end $$;
+
 
 -- Perbarui admin_resolve_request agar menyertakan alasan
 drop function if exists public.admin_resolve_request(uuid, text, integer);
@@ -490,7 +482,6 @@ revoke all on function public.admin_dashboard_summary(timestamptz, timestamptz) 
 revoke all on function public.admin_list_prices() from public, anon;
 revoke all on function public.admin_set_price(integer, integer) from public, anon;
 revoke all on function public.admin_set_plan(uuid, text, integer, text) from public, anon;
-revoke all on function public.admin_set_plan(uuid, text, integer) from public, anon;
 revoke all on function public.admin_get_ai_controls() from public, anon;
 revoke all on function public.admin_set_ai_controls(jsonb, numeric) from public, anon;
 
@@ -499,6 +490,11 @@ grant execute on function public.admin_dashboard_summary(timestamptz, timestampt
 grant execute on function public.admin_list_prices() to authenticated;
 grant execute on function public.admin_set_price(integer, integer) to authenticated;
 grant execute on function public.admin_set_plan(uuid, text, integer, text) to authenticated;
-grant execute on function public.admin_set_plan(uuid, text, integer) to authenticated;
 grant execute on function public.admin_get_ai_controls() to authenticated;
 grant execute on function public.admin_set_ai_controls(jsonb, numeric) to authenticated;
+
+-- Pencabutan izin untuk fungsi yang dibuat ulang di atas (ditambahkan 25 Nov malam).
+revoke all on function public.admin_confirm_payment(uuid) from public, anon;
+revoke all on function public.admin_resolve_request(uuid, text, integer) from public, anon;
+grant execute on function public.admin_confirm_payment(uuid) to authenticated;
+grant execute on function public.admin_resolve_request(uuid, text, integer) to authenticated;

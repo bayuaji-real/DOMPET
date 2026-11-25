@@ -57,6 +57,7 @@ function SisaChip({ n, large = false }: { n: number; large?: boolean }) {
 
 export function BottomNav() {
   const pathname = usePathname();
+  if (pathname.startsWith("/admin")) return null;
   const keyboardOpen = useKeyboardOpen();
   const { ent, reload: reloadEnt } = useEntitlement();
   const sisaStruk = ent.plan === "free" ? sisaLabel(ent.cicip.struk) : null;
