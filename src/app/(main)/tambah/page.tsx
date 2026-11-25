@@ -38,6 +38,7 @@ export default function TambahTransaksiPage() {
   const [selectedCategoryId, setSelectedCategoryId] = React.useState("");
 
   const [wallets, setWallets] = React.useState<WalletBalance[]>([]);
+
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [savedSuccess, setSavedSuccess] = React.useState(false);
@@ -324,7 +325,7 @@ export default function TambahTransaksiPage() {
                           <WalletIcon icon={w.icon} color={w.color} size={28} />
                           <div className="min-w-0">
                             <div className="font-bold truncate">{w.name}</div>
-                            <div className="text-[10px] opacity-75">{formatRupiah(w.balance)}</div>
+                            <div className="text-[10px] opacity-75">{w.type === "tabungan" ? "Tabungan · " : ""}{formatRupiah(w.balance)}</div>
                           </div>
                         </div>
                       </button>
