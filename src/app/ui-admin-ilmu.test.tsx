@@ -19,6 +19,23 @@ vi.mock("@/lib/data/admin", async () => {
   return {
     ...real,
     getMyAdminRole: async () => role,
+    getDashboardSummary: async () => ({
+      total_users: 10,
+      new_users_today: 2,
+      active_users_today: 4,
+      active_users_30d: 8,
+      cash_in_period: 150000,
+      cash_in_month: 150000,
+      ai_cost_period: 25000,
+      ai_cost_month: 25000,
+      pending_payments: 0,
+      oldest_pending_minutes: 0,
+      budget_idr: 100000,
+      warn_pct: 70,
+      budget_used_pct: 25,
+      period_from: "2026-11-01T00:00:00Z",
+      period_to: "2026-11-25T00:00:00Z",
+    }),
     getApiUsage: async () => usage,
     setApiBudget: (...a: unknown[]) => (setApiBudget as unknown as (...x: unknown[]) => Promise<void>)(...a),
     listUsers: async () => [{ user_id: "u1", email: "intan@example.test", created_at: "2026-11-01T00:00:00Z", last_sign_in_at: null, admin_role: null, plan: "pro", source: "paid", plan_expires_at: null, trial_ends_at: null, ai_used: 3 }],
@@ -40,6 +57,7 @@ describe("Admin UI", () => {
     usage = baseUsage;
     const u = userEvent.setup();
     render(<AdminPage />);
+    await u.click(await screen.findByRole("tab", { name: /API/i }));
     const al = await screen.findByRole("alert");
     expect(al.textContent).toMatch(/hampir habis/i);
     await u.type(screen.getByLabelText("Nilai top-up"), "500000");
@@ -49,7 +67,9 @@ describe("Admin UI", () => {
   });
   it("admin biasa tidak melihat form top-up", async () => {
     role = "admin"; usage = baseUsage;
+    const u = userEvent.setup();
     render(<AdminPage />);
+    await u.click(await screen.findByRole("tab", { name: /API/i }));
     await screen.findByRole("alert");
     expect(screen.queryByLabelText("Nilai top-up")).toBeNull();
     expect(screen.getByText(/Hanya Superadmin/)).toBeTruthy();

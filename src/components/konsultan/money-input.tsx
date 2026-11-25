@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 const fmt = (n: number, decimals: boolean) => (n > 0 ? (decimals ? String(n).replace(".", ",") : n.toLocaleString("id-ID")) : "");
 
 /** Input angka. Tanpa desimal: pemisah ribuan gaya Indonesia. Dengan desimal: ketik koma atau titik. value dalam angka murni. */
-export function MoneyInput({ value, onChange, id, placeholder, suffix, decimals = false, "aria-label": ariaLabel }: { value: number; onChange: (n: number) => void; id?: string; placeholder?: string; suffix?: string; decimals?: boolean; "aria-label"?: string }) {
+export function MoneyInput({ value, onChange, id, placeholder, suffix, decimals = false, "aria-label": ariaLabel, disabled = false }: { value: number; onChange: (n: number) => void; id?: string; placeholder?: string; suffix?: string; decimals?: boolean; "aria-label"?: string; disabled?: boolean }) {
   const [text, setText] = React.useState(fmt(value, decimals));
   const [last, setLast] = React.useState(value);
   // Nilai berubah dari luar (misal formulir dikosongkan): ikuti. Nilai dari ketikan sendiri tidak mengubah teks.
@@ -15,6 +15,7 @@ export function MoneyInput({ value, onChange, id, placeholder, suffix, decimals 
       <Input
         id={id}
         aria-label={ariaLabel}
+        disabled={disabled}
         inputMode={decimals ? "decimal" : "numeric"}
         placeholder={placeholder}
         value={text}

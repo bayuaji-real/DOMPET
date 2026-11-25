@@ -5,6 +5,39 @@ export type AdminUser = F["admin_list_users"]["Returns"][number];
 export type AdminRequest = F["admin_list_requests"]["Returns"][number];
 export type AdminAudit = F["admin_list_audit"]["Returns"][number];
 
+export type DashboardSummary = {
+  total_users: number;
+  new_users_today: number;
+  active_users_today: number;
+  active_users_30d: number;
+  cash_in_period: number;
+  cash_in_month: number;
+  ai_cost_period: number;
+  ai_cost_month: number;
+  pending_payments: number;
+  oldest_pending_minutes: number;
+  budget_idr: number;
+  warn_pct: number;
+  budget_used_pct: number | null;
+  period_from: string;
+  period_to: string;
+};
+
+export type PriceRow = {
+  months: number;
+  amount: number;
+};
+
+export type AiControlsData = {
+  controls: {
+    master_kill_switch: boolean;
+    basic_ai_disabled_at_100pct: boolean;
+    pro_hard_limit_enabled: boolean;
+    feature_toggles: Record<string, boolean>;
+  };
+  usd_idr_rate: number;
+};
+
 export type ApiUsage = {
   configured: boolean; budget_idr: number; since: string; warn_pct: number; spent_idr: number; remaining_idr: number;
   used_pct: number | null; level: "belum_diatur" | "aman" | "waspada" | "kritis" | "habis"; days_left: number | null; avg_daily_idr: number;
@@ -23,14 +56,28 @@ export async function getMyAdminRole(): Promise<"admin" | "superadmin" | null> {
   if (error) return null;
   return data === "admin" || data === "superadmin" ? data : null;
 }
+
+export const getDashboardSummary = async (from?: string, to?: string): Promise<DashboardSummary> =>
+  (await rpc(c().rpc("admin_dashboard_summary", { p_from: from ?? null, p_to: to ?? null }))) as unknown as DashboardSummary;
+
+export const listPrices = () => rpc(c().rpc("admin_list_prices")) as Promise<PriceRow[]>;
+export const setPrice = (months: number, amount: number) => rpc(c().rpc("admin_set_price", { p_months: months, p_amount: amount }));
+
+export const getAiControls = async (): Promise<AiControlsData> =>
+  (await rpc(c().rpc("admin_get_ai_controls"))) as unknown as AiControlsData;
+export const setAiControls = (controls: unknown, usdRate?: number) =>
+  rpc(c().rpc("admin_set_ai_controls", { p_controls: controls as Record<string, unknown>, p_usd_idr_rate: usdRate }));
+
 export const listUsers = () => rpc(c().rpc("admin_list_users"));
-export const setPlan = (user: string, plan: string, days: number | null) => rpc(c().rpc("admin_set_plan", { p_user: user, p_plan: plan, p_days: days }));
+export const setPlan = (user: string, plan: string, days: number | null, reason?: string) =>
+  rpc(c().rpc("admin_set_plan", { p_user: user, p_plan: plan, p_days: days, p_reason: reason ?? null }));
 export const setRole = (user: string, role: string) => rpc(c().rpc("admin_set_role", { p_user: user, p_role: role }));
 export const listRequests = () => rpc(c().rpc("admin_list_requests"));
 export const resolveRequest = (id: string, status: string, days: number) => rpc(c().rpc("admin_resolve_request", { p_id: id, p_status: status, p_days: days }));
 export const listAudit = () => rpc(c().rpc("admin_list_audit"));
 export const getApiUsage = async (): Promise<ApiUsage> => (await rpc(c().rpc("admin_api_usage"))) as unknown as ApiUsage;
 export const setApiBudget = (budget: number, since: string, warn: number) => rpc(c().rpc("admin_set_api_budget", { p_budget: budget, p_since: since, p_warn: warn }));
+
 export type MarketInput = { id: string | null; name: string; category: string; risk: string; ret_1m: number | null; ret_ytd: number | null; ret_1y: number | null; aum: number | null; as_of: string; source_url: string };
 export const upsertMarket = (m: MarketInput) => rpc(c().rpc("admin_upsert_market", { p_id: m.id, p_name: m.name, p_category: m.category, p_risk: m.risk, p_ret_1m: m.ret_1m, p_ret_ytd: m.ret_ytd, p_ret_1y: m.ret_1y, p_aum: m.aum, p_as_of: m.as_of, p_source_url: m.source_url }));
 export const deleteMarket = (id: string) => rpc(c().rpc("admin_delete_market", { p_id: id }));
@@ -45,12 +92,27 @@ export const getMfaStatus = async (): Promise<MfaStatus> => (await rpc(c().rpc("
 export const setRequireMfa = (on: boolean) => rpc(c().rpc("admin_set_require_mfa", { p_on: on }));
 
 const MSG: Record<string, string> = {
-  MFA_WAJIB: "Masukkan kode 6 angka dari aplikasi authenticator dulu.", MFA_BELUM_AKTIF: "Aktifkan MFA di menu Keamanan dan masukkan kodenya dulu, baru wajibkan untuk admin.", KODE_TIDAK_VALID: "Kode hanya boleh huruf kecil, angka, dan garis bawah (2 sampai 40 karakter).",
-  BUKAN_ADMIN: "Kamu tidak punya akses untuk tindakan ini.", TIDAK_BISA_UBAH_DIRI_SENDIRI: "Peran akunmu sendiri tidak bisa diubah di sini.",
-  SUMBER_WAJIB_HTTPS: "Alamat sumber harus diawali https://", TANGGAL_TIDAK_VALID: "Tanggal tidak valid.", HARI_TIDAK_VALID: "Jumlah hari harus 1 sampai 3650.",
-  PERMINTAAN_TIDAK_ADA: "Permintaan tidak ditemukan.", SUDAH_DIPROSES: "Permintaan ini sudah dikonfirmasi atau ditolak.", KEDALUWARSA_TANPA_BUKTI: "Permintaan sudah kedaluwarsa dan tidak ada bukti. Minta pengguna membuat permintaan baru.",
-  ANGGARAN_TIDAK_VALID: "Nilai top-up tidak valid.", AMBANG_TIDAK_VALID: "Ambang peringatan harus 10 sampai 95 persen.",
+  MFA_WAJIB: "Masukkan kode 6 angka dari aplikasi authenticator dulu.",
+  MFA_BELUM_AKTIF: "Aktifkan MFA di menu Keamanan dan masukkan kodenya dulu, baru wajibkan untuk admin.",
+  KODE_TIDAK_VALID: "Kode hanya boleh huruf kecil, angka, dan garis bawah (2 sampai 40 karakter).",
+  BUKAN_ADMIN: "Kamu tidak punya akses untuk tindakan ini.",
+  TIDAK_BISA_UBAH_DIRI_SENDIRI: "Peran akunmu sendiri tidak bisa diubah di sini.",
+  SUMBER_WAJIB_HTTPS: "Alamat sumber harus diawali https://",
+  TANGGAL_TIDAK_VALID: "Tanggal tidak valid.",
+  HARI_TIDAK_VALID: "Jumlah hari harus 1 sampai 3650.",
+  PERMINTAAN_TIDAK_ADA: "Permintaan tidak ditemukan.",
+  SUDAH_DIPROSES: "Permintaan ini sudah dikonfirmasi atau ditolak.",
+  KEDALUWARSA_TANPA_BUKTI: "Permintaan sudah kedaluwarsa dan tidak ada bukti. Minta pengguna membuat permintaan baru.",
+  ANGGARAN_TIDAK_VALID: "Nilai top-up tidak valid.",
+  AMBANG_TIDAK_VALID: "Ambang peringatan harus 10 sampai 95 persen.",
+  ALASAN_WAJIB_DIISI: "Alasan perubahan paket wajib diisi (minimal 5 karakter).",
+  PAKET_TIDAK_DIKENAL: "Pilihan paket hanya boleh Basic atau Pro.",
+  DURASI_TIDAK_VALID: "Durasi paket hanya 1, 6, atau 12 bulan.",
+  HARGA_TIDAK_VALID: "Nominal harga tidak valid (harus Rp1.000 sampai Rp100.000.000).",
+  KONTROL_AI_TIDAK_VALID: "Format pengaturan saklar AI tidak valid.",
+  KURS_TIDAK_VALID: "Kurs USD ke Rupiah harus antara Rp5.000 sampai Rp50.000.",
 };
+
 export function adminErrorText(e: unknown): string {
   const m = e instanceof Error ? e.message : "";
   const k = Object.keys(MSG).find((x) => m.includes(x));
