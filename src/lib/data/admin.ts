@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@/types/database";
+import type { Database, Json } from "@/types/database";
 type F = Database["public"]["Functions"];
 export type AdminUser = F["admin_list_users"]["Returns"][number];
 export type AdminRequest = F["admin_list_requests"]["Returns"][number];
@@ -65,8 +65,8 @@ export const setPrice = (months: number, amount: number) => rpc(c().rpc("admin_s
 
 export const getAiControls = async (): Promise<AiControlsData> =>
   (await rpc(c().rpc("admin_get_ai_controls"))) as unknown as AiControlsData;
-export const setAiControls = (controls: unknown, usdRate?: number) =>
-  rpc(c().rpc("admin_set_ai_controls", { p_controls: controls as Record<string, unknown>, p_usd_idr_rate: usdRate }));
+export const setAiControls = (controls: Json, usdRate?: number) =>
+  rpc(c().rpc("admin_set_ai_controls", { p_controls: controls, p_usd_idr_rate: usdRate }));
 
 export const listUsers = () => rpc(c().rpc("admin_list_users"));
 export const setPlan = (user: string, plan: string, days: number | null, reason?: string) =>
