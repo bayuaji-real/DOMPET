@@ -19,7 +19,10 @@ export function healthScore(i: HealthInput): HealthResult {
     { key: "arus", label: "Arus kas", max: 20, score: income <= 0 ? 0 : exp <= income ? 20 : Math.round(20 * (1 - lin(exp / income, 1, 1.3))), tip: "Pengeluaran sebaiknya tidak melebihi pemasukan." },
   ];
   const total = parts.reduce((s, p) => s + p.score, 0);
-  return { total, level: total >= 70 ? "sehat" : total >= 40 ? "cukup" : "perlu perhatian", parts };
+  // Tanpa tabungan dana darurat, kondisi tidak bisa disebut sehat walau angka lain penuh.
+  const raw = total >= 70 ? "sehat" : total >= 40 ? "cukup" : "perlu perhatian";
+  const level = raw === "sehat" && i.hasEmergencyFund === false ? "cukup" : raw;
+  return { total, level, parts };
 }
 
 type SnapLike = { hasData: boolean; monthlyIncome: number; monthlyExpense: number; freeCash?: number; liquidSavings: number; emergencyFund?: number; hasEmergencyGoal?: boolean };
@@ -33,7 +36,7 @@ export function unifyHealth(fh: FinancialHealth, snap: SnapLike | null, monthlyD
   if (!snap || !snap.hasData) return fh;
   // Dana darurat = hanya tabungan yang dibuat pengguna sebagai dana darurat. Saldo dompet biasa tidak dianggap dana darurat.
   const free = snap.emergencyFund ?? 0;
-  const r = healthScore({ monthlyIncome: snap.monthlyIncome, monthlyExpense: snap.monthlyExpense, liquidSavings: free, monthlyDebtPayment });
+  const r = healthScore({ monthlyIncome: snap.monthlyIncome, monthlyExpense: snap.monthlyExpense, liquidSavings: free, monthlyDebtPayment, hasEmergencyFund: snap.hasEmergencyGoal });
   const part = (k: HealthPart["key"]): HealthStatus => {
     const p = r.parts.find((x) => x.key === k)!;
     const ratio = p.score / p.max;

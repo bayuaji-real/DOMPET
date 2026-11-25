@@ -32,3 +32,12 @@ describe("solusi yang bisa dijalankan", () => {
     expect(d.action).toMatch(/Rp\s?6\.000\.000/);
   });
 });
+
+describe("tanpa dana darurat tidak disebut sehat", () => {
+  it("angka lain penuh tapi belum ada dana darurat: paling tinggi cukup", () => {
+    const i = { monthlyIncome: 6_000_000, monthlyExpense: 2_000_000, liquidSavings: 0, monthlyDebtPayment: 0, hasEmergencyFund: false };
+    expect(healthScore(i).total).toBe(70);
+    expect(healthScore(i).level).toBe("cukup");
+    expect(healthScore({ ...i, hasEmergencyFund: true }).level).toBe("sehat");
+  });
+});
