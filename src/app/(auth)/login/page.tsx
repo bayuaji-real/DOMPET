@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -379,6 +380,16 @@ export default function LoginPage() {
             <ShieldCheck className="h-3 w-3 text-emerald-500" />
             <span>100% Privat</span>
           </div>
+        </div>
+
+        {/* Link to Landing Page */}
+        <div className="mt-4 text-center">
+          <Link
+            href="/landing"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 hover:underline transition-colors"
+          >
+            <span>← Lihat Fitur & Detail Produk di Landing Page</span>
+          </Link>
         </div>
       </div>
 

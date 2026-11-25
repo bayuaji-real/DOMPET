@@ -78,6 +78,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   const isAuthPath = pathname.startsWith("/login");
+  const isLandingPath = pathname === "/landing" || pathname.startsWith("/landing/");
   // #5 Mode demo HANYA di development lokal. Di production selalu mati (celah ditutup).
   const demoEnabled = process.env.NODE_ENV !== "production";
   const isDemoParam = demoEnabled && request.nextUrl.searchParams.get("demo") === "true";
@@ -88,8 +89,8 @@ export async function updateSession(request: NextRequest) {
     supabaseResponse.cookies.set("dompet_dev_mode", "true", { path: "/", maxAge: 86400 });
   }
 
-  // Jika user belum login dan mencoba membuka halaman selain /login -> redirect ke /login
-  if (!user && !isAuthPath && !hasDevBypass) {
+  // Jika user belum login dan mencoba membuka halaman selain /login atau /landing -> redirect ke /login
+  if (!user && !isAuthPath && !isLandingPath && !hasDevBypass) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
