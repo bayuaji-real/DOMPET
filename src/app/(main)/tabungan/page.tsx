@@ -5,6 +5,7 @@ import { notify } from "@/lib/notify";
 import { batasBasicMessage } from "@/lib/plans";
 import { TopHeader } from "@/components/layout/top-header";
 import { SavingsTimeline } from "@/components/tabungan/savings-timeline";
+import { ProviderPicker, walletLookFor } from "@/components/tabungan/provider-picker";
 import { formatRupiah, formatTanggalWIB } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { todayJakarta } from "@/lib/data/sample-mode";
@@ -205,13 +206,16 @@ export default function TabunganPage() {
   const [actionAmount, setActionAmount] = React.useState("");
   const [actionNote, setActionNote] = React.useState("");
   const [toastMessage, setToastMessage] = React.useState<string | null>(null);
+  // Setelah tabungan dibuat lewat Ruby: tanya mau disimpan di mana (Jago, Bibit, Mandiri, dst).
+  const [placeGoal, setPlaceGoal] = React.useState<{ id: string; name: string } | null>(null);
+  const [placeValue, setPlaceValue] = React.useState("Bibit");
 
   // Form input state untuk Tambah / Edit
   const [formName, setFormName] = React.useState("");
   const [formTarget, setFormTarget] = React.useState("");
   const [formInitial, setFormInitial] = React.useState("");
   const [formDeadline, setFormDeadline] = React.useState("");
-  const [formStorage, setFormStorage] = React.useState("RDPU Bibit");
+  const [formStorage, setFormStorage] = React.useState("Bibit");
   const [formPlannedPayday, setFormPlannedPayday] = React.useState("");
   const [formNotes, setFormNotes] = React.useState("");
 
@@ -279,9 +283,10 @@ export default function TabunganPage() {
         notes: null,
         ...(user?.id ? { user_id: user.id } : {}),
       };
-      const { error } = await supabase.from("savings_goals").insert(payload);
+      const { data: created, error } = await supabase.from("savings_goals").insert(payload).select("id").single();
       if (error) throw error;
       showToast(`Target "${pr.name}" berhasil dibuat!`);
+      if (created?.id) { setPlaceValue("Bibit"); setPlaceGoal({ id: created.id, name: pr.name }); }
       setIsChatOpen(false);
       await loadData();
       return true;
@@ -372,7 +377,7 @@ export default function TabunganPage() {
     setFormTarget("");
     setFormInitial("0");
     setFormDeadline("");
-    setFormStorage("RDPU Bibit");
+    setFormStorage("Bibit");
     setFormPlannedPayday("500000");
     setFormNotes("");
     setIsFormOpen(true);
@@ -424,6 +429,8 @@ export default function TabunganPage() {
           })
           .eq("id", editingGoal.id);
         if (error) throw error;
+        // Tabungan adalah dompet: logo dan warnanya mengikuti tempat simpan.
+        await supabase.from("wallets").update(walletLookFor(formStorage)).eq("goal_id", editingGoal.id);
         showToast(`Tabungan "${formName}" berhasil diperbarui!`);
       } else {
         const insertPayload: Database["public"]["Tables"]["savings_goals"]["Insert"] = {
@@ -440,8 +447,9 @@ export default function TabunganPage() {
           notes: formNotes || null,
           ...(user?.id ? { user_id: user.id } : {}),
         };
-        const { error } = await supabase.from("savings_goals").insert(insertPayload);
+        const { data: created, error } = await supabase.from("savings_goals").insert(insertPayload).select("id").single();
         if (error) throw error;
+        if (created?.id) await supabase.from("wallets").update(walletLookFor(formStorage)).eq("goal_id", created.id);
         showToast(`Target "${formName}" berhasil dibuat!`);
       }
       setIsFormOpen(false);
@@ -561,6 +569,37 @@ export default function TabunganPage() {
         title="Tabungan & Impian"
         subtitle="Rencanakan target & pantau proyeksi gajian"
       />
+
+      {/* Pilih tempat simpan setelah tabungan dibuat */}
+      {placeGoal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" role="dialog" aria-modal="true" aria-label="Pilih tempat simpan tabungan">
+          <div className="w-full max-w-[430px] space-y-3 rounded-t-3xl bg-background p-4 shadow-xl">
+            <div>
+              <p className="text-sm font-bold">Simpan &quot;{placeGoal.name}&quot; di mana?</p>
+              <p className="text-[11px] text-muted-foreground">Pilih rekening atau aplikasinya. Tabungan ini tetap dompet, hanya tampil di tab Tabungan.</p>
+            </div>
+            <ProviderPicker value={placeValue} onChange={setPlaceValue} />
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" className="h-10 flex-1 rounded-xl text-xs" onClick={() => setPlaceGoal(null)}>Nanti saja</Button>
+              <Button
+                type="button"
+                className="h-10 flex-1 rounded-xl text-xs"
+                onClick={async () => {
+                  const supabase = createClient();
+                  const { error } = await supabase.from("savings_goals").update({ storage_place: placeValue }).eq("id", placeGoal.id);
+                  if (error) { notify("Gagal menyimpan pilihan. Coba lagi."); return; }
+                  await supabase.from("wallets").update(walletLookFor(placeValue)).eq("goal_id", placeGoal.id);
+                  setPlaceGoal(null);
+                  showToast("Tempat simpan tersimpan.");
+                  await loadData();
+                }}
+              >
+                Simpan
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Feedback */}
       {toastMessage && (
@@ -1400,20 +1439,7 @@ export default function TabunganPage() {
 
               <div className="space-y-1">
                 <Label className="text-xs">Tempat Penyimpanan</Label>
-                <Select
-                  value={formStorage}
-                  onChange={(e) => setFormStorage(e.target.value)}
-                  size="sm"
-                >
-                  {formStorage && !["RDPU Bibit","BCA Utama (Tabungan)","Bank Jago Kantong","Emas Digital","Tunai Celengan"].includes(formStorage) && (
-                    <option value={formStorage}>{formStorage}</option>
-                  )}
-                  <option value="RDPU Bibit">RDPU Bibit (Reksa Dana)</option>
-                  <option value="BCA Utama (Tabungan)">BCA Utama (Tabungan)</option>
-                  <option value="Bank Jago Kantong">Bank Jago Kantong</option>
-                  <option value="Emas Digital">Emas Digital</option>
-                  <option value="Tunai Celengan">Tunai Celengan</option>
-                </Select>
+                <ProviderPicker value={formStorage} onChange={setFormStorage} />
               </div>
 
               <div className="space-y-1">

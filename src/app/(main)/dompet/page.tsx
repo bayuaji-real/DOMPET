@@ -140,11 +140,19 @@ export default function DompetPage() {
     return wallets.reduce((acc, w) => acc + (w.balance || 0), 0);
   }, [wallets]);
 
+  // Dompet tabungan tetap dompet, tapi hanya tampil di tab Tabungan (keputusan Owner 25 Nov).
+  const isSavingsWallet = (w: WalletBalance) => w.type === "tabungan" || Boolean(w.goal_id);
+  const plainWallets = React.useMemo(() => wallets.filter((w) => !isSavingsWallet(w)), [wallets]);
+  const savingsTotal = React.useMemo(
+    () => wallets.filter(isSavingsWallet).reduce((acc, w) => acc + (w.balance || 0), 0),
+    [wallets]
+  );
+
   // Filter daftar dompet
   const filteredWallets = React.useMemo(() => {
-    if (selectedFilter === "all") return wallets;
-    return wallets.filter((w) => w.type === selectedFilter);
-  }, [wallets, selectedFilter]);
+    if (selectedFilter === "all") return plainWallets;
+    return plainWallets.filter((w) => w.type === selectedFilter);
+  }, [plainWallets, selectedFilter]);
 
   // Presets terfilter untuk modal tambah dompet
   const filteredPresets = React.useMemo(() => {
@@ -297,6 +305,11 @@ export default function DompetPage() {
                 <h2 className="text-2xl font-black tracking-tight text-foreground">
                   {hideBalance ? "••••••••" : formatRupiah(totalBalance, { absolute: true })}
                 </h2>
+                {savingsTotal > 0 && (
+                  <p className="text-[10px] text-muted-foreground">
+                    Termasuk tabungan {hideBalance ? "••••" : formatRupiah(savingsTotal, { absolute: true })} (lihat di tab Tabungan)
+                  </p>
+                )}
               </div>
             </div>
 
@@ -345,11 +358,10 @@ export default function DompetPage() {
         {/* 2. Filter Kategori Dompet */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {[
-            { id: "all", label: `Semua (${wallets.length})` },
+            { id: "all", label: `Semua (${plainWallets.length})` },
             { id: "bank", label: "Bank" },
             { id: "ewallet", label: "E-Wallet" },
             { id: "cash", label: "Tunai" },
-            { id: "tabungan", label: "Tabungan" },
             { id: "investasi", label: "Investasi" },
           ].map((tab) => (
             <button
