@@ -109,8 +109,8 @@ export function SettingsView({ top }: { top?: React.ReactNode | ((slots: { secon
 
   // Profile state
   const [profile, setProfile] = React.useState<UserProfile>({
-    name: "Bayu Aji",
-    email: "bayuaji@dompetku.id",
+    name: "Sobat Finansial",
+    email: "user@dompetku.id",
     avatarUrl: null,
     avatarEmoji: "🧑‍💻",
     avatarBg: "#0d9488",

@@ -27,8 +27,8 @@ function TopHeaderInner({ title }: TopHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [profile, setProfile] = React.useState<UserProfile>({
-    name: "Bayu Aji",
-    email: "bayuaji@dompetku.id",
+    name: "Sobat Finansial",
+    email: "user@dompetku.id",
     avatarUrl: null,
     avatarEmoji: "🧑‍💻",
     avatarBg: "#0d9488",

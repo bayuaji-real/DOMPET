@@ -9,8 +9,8 @@ export interface UserProfile {
 }
 
 const DEFAULT_PROFILE: UserProfile = {
-  name: "Bayu Aji",
-  email: "bayuaji@dompetku.id",
+  name: "Sobat Finansial",
+  email: "user@dompetku.id",
   avatarUrl: null,
   avatarEmoji: "🧑‍💻",
   avatarBg: "#0d9488",

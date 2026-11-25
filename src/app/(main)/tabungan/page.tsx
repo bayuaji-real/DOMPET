@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { todayJakarta } from "@/lib/data/sample-mode";
 import type { Database } from "@/types/database";
 import { isSpendableWallet, type WalletBalance } from "@/lib/data/wallets";
-import { deleteSavingsGoal } from "@/lib/data/goals";
+import { deleteSavingsGoal, SAMPLE_GOALS } from "@/lib/data/goals";
 import {
   calculateSavingsProjection,
   type SavingsProjectionResult,
@@ -149,8 +149,10 @@ export default function TabunganPage() {
       amount: number; wallet_id: string; note: string | null; goal_id: string | null;
     }[];
 
+    const rawGoals =
+      goalsRes.data && goalsRes.data.length > 0 ? goalsRes.data : SAMPLE_GOALS;
     setGoals(
-      (goalsRes.data ?? []).map((g) => ({
+      rawGoals.map((g) => ({
         id: g.id as string,
         name: g.name as string,
         target_amount: Number(g.target_amount),

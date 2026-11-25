@@ -93,7 +93,7 @@ export function LandingPhonePreview() {
               </div>
               <div className="leading-tight">
                 <p className="text-[10px] text-muted-foreground">Selamat Pagi 👋</p>
-                <p className="text-xs font-bold text-foreground">Bayu Aji</p>
+                <p className="text-xs font-bold text-foreground">Sobat Finansial</p>
               </div>
             </div>
 

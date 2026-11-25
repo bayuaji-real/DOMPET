@@ -27,7 +27,7 @@ export function LandingFeaturesGrid() {
   const features = [
     {
       id: "multi-dompet",
-      screenshot: "/screenshots/beranda-wallet.png",
+      screenshot: "/screenshots/dompet.png",
       icon: Wallet,
       tag: "Multi-Dompet Real-Time",
       title: "Bank, E-Wallet, & Tunai Terhubung Tanpa Password",
@@ -97,7 +97,7 @@ export function LandingFeaturesGrid() {
     },
     {
       id: "kontrol-data",
-      screenshot: "/screenshots/cicilan-utang.png",
+      screenshot: "/screenshots/pengaturan-ekspor.png",
       icon: Download,
       tag: "Kontrol Data 100%",
       title: "Datamu Milikmu: Ekspor CSV & Backup JSON Penuh",
@@ -139,20 +139,20 @@ export function LandingFeaturesGrid() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
         {/* LEFT COLUMN: Real Phone Mockup Matching Height with Right List (aligned top to bottom) */}
         <div
-          className="lg:col-span-5 flex flex-col justify-stretch self-stretch"
+          className="lg:col-span-5 flex flex-col justify-center items-center"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          {/* Smartphone Chassis stretching exactly to match right column */}
-          <div className="relative w-full h-full min-h-[580px] sm:min-h-[640px] rounded-[2.8rem] sm:rounded-[3.2rem] p-2.5 sm:p-3 bg-gradient-to-b from-neutral-800 via-neutral-900 to-neutral-950 border-[3px] border-neutral-700/80 shadow-2xl shadow-teal-950/40 flex flex-col justify-between overflow-hidden">
+          {/* Smartphone Chassis with true full phone aspect ratio (390:844) */}
+          <div className="relative w-full max-w-[340px] sm:max-w-[370px] aspect-[390/844] rounded-[3rem] p-2.5 sm:p-3 bg-gradient-to-b from-neutral-800 via-neutral-900 to-neutral-950 border-[3.5px] border-neutral-700/90 shadow-2xl shadow-teal-950/50 flex flex-col overflow-hidden">
             {/* Dynamic Island / Notch */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-5 rounded-full bg-black z-30 flex items-center justify-between px-2.5 shadow-sm">
               <span className="size-2 rounded-full bg-neutral-900 border border-neutral-800" />
               <span className="size-1.5 rounded-full bg-teal-500/60" />
             </div>
 
-            {/* Inner Phone Screen with Stacked Screenshots for Zero-Flicker Transitions */}
-            <div className="relative flex-1 w-full rounded-[2.2rem] sm:rounded-[2.5rem] overflow-hidden bg-background border border-neutral-800/80">
+            {/* Inner Phone Screen displaying Full Screen without cutting off bottom navigation */}
+            <div className="relative flex-1 w-full rounded-[2.3rem] overflow-hidden bg-background border border-neutral-800/80">
               {features.map((f, idx) => (
                 <div
                   key={f.id}
@@ -167,8 +167,8 @@ export function LandingFeaturesGrid() {
                     src={f.screenshot}
                     alt={f.title}
                     fill
-                    sizes="(max-width: 1024px) 100vw, 450px"
-                    className="object-cover object-top"
+                    sizes="(max-width: 1024px) 100vw, 420px"
+                    className="object-contain object-top"
                     priority={idx === 0}
                   />
                 </div>
@@ -176,7 +176,7 @@ export function LandingFeaturesGrid() {
 
               {/* Bottom Subtle Glass Indicator Bar */}
               <div className="absolute inset-x-0 bottom-2.5 px-3 z-30 pointer-events-none">
-                <div className="p-2 rounded-2xl bg-black/65 backdrop-blur-md border border-white/10 shadow-lg flex items-center justify-between text-white text-[11px] pointer-events-auto">
+                <div className="p-2 rounded-2xl bg-black/75 backdrop-blur-md border border-white/10 shadow-lg flex items-center justify-between text-white text-[11px] pointer-events-auto">
                   <div className="flex items-center gap-2 truncate">
                     <span className="font-extrabold px-2 py-0.5 rounded-full bg-teal-600 text-[10px] shrink-0">
                       #{activeIndex + 1}
