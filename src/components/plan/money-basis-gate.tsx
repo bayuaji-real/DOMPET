@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { Send } from "lucide-react";
+import { Bubble, ReplyBubble, ReplyRow, nowLabel, type Msg } from "@/components/ai/ai-chat";
+import { getUserProfile, type UserProfile } from "@/lib/user-profile";
 import { loadPlanContext, persistPlanAnswers, type PlanContext } from "@/lib/data/plan-basis";
 import { resolvePlanBasis, type PlanHints, type PlanBasis } from "@/lib/savings-queue";
 import { parseBasisAnswer } from "@/lib/savings-answer";
@@ -22,6 +24,10 @@ export function MoneyBasisGate({ snap, children }: { snap: FinanceSnapshot; chil
   const [text, setText] = React.useState("");
   const [msg, setMsg] = React.useState("");
   const saved = React.useRef(false);
+  const [log, setLog] = React.useState<Msg[]>([]);
+  const [profile, setProfile] = React.useState<UserProfile | null>(null);
+  const [openedAt] = React.useState(() => nowLabel());
+  React.useEffect(() => { getUserProfile().then(setProfile).catch(() => {}); }, []);
 
   React.useEffect(() => { loadPlanContext(snap.monthlyExpense).then(setCtx).catch(() => setMsg("Data rencanamu belum bisa dimuat.")); }, [snap.monthlyExpense]);
 
@@ -57,33 +63,42 @@ export function MoneyBasisGate({ snap, children }: { snap: FinanceSnapshot; chil
   }
 
   const ask: Ask = res.ask;
+  const say = (role: "model" | "user", t: string): Msg => ({ role, text: t, time: nowLabel() });
+  const remember = (answerText: string) => setLog((l) => [...l, say("model", res.question), say("user", answerText)]);
   const answer = (t: string) => {
     const h = parseBasisAnswer(ask, t, ask === "biaya_hidup" && ctx.basisInput.avgMonthlyExpense > 0);
     if (!h) { setMsg("Jawabannya belum terbaca. Tulis angkanya, misalnya 3 juta."); return; }
     setMsg(""); setText("");
+    remember(t);
     setHints((p) => ({ ...p, ...h }));
   };
+  const pick = (label: string, run: () => void) => { remember(label); setMsg(""); run(); };
   const submit = (e: React.FormEvent) => { e.preventDefault(); if (text.trim()) answer(text.trim()); };
 
+  const options: { label: string; run: () => void }[] = [];
+  if (ask === "gaji" && snap.monthlyIncome > 0) options.push({ label: `Pakai rata-rata pemasukan (${formatRupiah(snap.monthlyIncome)})`, run: () => setIncomeAvg(true) });
+  if (ask === "biaya_hidup" && ctx.basisInput.avgMonthlyExpense > 0) options.push({ label: `Pakai rata-rata (${formatRupiah(ctx.basisInput.avgMonthlyExpense)})`, run: () => setHints((p) => ({ ...p, living_use_average: true })) });
+  if (ask === "komitmen_rutin") options.push({ label: "Tidak ada", run: () => setHints((p) => ({ ...p, other_fixed_monthly: 0 })) });
+
   return (
-    <div className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
-      <p className="text-sm font-semibold">{res.question}</p>
-      <div className="flex flex-wrap gap-2">
-        {ask === "gaji" && snap.monthlyIncome > 0 && (
-          <Button type="button" variant="outline" size="sm" onClick={() => setIncomeAvg(true)}>Pakai rata-rata pemasukan ({formatRupiah(snap.monthlyIncome)})</Button>
+    <div className="flex flex-col overflow-hidden rounded-3xl border border-border/70 bg-background/50 shadow-xs">
+      <div className="space-y-3 px-3.5 py-4">
+        {log.map((m, i) => (<Bubble key={i} msg={m} first={i === 0 || log[i - 1].role !== m.role} profile={profile} />))}
+        <Bubble msg={{ role: "model", text: res.question, time: openedAt || undefined }} first={log.length === 0 || log[log.length - 1].role !== "model"} profile={profile} />
+        {options.length > 0 && (
+          <ReplyBubble>
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Ketuk salah satu, atau ketik sendiri di bawah ya:</p>
+            <div className="flex flex-col gap-2">
+              {options.map((o) => (<ReplyRow key={o.label} label={o.label} onClick={() => pick(o.label, o.run)} />))}
+            </div>
+          </ReplyBubble>
         )}
-        {ask === "biaya_hidup" && ctx.basisInput.avgMonthlyExpense > 0 && (
-          <Button type="button" variant="outline" size="sm" onClick={() => setHints((p) => ({ ...p, living_use_average: true }))}>Pakai rata-rata ({formatRupiah(ctx.basisInput.avgMonthlyExpense)})</Button>
-        )}
-        {ask === "komitmen_rutin" && (
-          <Button type="button" variant="outline" size="sm" onClick={() => setHints((p) => ({ ...p, other_fixed_monthly: 0 }))}>Tidak ada</Button>
-        )}
+        {msg && <p role="alert" className="text-xs font-semibold text-rose-700 dark:text-rose-300">{msg}</p>}
       </div>
-      <form onSubmit={submit} className="flex gap-2">
-        <input value={text} onChange={(e) => setText(e.target.value)} aria-label="Jawabanmu" placeholder="Tulis jawabanmu" className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm" />
-        <Button type="submit" size="sm">Kirim</Button>
+      <form onSubmit={submit} className="flex shrink-0 items-center gap-2 border-t border-border/80 bg-card/90 p-3 backdrop-blur-md">
+        <input value={text} onChange={(e) => setText(e.target.value)} maxLength={100} aria-label="Jawabanmu" placeholder="Ketik jawabanmu di sini…" className="flex-1 rounded-xl border border-border/70 bg-muted/40 px-3.5 py-2.5 text-xs text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-teal-500/40" />
+        <button type="submit" disabled={!text.trim()} aria-label="Kirim" className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-teal-600 text-white shadow-xs transition-all hover:bg-teal-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"><Send className="size-4" /></button>
       </form>
-      {msg && <p role="alert" className="text-xs font-semibold text-rose-700 dark:text-rose-300">{msg}</p>}
     </div>
   );
 }
