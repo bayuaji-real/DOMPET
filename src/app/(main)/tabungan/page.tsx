@@ -322,11 +322,15 @@ export default function TabunganPage() {
             <p className="font-bold">Realistisnya:</p>
             {f.freeMonthly > 0 && f.earliestRealisticDate ? (
               <p>
-                Sisihkan sekitar {formatRupiah(Math.floor(f.freeMonthly / 10000) * 10000)} per bulan, target tercapai sekitar{" "}
+                Sisihkan sekitar {formatRupiah(f.freeMonthly)} per bulan, target tercapai sekitar{" "}
                 {formatTanggalWIB(f.earliestRealisticDate)}.
               </p>
             ) : (
-              <p>Pemasukanmu belum menyisakan uang bulanan, jadi tabungan ini baru jalan kalau pengeluaran turun atau pemasukan naik.</p>
+              <p>
+                {f.freeMonthly > 0
+                  ? "Dengan sisa uangmu sekarang, target ini butuh lebih dari 10 tahun, jadi belum realistis. Coba kecilkan target, geser tenggat, atau naikkan pemasukan."
+                  : "Pemasukanmu belum menyisakan uang bulanan, jadi tabungan ini baru jalan kalau pengeluaran turun atau pemasukan naik."}
+              </p>
             )}
             <p className="text-muted-foreground">Kamu tetap boleh membuatnya sesuai rencanamu.</p>
           </div>

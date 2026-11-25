@@ -462,6 +462,8 @@ export function AiChat({
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [proposal, setProposal] = React.useState<SavingsProposal | null>(null);
+  // Ruby sedang menunggu jawaban gaji/biaya hidup (mode tabungan); dikirim kembali di pesan berikutnya.
+  const [pending, setPending] = React.useState<AIChatResponse["pending"]>(null);
   const [profile, setProfile] = React.useState<UserProfile | null>(null);
   const [openedAt, setOpenedAt] = React.useState<string>("");
   const endRef = React.useRef<HTMLDivElement>(null);
@@ -484,6 +486,7 @@ export function AiChat({
   const reset = () => {
     setMessages([]);
     setProposal(null);
+    setPending(null);
     setError(null);
     setInput("");
   };
@@ -501,7 +504,7 @@ export function AiChat({
       const res = await fetch("/api/ai-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, messages: next.slice(-14).map(({ role, text: t }) => ({ role, text: t })) }),
+        body: JSON.stringify({ mode, messages: next.slice(-14).map(({ role, text: t }) => ({ role, text: t })), pending }),
       });
       const json = (await res.json()) as AIChatResponse | { success: false; error: string };
       if (!res.ok || !json.success) {
@@ -510,6 +513,7 @@ export function AiChat({
       }
       setMessages([...next, { role: "model", text: json.reply, time: nowLabel() }]);
       setProposal(json.proposal);
+      setPending(json.pending ?? null);
     } catch {
       setError("Tidak bisa terhubung. Cek internet lalu coba lagi.");
     } finally {

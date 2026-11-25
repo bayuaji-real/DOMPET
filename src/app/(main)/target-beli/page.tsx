@@ -16,7 +16,10 @@ import { getFinanceSnapshot, type FinanceSnapshot } from "@/lib/data/finance-sna
 import { getBenchmarks } from "@/lib/data/admin";
 import { addPurchase, deletePurchase, getPurchases, updatePurchase, type PurchaseRow } from "@/lib/data/purchase";
 import { analyzePurchase, quickSummary, type PurchaseResult } from "@/lib/konsultan/purchase-calc";
-import { parsePurchase, type ParsedPurchase } from "@/lib/konsultan/purchase-parse";
+import { parseAmount, parsePurchase, type ParsedPurchase } from "@/lib/konsultan/purchase-parse";
+import { loadPlanContext, persistPlanAnswers, type PlanContext } from "@/lib/data/plan-basis";
+import { resolvePlanBasis, type PlanBasis, type PlanHints, type QueueBasis, type QueueGoal } from "@/lib/savings-queue";
+import { parseBasisAnswer, type AskKind } from "@/lib/savings-answer";
 import { addMonths } from "@/lib/savings-feasibility";
 
 const rp = (n: number) => formatRupiah(Math.round(n));
@@ -26,8 +29,45 @@ const EMOJI: Record<string, string> = { aman: "✅", pas: "⚖️", berat: "🔥
 const LABEL: Record<string, string> = { aman: "Aman", pas: "Pas-pasan", berat: "Berat", belum_ada_data: "Belum bisa dinilai" };
 const SUGGEST = ["Laptop 12jt tunai", "Motor 25jt cicilan 24 bulan dp 5jt", "HP 3jt 6 bulan lagi"];
 
-function analyze(g: PurchaseRow, snap: FinanceSnapshot, infl: number): PurchaseResult {
-  return analyzePurchase({ price: Number(g.price), downPayment: Number(g.down_payment), saved: Number(g.saved), mode: g.mode, months: g.months ?? 12, ratePctYear: Number(g.rate_pct ?? 0), targetDate: g.target_date, today: snap.today, income: snap.monthlyIncome, expense: snap.monthlyExpense, commitments: 0, inflationPct: infl });
+const cashNeededOf = (g: PurchaseRow) => (g.mode === "cicilan" ? Number(g.down_payment) : Number(g.price));
+
+/**
+ * Dasar hitung Money Planner: gaji - biaya tetap, antrean bersama tabungan dan target beli lain.
+ * Data yang kurang tidak ditebak: hasilnya "resolved" berisi pertanyaan untuk pengguna.
+ */
+function basisFor(ctx: PlanContext, hints: PlanHints, purchases: PurchaseRow[], selfId: string | null): { resolved: PlanBasis; basis: QueueBasis | null } {
+  const resolved = resolvePlanBasis(ctx.basisInput, hints);
+  if (!resolved.ok) return { resolved, basis: null };
+  const others: QueueGoal[] = [
+    ...ctx.savingsGoals,
+    ...purchases.filter((p) => p.status === "aktif" && p.id !== selfId).map((p) => ({ name: p.name, target: cashNeededOf(p), saved: Number(p.saved), deadline: p.target_date })),
+  ];
+  return { resolved, basis: { incomeMonthly: resolved.incomeMonthly, fixedMonthly: resolved.fixedMonthly, payday: resolved.payday, otherMonthlyCommitments: ctx.savingsMonthly, others } };
+}
+
+function analyze(g: PurchaseRow, today: string, infl: number | null, basis: QueueBasis | null): PurchaseResult {
+  return analyzePurchase({ name: g.name, price: Number(g.price), downPayment: Number(g.down_payment), saved: Number(g.saved), mode: g.mode, months: g.months ?? 12, ratePctYear: Number(g.rate_pct ?? 0), targetDate: g.target_date, today, basis, inflationPct: infl });
+}
+
+type Field = "dp" | "months" | "rate";
+const fieldQuestion = (f: Field) => f === "dp" ? "DP-nya berapa? Contoh: 5jt, atau ketik 0 kalau tanpa DP." : f === "months" ? "Tenornya berapa bulan? Contoh: 24 bulan." : "Bunga cicilannya berapa persen per tahun (flat)? Contoh: 10%.";
+function readField(f: Field, text: string): Partial<ParsedPurchase> | null {
+  const t = text.toLowerCase().trim();
+  if (f === "dp") {
+    if (/^(0|nol|tidak ada|tanpa dp|nggak ada|gak ada)\W*$/.test(t)) return { downPayment: 0 };
+    const v = parseAmount(t.replace(/^dp\s*/, ""));
+    return v > 0 ? { downPayment: v } : null;
+  }
+  if (f === "months") {
+    const m = /(\d+)\s*(bulan|bln|tahun|thn|x)?/.exec(t);
+    if (!m) return null;
+    const n = Number(m[1]) * (m[2] && /^t/.test(m[2]) ? 12 : 1);
+    return n >= 1 && n <= 360 ? { months: n } : null;
+  }
+  const m = /(\d+(?:[.,]\d+)?)/.exec(t);
+  if (!m) return null;
+  const r = Number(m[1].replace(",", "."));
+  return r >= 0 && r <= 100 ? { ratePct: r } : null;
 }
 
 export default function TargetBeliPage() {
@@ -37,7 +77,11 @@ export default function TargetBeliPage() {
 function TargetBeliInner() {
   const [list, setList] = React.useState<PurchaseRow[] | null>(null);
   const [snap, setSnap] = React.useState<FinanceSnapshot | null>(null);
-  const [infl, setInfl] = React.useState(3);
+  const [infl, setInfl] = React.useState<number | null>(null);
+  const [ctx, setCtx] = React.useState<PlanContext | null>(null);
+  const [hints, setHints] = React.useState<PlanHints>({});
+  const [awaitBasis, setAwaitBasis] = React.useState<{ kind: AskKind; question: string } | null>(null);
+  const [askField, setAskField] = React.useState<Field | null>(null);
   const [profile, setProfile] = React.useState<UserProfile | null>(null);
   const [msgs, setMsgs] = React.useState<Msg[]>([]);
   const [input, setInput] = React.useState("");
@@ -49,7 +93,12 @@ function TargetBeliInner() {
   const endRef = React.useRef<HTMLDivElement>(null);
 
   const load = React.useCallback(async () => {
-    try { const [l, s] = await Promise.all([getPurchases(), getFinanceSnapshot()]); setList(l); setSnap(s); return s; } catch { return null; }
+    try {
+      const [l, s] = await Promise.all([getPurchases(), getFinanceSnapshot()]);
+      const c = await loadPlanContext(s.monthlyExpense);
+      setList(l); setSnap(s); setCtx(c);
+      return { l, s, c };
+    } catch { return null; }
   }, []);
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -62,6 +111,37 @@ function TargetBeliInner() {
 
   const reply = (text: string) => setMsgs((m) => [...m, { role: "model", text, time: nowLabel() }]);
 
+  const finish = async (merged: ParsedPurchase, h: PlanHints) => {
+    const loaded = ctx && snap && list ? { l: list, s: snap, c: ctx } : await load();
+    if (!loaded) { reply("Belum bisa membaca datamu. Coba lagi sebentar."); return; }
+    const { l, s, c } = loaded;
+    const bp = basisFor(c, h, l, null);
+    if (!bp.resolved.ok) {
+      // Gaji, biaya hidup, atau komitmen rutin belum ada: tanya, jangan tebak dan jangan pakai rata-rata tanpa persetujuan.
+      setPending(merged);
+      setAwaitBasis({ kind: bp.resolved.ask, question: bp.resolved.question });
+      reply(bp.resolved.question);
+      return;
+    }
+    const rb = bp.resolved;
+    if (rb.newPayday || rb.livingSource !== "rencana" || rb.otherFixedNew) {
+      await persistPlanAnswers({ newPayday: rb.newPayday ? rb.payday : null, livingMonthly: rb.livingSource !== "rencana" ? rb.livingMonthly : null, otherFixedMonthly: rb.otherFixedNew ? rb.otherFixedMonthly : null });
+    }
+    const cicil = merged.mode === "cicilan";
+    const months = cicil ? Math.min(Math.max(merged.months ?? 1, 1), 360) : null;
+    const dp = cicil ? Math.min(merged.downPayment ?? 0, merged.price! - 1) : 0;
+    const rate = cicil ? (merged.ratePct ?? 0) : null;
+    const today = s.today;
+    const row = { name: merged.name!, price: merged.price!, mode: cicil ? "cicilan" as const : "tunai" as const, down_payment: dp, months, rate_pct: rate, saved: merged.saved ?? 0, target_date: merged.targetMonths ? addMonths(today, merged.targetMonths) : null };
+    await addPurchase(row);
+    setPending(null); setAwaitBasis(null); setHints({}); setAskField(null);
+    const g = { ...row, id: "", status: "aktif" } as unknown as PurchaseRow;
+    const r = analyze(g, today, infl, bp.basis);
+    const head = `**${row.name}** ${rp(row.price)}, ${cicil ? `cicilan ${months} bulan` : "tunai"}: ${LABEL[r.verdict]}.`;
+    reply([head, ...quickSummary(r, rp, fmtDate).map((x) => `- ${x}`)].join("\n"));
+    await load();
+  };
+
   const send = async (raw: string) => {
     const text = raw.trim().slice(0, 300);
     if (!text || busy) return;
@@ -69,25 +149,39 @@ function TargetBeliInner() {
     setInput("");
     setBusy(true);
     try {
-      const p = parsePurchase(text);
-      const merged: ParsedPurchase = { ...pending, ...Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined)) };
+      let base = pending;
+      // 1. Jawaban atas pertanyaan balik (gaji, tanggal gajian, biaya hidup, komitmen rutin)
+      if (awaitBasis && base) {
+        const ans = parseBasisAnswer(awaitBasis.kind, text, (snap?.monthlyExpense ?? 0) > 0);
+        if (ans) {
+          const next: PlanHints = { ...hints, ...ans };
+          if (ans.monthly_living_cost) delete next.living_use_average;
+          setHints(next);
+          await finish(base, next);
+          return;
+        }
+        if (!parsePurchase(text).price) { reply(`Belum terbaca ya. ${awaitBasis.question}`); return; }
+        // Pengguna malah mengetik barang baru: mulai dari awal.
+        setAwaitBasis(null); setHints({}); setPending(null); base = null;
+      }
+      // 2. Isian cicilan yang kurang, atau kalimat barang baru
+      let merged: ParsedPurchase;
+      if (askField && base) {
+        const patch = readField(askField, text);
+        if (!patch) { reply(fieldQuestion(askField)); return; }
+        merged = { ...base, ...patch };
+      } else {
+        const p = parsePurchase(text);
+        merged = { ...base, ...Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined)) };
+      }
+      setAskField(null);
       if (!merged.price) { setPending(merged); reply(merged.name ? `${merged.name}, harganya berapa? Contoh: 12jt` : "Mau beli apa dan harganya berapa? Contoh: Laptop 12jt"); return; }
       if (!merged.name) merged.name = "Barang";
-      const cicil = merged.mode === "cicilan";
-      const months = cicil ? Math.min(Math.max(merged.months ?? 12, 1), 360) : null;
-      const dp = cicil ? Math.min(merged.downPayment ?? 0, merged.price - 1) : 0;
-      const rate = cicil ? (merged.ratePct ?? 10) : null;
-      const s = snap ?? (await load());
-      const today = s?.today ?? new Date().toISOString().slice(0, 10);
-      const row = { name: merged.name, price: merged.price, mode: cicil ? "cicilan" as const : "tunai" as const, down_payment: dp, months, rate_pct: rate, saved: merged.saved ?? 0, target_date: merged.targetMonths ? addMonths(today, merged.targetMonths) : null };
-      await addPurchase(row);
-      setPending(null);
-      const fresh = await load();
-      const g = { ...row, id: "", status: "aktif" } as unknown as PurchaseRow;
-      const r = fresh ? analyze(g, fresh, infl) : null;
-      const head = `**${row.name}** ${rp(row.price)}, ${cicil ? `cicilan ${months} bulan` : "tunai"}${r ? `: ${LABEL[r.verdict]}.` : " tersimpan."}`;
-      const assume = cicil && (merged.months === undefined || merged.ratePct === undefined) ? "\nAsumsi cicilan 12 bulan dan bunga 10% per tahun kalau belum kamu sebut." : "";
-      reply([head, ...(r && fresh ? quickSummary(r, rp, fmtDate).map((l) => `- ${l}`) : [])].join("\n") + assume);
+      if (merged.mode === "cicilan") {
+        const missing: Field | null = merged.downPayment === undefined ? "dp" : merged.months === undefined ? "months" : merged.ratePct === undefined ? "rate" : null;
+        if (missing) { setPending(merged); setAskField(missing); reply(fieldQuestion(missing)); return; }
+      }
+      await finish(merged, hints);
     } catch { reply("Belum bisa disimpan. Coba lagi sebentar."); }
     finally { setBusy(false); }
   };
@@ -111,8 +205,8 @@ function TargetBeliInner() {
         {showList && (
           <ul className="mt-3 space-y-2">
             {empty && <li><EmptyState emoji="🛍️">Belum ada target.</EmptyState></li>}
-            {snap && list?.map((g) => {
-              const r = analyze(g, snap, infl);
+            {snap && ctx && list?.map((g) => {
+              const r = analyze(g, snap.today, infl, basisFor(ctx, {}, list, g.id).basis);
               return (
                 <li key={g.id} className="space-y-2 rounded-3xl border border-border/60 bg-white p-3.5 text-xs text-zinc-900 shadow-sm dark:bg-[#202c33] dark:text-zinc-50">
                   <div className="flex items-start justify-between gap-2">

@@ -57,6 +57,24 @@ export const analyticsQuerySchema = z.object({
   endDate: z.string().max(40).optional(),
 });
 
+export const savingsPendingSchema = z.object({
+  ask: z.enum(["gaji", "tanggal_gajian", "biaya_hidup", "komitmen_rutin"]),
+  name: z.string().max(60),
+  target_amount: z.number().int().positive().max(1e13),
+  initial_amount: z.number().int().min(0).max(1e13),
+  deadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
+  hints: z
+    .object({
+      monthly_income: z.number().min(0).max(1e13).optional(),
+      payday_day: z.number().int().min(0).max(31).optional(),
+      monthly_living_cost: z.number().min(0).max(1e13).optional(),
+      living_use_average: z.boolean().optional(),
+      other_fixed_monthly: z.number().min(0).max(1e11).optional(),
+    })
+    .default({}),
+});
+export type SavingsPending = z.infer<typeof savingsPendingSchema>;
+
 export const aiChatSchema = z.object({
   mode: z.enum(["savings", "advisor", "plan"]),
   // Riwayat dibatasi supaya biaya token terkendali
@@ -64,6 +82,8 @@ export const aiChatSchema = z.object({
     .array(z.object({ role: z.enum(["user", "model"]), text: z.string().min(1).max(1000) }))
     .min(1)
     .max(14),
+  /** Keadaan "menunggu jawaban gaji/biaya hidup" dari balasan sebelumnya (mode tabungan). */
+  pending: savingsPendingSchema.nullable().optional(),
 });
 
 export const helpReportSchema = z.object({

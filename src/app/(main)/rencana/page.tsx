@@ -1,5 +1,6 @@
 "use client";
 
+import { paydayInfoFromRows } from "@/lib/savings-queue";
 import * as React from "react";
 import { PageHero } from "@/components/ui/form-kit";
 import Link from "next/link";
@@ -27,8 +28,8 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 const STORAGE_LABEL: Record<StorageAdvice, string> = {
   bank: "Tabungan bank terpisah (< 3 bulan)",
-  rdpu: "RDPU / deposito (3 bln–3 thn)",
-  investasi_jangka_panjang: "Reksa dana indeks, bertahap (> 3 thn)",
+  rdpu: "RDPU / deposito (3 bln–5 thn)",
+  investasi_jangka_panjang: "Reksa dana indeks, bertahap (> 5 thn)",
 };
 
 interface AIPlan {
@@ -57,6 +58,7 @@ function RencanaInner() {
   const [schedule, setSchedule] = React.useState<PlanPayday[]>([]);
   const [manual, setManual] = React.useState({ amount: 0, frequency: "biweekly" as "biweekly" | "monthly", next: "" });
   const [living, setLiving] = React.useState(0);
+  const [otherFixed, setOtherFixed] = React.useState(0);
   const [bills, setBills] = React.useState<PlanBill[]>([]);
   const [goals, setGoals] = React.useState<PlanNeed[]>([]);
   const [excluded, setExcluded] = React.useState<string[]>([]);
@@ -93,7 +95,11 @@ function RencanaInner() {
             .map((p) => ({ date: p.date, amount: Number(p.expected_amount) || 0 }))
         );
       }
-      if (settings.status === "fulfilled") setLiving(Number(settings.value?.living_cost_per_payday ?? 0));
+      if (settings.status === "fulfilled") {
+        setLiving(Number(settings.value?.living_cost_per_payday ?? 0));
+        const perMonth = pay.status === "fulfilled" ? paydayInfoFromRows(pay.value.filter((p) => p.actual_amount == null)).perMonth : 1;
+        setOtherFixed(Math.round(Number(settings.value?.other_fixed_monthly ?? 0) / (perMonth || 1)));
+      }
       if (rec.status === "fulfilled") {
         setBills(
           rec.value
@@ -147,8 +153,8 @@ function RencanaInner() {
   );
 
   const plan = React.useMemo(
-    () => buildPlan({ today, paydays, livingPerPayday: living, bills, needs }),
-    [today, paydays, living, bills, needs]
+    () => buildPlan({ today, paydays, livingPerPayday: living + otherFixed, bills, needs }),
+    [today, paydays, living, otherFixed, bills, needs]
   );
 
   // Rencana berubah → saran AI lama tidak berlaku lagi
@@ -173,7 +179,7 @@ function RencanaInner() {
           incomePerPayday: avgIncome,
           paydayCount: plan.allocations.length,
           frequencyLabel: usingSchedule ? "sesuai jadwal gajian di aplikasi" : manual.frequency === "biweekly" ? "tiap 2 minggu" : "tiap bulan",
-          livingPerPayday: living,
+          livingPerPayday: living + otherFixed,
           bills,
           needs: plan.needs,
           wallets: wallets.map((w) => ({ name: w.name, type: w.type })),
@@ -288,6 +294,7 @@ function RencanaInner() {
                 </div>
               )}
               <MoneyField label="Biaya hidup per gajian" value={living} onChange={setLiving} />
+              <MoneyField label="Komitmen rutin per gajian (zakat, investasi, asuransi, dll)" value={otherFixed} onChange={setOtherFixed} />
               {bills.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-[11px] font-medium">Tagihan bulanan (dari menu Tagihan & Langganan Rutin di More)</p>

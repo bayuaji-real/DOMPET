@@ -21,6 +21,9 @@ vi.mock("@/lib/data/entitlement", () => ({ requestSubscription: async () => true
 const snap = { monthlyIncome: 10_000_000, monthlyExpense: 6_000_000, liquidSavings: 30_000_000, fixedBills: 0, budgets: [{ name: "Makan", limit: 1_000_000, spent: 1_200_000 }], txs: [], categoryNames: {}, today: "2026-11-24", hasData: true };
 vi.mock("@/lib/data/payment", () => ({ getPrices: async () => [{ months: 1, amount: 15000 }, { months: 6, amount: 50000 }, { months: 12, amount: 99000 }] }));
 vi.mock("@/lib/data/finance-snapshot", () => ({ getFinanceSnapshot: async () => snap }));
+const planCtx = { v: null as unknown };
+const fullCtx = () => ({ basisInput: { today: "2026-11-24", payday: { first: "2026-12-24", amount: 6_000_000, frequency: "monthly" as const }, scheduleIncomeMonthly: 6_000_000, livingMonthlySet: 3_000_000, billsMonthly: 500_000, debtMonthly: 0, avgMonthlyExpense: 3_500_000, otherFixedMonthly: 0 }, savingsGoals: [], savingsMonthly: 0 });
+vi.mock("@/lib/data/plan-basis", () => ({ loadPlanContext: async () => planCtx.v ?? fullCtx(), persistPlanAnswers: async () => {} }));
 vi.mock("@/lib/data/debts", () => ({ getDebts: async () => [], addDebt: vi.fn(), deleteDebt: vi.fn() }));
 const holdings: unknown[] = [];
 const addHolding = vi.fn(async (_h: unknown) => {});
@@ -154,6 +157,14 @@ describe("Kesehatan Finansial dan Prediksi", () => {
     render(<PrediksiPage />);
     expect(await screen.findByText(/tetap positif/)).toBeTruthy();
     expect(screen.getAllByText(/Bulan ke-/).length).toBe(3);
+  });
+  it("bertanya balik bila gaji belum diisi, tanpa memakai rata-rata sendiri", async () => {
+    const c = fullCtx(); c.basisInput.payday = null as never; c.basisInput.scheduleIncomeMonthly = 0; planCtx.v = c;
+    render(<PrediksiPage />);
+    expect(await screen.findByText(/Gajimu belum diatur/)).toBeTruthy();
+    expect(screen.queryByText(/Bulan ke-/)).toBeNull();
+    expect(screen.getByRole("button", { name: /Pakai rata-rata pemasukan/ })).toBeTruthy();
+    planCtx.v = null;
   });
 });
 

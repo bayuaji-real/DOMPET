@@ -69,6 +69,7 @@ describe("rencana keuangan per gajian", () => {
   it("aturan tempat simpan sesuai jangka waktu", () => {
     expect(storageFor(1)).toBe("bank");
     expect(storageFor(12)).toBe("rdpu");
-    expect(storageFor(60)).toBe("investasi_jangka_panjang");
+    expect(storageFor(60)).toBe("rdpu");
+    expect(storageFor(61)).toBe("investasi_jangka_panjang");
   });
 });

@@ -45,7 +45,7 @@ export function Skor({ s }: { s: FinanceSnapshot }) {
           <li key={p.key} className="flex items-start gap-2 rounded-2xl border border-border/70 bg-card p-2.5 text-[11px] shadow-xs"><span aria-hidden className="text-sm leading-none">{EMO[i % EMO.length]}</span><span><b className="font-extrabold">{p.label}:</b> <span className="text-muted-foreground">{p.tip}</span></span></li>
         ))}
       </ul>
-      <Notice tone="sky" emoji="🧮">Dihitung dari rata-rata {s.monthsCovered ?? 3} bulan data: pemasukan {formatRupiah(s.monthlyIncome)}, pengeluaran {formatRupiah(s.monthlyExpense)}, uang bebas pakai {formatRupiah(s.freeCash ?? s.liquidSavings)} (di luar dompet tabungan dan investasi). Cicilan utang dari menu Utang.</Notice>
+      <Notice tone="sky" emoji="🧮">{s.basisNote ?? `Dihitung dari rata-rata ${s.monthsCovered ?? 3} bulan data`}: pemasukan {formatRupiah(s.monthlyIncome)}, pengeluaran tetap {formatRupiah(s.monthlyExpense)}, uang bebas pakai {formatRupiah(s.freeCash ?? s.liquidSavings)} (di luar dompet tabungan dan investasi). Cicilan utang dari menu Utang.</Notice>
     </div>
   );
 }
@@ -55,7 +55,7 @@ export function Proyeksi({ s }: { s: FinanceSnapshot }) {
   const r = forecastCashflow({ startBalance: s.liquidSavings, monthlyIncome: s.monthlyIncome, avgMonthlyExpense: s.monthlyExpense, monthlyFixedBills: 0, months: 3 });
   return (
     <div className="space-y-3">
-      <Notice tone="sky" emoji="🔮">Perkiraan saldo 3 bulan ke depan jika pemasukan dan pengeluaranmu mirip rata-rata {s.monthsCovered ?? 3} bulan data. Gaji terjadwal dan tagihan rutin yang belum tercatat belum ikut dihitung. Ini tebakan berbasis pola, bukan kepastian.</Notice>
+      <Notice tone="sky" emoji="🔮">Perkiraan saldo 3 bulan ke depan {s.basisNote ? `dengan dasar ${s.basisNote.toLowerCase()} (gaji dikurangi biaya tetap, belanja di luar biaya hidup belum ikut).` : `jika pemasukan dan pengeluaranmu mirip rata-rata ${s.monthsCovered ?? 3} bulan data.`} Ini tebakan berbasis pola, bukan kepastian.</Notice>
       {r.firstNegativeMonth ? <Notice tone="rose" emoji="🚨" role="alert">Saldo diperkirakan minus mulai bulan ke-{r.firstNegativeMonth}. Pertimbangkan menekan pengeluaran atau menambah pemasukan.</Notice> : <Notice tone="emerald" emoji="✅">Saldo diperkirakan tetap positif 3 bulan ke depan.</Notice>}
       <ul className="space-y-1.5">{r.months.map((m) => (<li key={m.month} className="flex items-center justify-between gap-2 rounded-2xl border border-border/70 bg-card p-3 text-sm shadow-xs"><span className="flex items-center gap-2"><IconBox tone={m.negative ? "rose" : "neon"} className="size-8 rounded-xl text-sm">{m.negative ? "📉" : "📈"}</IconBox>Bulan ke-{m.month}</span><Pill tone={m.negative ? "rose" : "neon"}>{formatRupiah(m.balance)}</Pill></li>))}</ul>
       <p className="px-1 text-[11px] text-muted-foreground">Saldo awal {formatRupiah(s.liquidSavings)} · pemasukan {formatRupiah(s.monthlyIncome)}/bulan · pengeluaran {formatRupiah(s.monthlyExpense)}/bulan.</p>

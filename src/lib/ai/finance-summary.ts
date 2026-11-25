@@ -5,6 +5,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { addMonths } from "@/lib/savings-feasibility";
+import { billsMonthlyFromRules, paydayInfoFromRows } from "@/lib/savings-queue";
 
 export interface FinanceSummary {
   today: string;
@@ -21,7 +22,23 @@ export interface FinanceSummary {
   /** Total setoran bulanan semua tabungan aktif (asumsi 1 gajian per bulan). */
   otherMonthlyCommitments: number;
   nextPayday: string | null;
+  /**
+   * Cara hitung ala Money Planner (dipakai untuk menilai tabungan baru):
+   * gaji per bulan - (biaya hidup + tagihan rutin + cicilan utang) - setoran tabungan lain.
+   * Bila gaji belum diatur di Rencana, dipakai rata-rata riwayat (planBasis = "rata-rata").
+   */
+  planIncomeMonthly: number;
+  planFixedMonthly: number;
+  planLivingMonthly: number;
+  planBillsMonthly: number;
+  planDebtMonthly: number;
+  planBasis: "rencana" | "rata-rata";
+  /** Jadwal gajian dari Rencana, atau null bila belum diatur. */
+  planPayday: { first: string; amount: number; frequency: "monthly" | "biweekly" } | null;
+  /** Komitmen rutin pasti per bulan dari pengaturan; null = belum ditanya. */
+  planOtherFixedMonthly: number | null;
 }
+
 
 export async function buildFinanceSummary(
   supabase: SupabaseClient<Database>,
@@ -30,7 +47,7 @@ export async function buildFinanceSummary(
   const monthStart = `${today.slice(0, 7)}-01`;
   const threeAgo = addMonths(monthStart, -3);
 
-  const [txRes, walletRes, goalRes, catRes, payRes] = await Promise.all([
+  const [txRes, walletRes, goalRes, catRes, payRes, planPayRes, settingsRes, recRes, debtRes] = await Promise.all([
     supabase
       .from("transactions")
       .select("type, amount, date, category_id")
@@ -42,6 +59,16 @@ export async function buildFinanceSummary(
     supabase.from("goal_progress").select("name, target_amount, saved, deadline, planned_per_payday, status"),
     supabase.from("categories").select("id, name"),
     supabase.from("payday_schedule").select("date").gte("date", today).order("date", { ascending: true }).limit(1),
+    supabase
+      .from("payday_schedule")
+      .select("date, expected_amount")
+      .gte("date", today)
+      .is("actual_amount", null)
+      .order("date", { ascending: true })
+      .limit(6),
+    supabase.from("user_settings").select("living_cost_per_payday, other_fixed_monthly").maybeSingle(),
+    supabase.from("recurring_transactions").select("amount, rule").eq("is_active", true).eq("type", "expense"),
+    supabase.from("debts").select("min_payment"),
   ]);
 
   const catName = new Map((catRes.data ?? []).map((c) => [c.id, c.name]));
@@ -90,8 +117,29 @@ export async function buildFinanceSummary(
       monthly: Number(g.planned_per_payday) || 0,
     }));
 
+  const goalsMonthly = goals.reduce((a, g) => a + g.monthly, 0);
+
+  // Hitungan ala Money Planner: gaji dari jadwal gajian, dikurangi biaya hidup, tagihan rutin, dan cicilan utang.
+  const pd = paydayInfoFromRows((planPayRes.data ?? []).map((r) => ({ date: String(r.date), expected_amount: Number(r.expected_amount) })));
+  const planIncome = pd.incomeMonthly;
+  const perMonth = pd.perMonth;
+  const livingMonthly = Math.round(Number(settingsRes.data?.living_cost_per_payday ?? 0) * perMonth);
+  const billsMonthly = billsMonthlyFromRules(recRes.data ?? []);
+  const debtMonthly = Math.round((debtRes.data ?? []).reduce((a, d) => a + Number(d.min_payment || 0), 0));
+  const useRencana = planIncome > 0;
+  // Biaya hidup belum diisi: pakai rata-rata pengeluaran riwayat (sudah memuat tagihan), cicilan utang tetap ditambahkan.
+  const planFixed = livingMonthly > 0 ? livingMonthly + billsMonthly + debtMonthly : Math.max(avgExpense, billsMonthly) + debtMonthly;
+
   return {
     today,
+    planIncomeMonthly: useRencana ? planIncome : avgIncome,
+    planFixedMonthly: useRencana ? planFixed : avgExpense + debtMonthly,
+    planLivingMonthly: livingMonthly,
+    planBillsMonthly: billsMonthly,
+    planDebtMonthly: debtMonthly,
+    planBasis: useRencana ? "rencana" : "rata-rata",
+    planPayday: useRencana ? pd.payday : null,
+    planOtherFixedMonthly: settingsRes.data?.other_fixed_monthly == null ? null : Number(settingsRes.data.other_fixed_monthly),
     avgMonthlyIncome: avgIncome,
     avgMonthlyExpense: avgExpense,
     monthsOfData: full.length,
@@ -104,7 +152,7 @@ export async function buildFinanceSummary(
       .slice(0, 5)
       .map(([name, amount]) => ({ name, amount })),
     goals,
-    otherMonthlyCommitments: goals.reduce((a, g) => a + g.monthly, 0),
+    otherMonthlyCommitments: goalsMonthly,
     nextPayday: payRes.data?.[0]?.date ?? null,
   };
 }
@@ -116,6 +164,9 @@ export function summaryToText(s: FinanceSummary): string {
   return [
     `Hari ini: ${s.today}`,
     `Rata-rata per bulan (${s.monthsOfData || "bulan ini"} bulan data): pemasukan ${rp(s.avgMonthlyIncome)}, pengeluaran ${rp(s.avgMonthlyExpense)}`,
+    s.planBasis === "rencana"
+      ? `Hitungan Money Planner per bulan: gaji ${rp(s.planIncomeMonthly)}, dikurangi biaya hidup ${rp(s.planLivingMonthly)}, tagihan rutin ${rp(s.planBillsMonthly)}, cicilan utang ${rp(s.planDebtMonthly)}, setoran tabungan lain ${rp(s.otherMonthlyCommitments)}`
+      : `Gaji belum diatur di Rencana, jadi dipakai rata-rata riwayat sebagai pemasukan.`,
     `Bulan ini sejauh ini: pemasukan ${rp(s.thisMonthIncome)}, pengeluaran ${rp(s.thisMonthExpense)}`,
     `Total saldo semua dompet: ${rp(s.totalBalance)} (di antaranya tabungan ${rp(s.savingsBalance)})`,
     `Pengeluaran terbesar bulan ini: ${s.topCategories.map((c) => `${c.name} ${rp(c.amount)}`).join(", ") || "belum ada"}`,

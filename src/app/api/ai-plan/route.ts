@@ -86,7 +86,7 @@ Kebutuhan:
 ${needsText || "- belum ada"}
 Dompet yang sudah ada: ${body.wallets.map((w) => `${String(w.name).slice(0, 40)} (${w.type})`).join(", ") || "belum ada"}
 
-Aturan jangka waktu: < 3 bulan → tabungan bank terpisah; 3 bulan–3 tahun → RDPU (reksa dana pasar uang) / deposito; > 5 tahun → reksa dana indeks/saham bertahap.
+Aturan jangka waktu: < 3 bulan → tabungan bank terpisah; 3 bulan–5 tahun → RDPU (reksa dana pasar uang) / deposito; > 5 tahun → reksa dana indeks/saham bertahap.
 
 Tugas:
 1. ringkasan: 2–3 kalimat, bahasa Indonesia santai untuk pemula, apakah rencana ini aman, mana yang paling mepet.

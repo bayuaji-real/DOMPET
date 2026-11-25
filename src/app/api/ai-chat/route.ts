@@ -1,11 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { generateChat, estimateCostIdr, GeminiError, type ChatTurn } from "@/lib/ai/gemini";
 import { buildFinanceSummary, summaryToText } from "@/lib/ai/finance-summary";
-import { computeFeasibility, type FeasibilityResult } from "@/lib/savings-feasibility";
+import type { FeasibilityResult } from "@/lib/savings-feasibility";
+import { evaluateSavingsQueue, generatePaydaysFromInfo, resolvePlanBasis } from "@/lib/savings-queue";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
 import { guardAi } from "@/lib/ai/entitlement";
 import { createClient } from "@/lib/supabase/server";
-import { aiChatSchema } from "@/lib/validation";
+import { aiChatSchema, type SavingsPending } from "@/lib/validation";
+import { parseBasisAnswer } from "@/lib/savings-answer";
+import type { PlanHints } from "@/lib/savings-queue";
 
 /**
  * Chat AI keuangan (Gemini). Dua mode terpisah:
@@ -27,6 +30,8 @@ export interface AIChatResponse {
   success: true;
   reply: string;
   proposal: SavingsProposal | null;
+  /** Ruby sedang menunggu jawaban gaji/biaya hidup. Klien mengirimnya kembali di pesan berikutnya. */
+  pending?: SavingsPending | null;
   usage: { inputTokens: number; outputTokens: number; costIdr: number };
 }
 
@@ -42,6 +47,12 @@ const SAVINGS_SCHEMA = {
     target_amount: { type: "INTEGER" },
     initial_amount: { type: "INTEGER" },
     deadline: { type: "STRING" },
+    monthly_income: { type: "INTEGER" },
+    payday_day: { type: "INTEGER" },
+    monthly_living_cost: { type: "INTEGER" },
+    living_use_average: { type: "BOOLEAN" },
+    other_fixed_monthly: { type: "INTEGER" },
+    other_fixed_none: { type: "BOOLEAN" },
   },
   required: ["reply", "ready"],
 };
@@ -60,6 +71,12 @@ interface SavingsJson {
   target_amount?: number;
   initial_amount?: number;
   deadline?: string;
+  monthly_income?: number;
+  payday_day?: number;
+  monthly_living_cost?: number;
+  living_use_average?: boolean;
+  other_fixed_monthly?: number;
+  other_fixed_none?: boolean;
 }
 
 /** Baca JSON tabungan dari Gemini: toleran pada pagar kode, teks di luar JSON, dan jawaban terpotong. */
@@ -95,6 +112,7 @@ ${summary}
 Tugas: ngobrol untuk menentukan tabungan baru. Kumpulkan: nama tujuan, target nominal (Rupiah), tenggat (tanggal), dan uang awal bila ada (default 0).
 Tanyakan SATU hal yang kurang per giliran. Kalau nama, target, dan tenggat sudah jelas, isi ready=true beserta name, target_amount, initial_amount, deadline (format YYYY-MM-DD).
 Selama belum lengkap, ready=false. Pengguna bisa tidak punya tenggat: tanyakan sekali, kalau tetap tidak ada, kosongkan deadline.
+Kamu TIDAK menanyakan gaji atau biaya hidup sendiri: aplikasi yang akan bertanya bila datanya belum ada. Tapi kalau pengguna menjawab pertanyaan aplikasi itu (gaji per bulan, tanggal gajian, biaya hidup per bulan, atau "pakai rata-rata pengeluaran"), isi monthly_income (Rupiah), payday_day (1-31), monthly_living_cost (Rupiah), living_use_average (true bila pengguna memilih memakai rata-rata pengeluaran), other_fixed_monthly (total zakat, investasi, asuransi, kiriman keluarga per bulan, Rupiah), other_fixed_none (true bila pengguna menjawab tidak ada komitmen rutin lain), dan tetap isi lagi name, target_amount, initial_amount, deadline dari obrolan sebelumnya dengan ready=true. Field yang tidak disebut pengguna isi 0 atau false. Jangan mengarang angka gaji atau biaya hidup.
 PENTING: kamu TIDAK menyebut hasil hitungan kelayakan, cicilan per bulan, atau apakah realistis. Aplikasi menampilkannya sendiri di kartu setelah ready=true. Di reply cukup bilang sedang dicek.
 Kalau pengguna menjawab ulang setelah kartu (misal menggeser tenggat atau target), keluarkan proposal baru dengan ready=true.
 ${COMMON_RULES}`;
@@ -128,6 +146,100 @@ FORMAT JAWABAN: satu kalimat pembuka, lalu poin-poin ("- ", maksimal 5 poin, tia
 ${COMMON_RULES}`;
 }
 
+const positive = (n: unknown) => (Number(n) > 0 ? Number(n) : undefined);
+
+/** Menilai tabungan baru. Data kurang = tanya balik (tidak menebak, tidak memakai rata-rata tanpa persetujuan). */
+async function resolveSavings(args: {
+  j: SavingsJson;
+  pending: SavingsPending | null;
+  summaryData: Awaited<ReturnType<typeof buildFinanceSummary>>;
+  today: string;
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  userId: string;
+}): Promise<{ reply: string; proposal: SavingsProposal | null; pending: SavingsPending | null }> {
+  const { j, pending, summaryData, today, supabase, userId } = args;
+  const reply = String(j.reply ?? "").trim() || "Oke, saya cek dulu ya.";
+  const target = Math.round(Number(j.target_amount) || 0) || pending?.target_amount || 0;
+  const name = String(j.name ?? "").trim().slice(0, 60) || pending?.name || "";
+  if (!j.ready || !name || target <= 0) return { reply, proposal: null, pending: null };
+
+  const initial = Math.max(0, Math.round(Number(j.initial_amount) || 0)) || pending?.initial_amount || 0;
+  const deadline = /^\d{4}-\d{2}-\d{2}$/.test(String(j.deadline ?? "")) ? String(j.deadline) : pending?.deadline ?? null;
+  const hints: PlanHints = {
+    ...pending?.hints,
+    ...(positive(j.monthly_income) ? { monthly_income: positive(j.monthly_income) } : {}),
+    ...(positive(j.payday_day) ? { payday_day: positive(j.payday_day) } : {}),
+    ...(positive(j.monthly_living_cost) ? { monthly_living_cost: positive(j.monthly_living_cost) } : {}),
+    ...(j.living_use_average ? { living_use_average: true } : {}),
+    ...(positive(j.other_fixed_monthly) ? { other_fixed_monthly: positive(j.other_fixed_monthly) } : j.other_fixed_none ? { other_fixed_monthly: 0 } : {}),
+  };
+  // Angka yang ditulis pengguna menang atas pilihan rata-rata.
+  if (hints.monthly_living_cost) delete hints.living_use_average;
+
+  const basis = resolvePlanBasis(
+    {
+      today,
+      payday: summaryData.planPayday,
+      scheduleIncomeMonthly: summaryData.planBasis === "rencana" ? summaryData.planIncomeMonthly : 0,
+      livingMonthlySet: summaryData.planLivingMonthly,
+      billsMonthly: summaryData.planBillsMonthly,
+      debtMonthly: summaryData.planDebtMonthly,
+      avgMonthlyExpense: summaryData.avgMonthlyExpense,
+      otherFixedMonthly: summaryData.planOtherFixedMonthly,
+    },
+    hints
+  );
+  if (!basis.ok) {
+    return {
+      reply: basis.question,
+      proposal: null,
+      pending: { ask: basis.ask, name, target_amount: target, initial_amount: initial, deadline, hints },
+    };
+  }
+
+  // Simpan jawaban pengguna ke backend supaya Ruby tidak bertanya lagi (hemat giliran chat dan token).
+  try {
+    if (basis.newPayday) {
+      const rows = generatePaydaysFromInfo(basis.payday, 12).map((p) => ({
+        date: p.date,
+        expected_amount: p.amount,
+        note: "Dari obrolan Ruby",
+      }));
+      const { error: payErr } = await supabase.from("payday_schedule").insert(rows);
+      if (payErr) console.error("[ai-chat] gagal simpan jadwal gajian", payErr.message);
+    }
+    if (basis.livingSource !== "rencana" || basis.otherFixedNew) {
+      const patch: { user_id: string; living_cost_per_payday?: number; other_fixed_monthly?: number } = { user_id: userId };
+      if (basis.livingSource !== "rencana") patch.living_cost_per_payday = basis.livingMonthly;
+      if (basis.otherFixedNew) patch.other_fixed_monthly = basis.otherFixedMonthly;
+      const { error: setErr } = await supabase.from("user_settings").upsert(patch, { onConflict: "user_id" });
+      if (setErr) console.error("[ai-chat] gagal simpan biaya hidup/komitmen rutin", setErr.message);
+    }
+  } catch (e) {
+    console.error("[ai-chat] gagal menyimpan gaji/biaya hidup", e);
+  }
+
+  return {
+    reply,
+    pending: null,
+    proposal: {
+      name,
+      target_amount: target,
+      initial_amount: initial,
+      deadline,
+      feasibility: evaluateSavingsQueue({
+        today,
+        newGoal: { name, target, initial, deadline },
+        otherGoals: summaryData.goals,
+        incomeMonthly: basis.incomeMonthly,
+        fixedMonthly: basis.fixedMonthly,
+        payday: basis.payday,
+        otherMonthlyCommitments: summaryData.otherMonthlyCommitments,
+      }),
+    },
+  };
+}
+
 export async function POST(request: NextRequest) {
   const auth = await verifyServerAuth(request);
   if (!auth.authenticated && auth.response) return auth.response;
@@ -140,7 +252,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ success: false, error: "Pesan terlalu panjang atau tidak valid." }, { status: 400 });
   }
-  const { mode, messages } = parsed.data;
+  const { mode, messages, pending } = parsed.data;
   // Jenis jatah cicip Basic mengikuti mode: tabungan, rencana, atau tanya biasa.
   const cicipKey = mode === "savings" ? "tabungan" : mode === "plan" ? "rencana" : "konsultasi";
   const guard = await guardAi("ai_chat", auth.userId, cicipKey, mode === "plan");
@@ -167,8 +279,26 @@ export async function POST(request: NextRequest) {
 
   try {
     const summaryData = await buildFinanceSummary(supabase, today);
-    const summaryText = summaryToText(summaryData);
 
+    // Jawaban atas pertanyaan balik (gaji, tanggal gajian, biaya hidup) dibaca dengan kode: tanpa Gemini, tanpa token.
+    if (mode === "savings" && pending) {
+      const lastUser = messages[messages.length - 1].text;
+      const answer = parseBasisAnswer(pending.ask, lastUser, summaryData.avgMonthlyExpense > 0);
+      if (answer) {
+        const r = await resolveSavings({
+          j: { ready: true, reply: "Oke, aku cek dulu ya.", ...answer, ...(answer.other_fixed_monthly === 0 ? { other_fixed_none: true } : {}) },
+          pending,
+          summaryData,
+          today,
+          supabase,
+          userId: auth.userId,
+        });
+        const body: AIChatResponse = { success: true, reply: r.reply, proposal: r.proposal, pending: r.pending, usage: { inputTokens: 0, outputTokens: 0, costIdr: 0 } };
+        return NextResponse.json(body);
+      }
+    }
+
+    const summaryText = summaryToText(summaryData);
     const turns: ChatTurn[] = messages.map((m) => ({ role: m.role, text: m.text }));
     const { text, usage } = await generateChat(turns, {
       system: mode === "savings" ? savingsSystem(summaryText, today) : mode === "plan" ? planSystem(summaryText) : advisorSystem(summaryText),
@@ -178,6 +308,7 @@ export async function POST(request: NextRequest) {
 
     let reply = text.trim();
     let proposal: SavingsProposal | null = null;
+    let nextPending: SavingsPending | null = null;
 
     if (mode === "savings") {
       const j = parseSavingsJson(text);
@@ -185,28 +316,10 @@ export async function POST(request: NextRequest) {
         console.error("[ai-chat] savings: JSON tidak terbaca", text.slice(0, 300));
         reply = "Maaf, Ruby sedang kurang lancar membaca itu. Coba kirim lagi ya, misalnya: nikah 25 Desember 10 juta.";
       } else {
-        reply = String(j.reply ?? "").trim() || "Oke, saya cek dulu ya.";
-        const target = Math.round(Number(j.target_amount) || 0);
-        const name = String(j.name ?? "").trim().slice(0, 60);
-        if (j.ready && name && target > 0) {
-          const initial = Math.max(0, Math.round(Number(j.initial_amount) || 0));
-          const deadline = /^\d{4}-\d{2}-\d{2}$/.test(String(j.deadline ?? "")) ? String(j.deadline) : null;
-          proposal = {
-            name,
-            target_amount: target,
-            initial_amount: initial,
-            deadline,
-            feasibility: computeFeasibility({
-              targetAmount: target,
-              initialAmount: initial,
-              deadline,
-              today,
-              avgMonthlyIncome: summaryData.avgMonthlyIncome,
-              avgMonthlyExpense: summaryData.avgMonthlyExpense,
-              otherMonthlyCommitments: summaryData.otherMonthlyCommitments,
-            }),
-          };
-        }
+        const r = await resolveSavings({ j, pending: pending ?? null, summaryData, today, supabase, userId: auth.userId });
+        reply = r.reply;
+        proposal = r.proposal;
+        nextPending = r.pending;
       }
     }
 
@@ -225,6 +338,7 @@ export async function POST(request: NextRequest) {
       success: true,
       reply,
       proposal,
+      pending: nextPending,
       usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, costIdr },
     };
     return NextResponse.json(body);

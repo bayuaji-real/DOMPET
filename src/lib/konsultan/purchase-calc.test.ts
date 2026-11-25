@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { analyzePurchase, flatInstallment, type PurchaseInput } from "./purchase-calc";
 
-const base: PurchaseInput = { price: 12_000_000, downPayment: 0, saved: 0, mode: "tunai", months: 0, ratePctYear: 0, targetDate: "2027-05-24", today: "2026-11-24", income: 6_000_000, expense: 3_500_000, commitments: 500_000, inflationPct: 3 };
+const basis = (income: number, fixed: number, commitments = 0): NonNullable<PurchaseInput["basis"]> => ({
+  incomeMonthly: income,
+  fixedMonthly: fixed,
+  payday: { first: "2026-12-24", amount: income, frequency: "monthly" },
+  otherMonthlyCommitments: commitments,
+  others: [],
+});
+const base: PurchaseInput = { name: "Barang", price: 12_000_000, downPayment: 0, saved: 0, mode: "tunai", months: 0, ratePctYear: 0, targetDate: "2027-05-24", today: "2026-11-24", basis: basis(6_000_000, 4_000_000), inflationPct: 3 };
 
 describe("target beli", () => {
   it("cicilan bunga flat dihitung benar", () => {
@@ -38,7 +45,7 @@ describe("target beli", () => {
     expect(r.verdict).toBe("berat");
   });
   it("tanpa pemasukan: belum bisa dinilai", () => {
-    expect(analyzePurchase({ ...base, income: 0 }).verdict).toBe("belum_ada_data");
+    expect(analyzePurchase({ ...base, basis: null }).verdict).toBe("belum_ada_data");
   });
   it("sudah cukup dana: langsung bisa beli", () => {
     const r = analyzePurchase({ ...base, saved: 12_000_000 });
@@ -47,8 +54,25 @@ describe("target beli", () => {
   });
 });
 
+describe("target beli ikut antrean prioritas", () => {
+  it("tabungan lain bertenggat lebih dekat didahulukan, jadi target beli bisa tidak sempat", () => {
+    const sendiri = analyzePurchase(base);
+    expect(sendiri.feasibility.feasible).toBe(true);
+    const dengan = analyzePurchase({ ...base, basis: { ...basis(6_000_000, 4_000_000), others: [{ name: "UKT", target: 11_000_000, saved: 0, deadline: "2027-03-24" }] } });
+    expect(dengan.feasibility.feasible).toBe(false);
+  });
+  it("gaji atau biaya hidup belum ada: belum bisa dinilai, tidak ditebak", () => {
+    const r = analyzePurchase({ ...base, basis: null });
+    expect(r.verdict).toBe("belum_ada_data");
+    expect(r.buyDate).toBeNull();
+  });
+  it("inflasi belum ada: harga masa depan tidak dihitung", () => {
+    expect(analyzePurchase({ ...base, inflationPct: null }).priceAtTarget).toBeNull();
+  });
+});
+
 describe("quickSummary", () => {
-  const base = { price: 12_000_000, downPayment: 0, saved: 0, mode: "tunai" as const, months: 12, ratePctYear: 0, targetDate: null, today: "2026-11-24", income: 119_000, expense: 107_000, commitments: 0, inflationPct: 3 };
+  const base: PurchaseInput = { name: "Barang", price: 12_000_000, downPayment: 0, saved: 0, mode: "tunai", months: 12, ratePctYear: 0, targetDate: null, today: "2026-11-24", basis: basis(119_000, 107_000), inflationPct: 3 };
   const fmt = (n: number) => `Rp${n}`;
   it("tidak menulis tanggal beli yang absurd (ratusan tahun)", async () => {
     const { quickSummary } = await import("./purchase-calc");

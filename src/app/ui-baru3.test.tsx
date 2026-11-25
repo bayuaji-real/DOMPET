@@ -17,6 +17,16 @@ vi.mock("next/link", () => ({ default: ({ href, children }: { href: string; chil
 vi.mock("@/components/ui/use-confirm", () => ({ useConfirm: () => [async () => true, null] }));
 vi.mock("@/lib/data/finance-snapshot", () => ({ getFinanceSnapshot: async () => ({ monthlyIncome: 6_000_000, monthlyExpense: 3_500_000, monthlyExpenseX: 0, today: "2026-11-24", hasData: true }) }));
 vi.mock("@/lib/data/goals", () => ({ getSavingsGoals: async () => [] }));
+const completeCtx = () => ({
+  basisInput: { today: "2026-11-24", payday: { first: "2026-12-24", amount: 6_000_000, frequency: "monthly" as const }, scheduleIncomeMonthly: 6_000_000, livingMonthlySet: 3_000_000, billsMonthly: 500_000, debtMonthly: 0, avgMonthlyExpense: 3_500_000, otherFixedMonthly: 0 },
+  savingsGoals: [] as unknown[], savingsMonthly: 0,
+});
+const plan = { ctx: completeCtx() as unknown };
+const persistPlanAnswers = vi.fn(async () => {});
+vi.mock("@/lib/data/plan-basis", () => ({
+  loadPlanContext: async () => plan.ctx,
+  persistPlanAnswers: (...a: unknown[]) => (persistPlanAnswers as unknown as (...x: unknown[]) => Promise<void>)(...a),
+}));
 
 const purchases = [{ id: "p1", user_id: "u", name: "Laptop kerja", price: 12_000_000, down_payment: 0, saved: 0, mode: "tunai", months: null, rate_pct: null, target_date: "2027-05-24", note: null, status: "aktif" }];
 const addPurchase = vi.fn(async () => {});
@@ -37,7 +47,7 @@ vi.mock("@/lib/supabase/client", () => ({ createClient: () => ({ auth: { mfa: { 
 import TargetBeliPage from "./(main)/target-beli/page";
 import { AcuanSection } from "@/components/market/acuan-section";
 import { MfaCard } from "@/components/security/mfa";
-afterEach(() => { cleanup(); vi.clearAllMocks(); });
+afterEach(() => { cleanup(); vi.clearAllMocks(); plan.ctx = completeCtx(); });
 
 describe("Target Beli (obrolan)", () => {
   it("menyapa singkat dan menampilkan daftar target dengan penilaian", async () => {
@@ -58,14 +68,40 @@ describe("Target Beli (obrolan)", () => {
     expect(arg.name).toBe("Kulkas"); expect(arg.price).toBe(4000000); expect(arg.mode).toBe("tunai");
     expect(await screen.findByText(/Rp\s?4\.000\.000, tunai/)).toBeTruthy();
   });
-  it("kalimat cicilan membaca DP dan lama cicilan", async () => {
+  it("cicilan: bunga tidak disebut = ditanya, tidak ditebak 10 persen", async () => {
     const u = userEvent.setup();
     render(<TargetBeliPage />);
     await u.type(screen.getByLabelText("Pesan Target Beli"), "Motor 25jt cicilan 24 bulan dp 5jt");
     await u.click(screen.getByRole("button", { name: "Kirim" }));
+    expect(await screen.findByText(/Bunga cicilannya berapa persen/)).toBeTruthy();
+    expect(addPurchase).not.toHaveBeenCalled();
+    await u.type(screen.getByLabelText("Pesan Target Beli"), "10%");
+    await u.click(screen.getByRole("button", { name: "Kirim" }));
     await waitFor(() => expect(addPurchase).toHaveBeenCalled());
     const arg = (addPurchase.mock.calls[0] as unknown[])[0] as Record<string, unknown>;
-    expect(arg).toMatchObject({ name: "Motor", price: 25000000, mode: "cicilan", months: 24, down_payment: 5000000 });
+    expect(arg).toMatchObject({ name: "Motor", price: 25000000, mode: "cicilan", months: 24, down_payment: 5000000, rate_pct: 10 });
+  });
+  it("gaji belum diisi: bertanya gaji dan tidak menyimpan dulu", async () => {
+    plan.ctx = { ...completeCtx(), basisInput: { ...completeCtx().basisInput, payday: null, scheduleIncomeMonthly: 0 } };
+    const u = userEvent.setup();
+    render(<TargetBeliPage />);
+    await u.type(screen.getByLabelText("Pesan Target Beli"), "Kulkas 4jt tunai");
+    await u.click(screen.getByRole("button", { name: "Kirim" }));
+    expect(await screen.findByText(/Berapa gajimu per bulan/)).toBeTruthy();
+    expect(addPurchase).not.toHaveBeenCalled();
+  });
+  it("biaya hidup belum diisi: menawarkan rata-rata dengan angkanya, pengguna yang memilih", async () => {
+    plan.ctx = { ...completeCtx(), basisInput: { ...completeCtx().basisInput, livingMonthlySet: 0 } };
+    const u = userEvent.setup();
+    render(<TargetBeliPage />);
+    await u.type(screen.getByLabelText("Pesan Target Beli"), "Kulkas 4jt tunai");
+    await u.click(screen.getByRole("button", { name: "Kirim" }));
+    expect(await screen.findByText(/rata-rata pengeluaranmu selama ini/)).toBeTruthy();
+    expect(addPurchase).not.toHaveBeenCalled();
+    await u.type(screen.getByLabelText("Pesan Target Beli"), "pakai rata-rata");
+    await u.click(screen.getByRole("button", { name: "Kirim" }));
+    await waitFor(() => expect(addPurchase).toHaveBeenCalled());
+    expect(persistPlanAnswers).toHaveBeenCalledWith(expect.objectContaining({ livingMonthly: 3_000_000 }));
   });
   it("tanpa harga bertanya dulu dan tidak menyimpan", async () => {
     const u = userEvent.setup();

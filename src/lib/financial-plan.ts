@@ -117,7 +117,7 @@ export function billDueDates(bill: PlanBill, start: string, end: string): string
 export function storageFor(monthsToDeadline: number | null): StorageAdvice {
   if (monthsToDeadline === null) return "rdpu";
   if (monthsToDeadline < 3) return "bank";
-  if (monthsToDeadline <= 36) return "rdpu";
+  if (monthsToDeadline <= 60) return "rdpu";
   return "investasi_jangka_panjang";
 }
 

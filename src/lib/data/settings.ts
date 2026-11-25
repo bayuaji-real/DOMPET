@@ -6,7 +6,9 @@ export type UserSettings = Database["public"]["Tables"]["user_settings"]["Row"];
 export const DEFAULT_USER_SETTINGS: UserSettings = {
   user_id: "demo-user",
   default_wallet_id: "w-1",
-  living_cost_per_payday: 400000,
+  // 0 = belum diisi. Jangan diisi tebakan: hitungan Money Planner bertanya ke pengguna bila kosong.
+  living_cost_per_payday: 0,
+  other_fixed_monthly: null,
   pin_hash: null,
   pin_enabled: false,
   hide_balance: false,

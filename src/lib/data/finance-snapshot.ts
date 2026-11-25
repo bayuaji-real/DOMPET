@@ -11,6 +11,8 @@ export interface FinanceSnapshot {
   freeCash?: number;
   /** Berapa bulan data yang benar-benar ada (1 sampai 3). Rata-rata dibagi angka ini, bukan selalu 3. */
   monthsCovered?: number;
+  /** Bila diisi, angka pemasukan/pengeluaran berasal dari Money Planner (gaji dikurangi biaya tetap), bukan rata-rata. Isinya penjelasan sumbernya. */
+  basisNote?: string;
   budgets: { name: string; limit: number; spent: number }[];
   txs: { type: string; amount: number; date: string; category_id: string | null }[];
   categoryNames: Record<string, string>;
@@ -44,7 +46,7 @@ export async function getFinanceSnapshot(): Promise<FinanceSnapshot> {
     monthlyExpense: Math.round(sum("expense") / monthsCovered),
     freeCash: active.filter((w) => w.type !== "investasi" && w.type !== "tabungan").reduce((s, w) => s + Number(w.balance), 0),
     liquidSavings: wallets.filter((w) => !w.is_archived && w.type !== "investasi").reduce((s, w) => s + Number(w.balance), 0),
-    fixedBills: recurring.filter((r) => r.is_active && r.type === "expense").reduce((s, r) => s + Number(r.amount) * (r.rule === "biweekly" ? 2 : 1), 0),
+    fixedBills: recurring.filter((r) => r.is_active && r.type === "expense").reduce((s, r) => s + Number(r.amount) * (r.rule === "biweekly" ? 26 / 12 : 1), 0),
     budgets: budgets.map((b) => ({ name: catNames[b.category_id] ?? "Kategori", limit: Number(b.limit_amount), spent: spentByCat.get(b.category_id) ?? 0 })),
     txs: txs.map((t) => ({ type: t.type, amount: Number(t.amount), date: t.date, category_id: t.category_id })),
     categoryNames: catNames, today, hasData: txs.length > 0,

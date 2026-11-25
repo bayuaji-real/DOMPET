@@ -3,6 +3,8 @@
 import * as React from "react";
 import { getFinanceSnapshot, type FinanceSnapshot } from "@/lib/data/finance-snapshot";
 import { getDebts } from "@/lib/data/debts";
+import { loadPlanContext } from "@/lib/data/plan-basis";
+import { resolvePlanBasis } from "@/lib/savings-queue";
 import { unifyHealth } from "@/lib/konsultan/health-score";
 import type { FinancialHealth } from "@/types/analytics";
 
@@ -11,7 +13,17 @@ let cache: { at: number; p: Promise<Basis> } | null = null;
 
 function loadBasis(): Promise<Basis> {
   if (cache && Date.now() - cache.at < 30_000) return cache.p;
-  const p = Promise.all([getFinanceSnapshot(), getDebts().catch(() => [])]).then(([snap, d]) => ({ snap, debt: d.reduce((x, r) => x + Number(r.min_payment), 0) }));
+  const p = Promise.all([getFinanceSnapshot(), getDebts().catch(() => [])]).then(async ([snap, d]) => {
+    const debt = d.reduce((x, r) => x + Number(r.min_payment), 0);
+    // Pakai gaji dan biaya tetap yang sudah tersimpan (Money Planner). Bila belum lengkap, tidak menebak: rata-rata lama tetap dipakai
+    // hanya untuk skor ringkas ini, dan halaman Kesehatan Finansial yang menanyakan data yang kurang.
+    try {
+      const ctx = await loadPlanContext(snap.monthlyExpense);
+      const r = resolvePlanBasis(ctx.basisInput, {});
+      if (r.ok) return { snap: { ...snap, monthlyIncome: r.incomeMonthly, monthlyExpense: Math.max(0, r.fixedMonthly - ctx.basisInput.debtMonthly) }, debt };
+    } catch { /* data rencana belum bisa dimuat */ }
+    return { snap, debt };
+  });
   cache = { at: Date.now(), p };
   p.catch(() => { cache = null; });
   return p;
