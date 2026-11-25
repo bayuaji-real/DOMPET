@@ -319,6 +319,8 @@ end $$;
 -- 7. Tambah parameter alasan ke admin_set_plan (Wajib minimal 5 karakter)
 --    Menolak 'premium', hanya 'free' dan 'pro'.
 -- =========================================================================
+drop function if exists public.admin_set_plan(uuid, text, integer);
+drop function if exists public.admin_set_plan(uuid, text, integer, text);
 create or replace function public.admin_set_plan(
   p_user uuid,
   p_plan text,
