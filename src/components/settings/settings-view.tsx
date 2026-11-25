@@ -1,5 +1,6 @@
 "use client";
 
+import { clearProfileCache } from "@/lib/user-profile";
 import { nextDateForDay } from "@/lib/dates";
 import { todayJakarta } from "@/lib/data/sample-mode";
 import * as React from "react";
@@ -486,6 +487,7 @@ export function SettingsView({ top }: { top?: React.ReactNode | ((slots: { secon
     try {
       const supabase = createClient();
       await supabase.auth.signOut();
+      clearProfileCache();
       router.push("/login");
       router.refresh();
     } catch (e) {

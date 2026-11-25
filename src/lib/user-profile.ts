@@ -30,8 +30,24 @@ export const PRESET_AVATARS = [
 /**
  * Ambil profil pengguna saat ini (dari Supabase session metadata & localStorage)
  */
+const CACHE_KEY = "dompetku_user_profile";
+/** Pemilik cache profil di perangkat ini. Cache milik akun lain tidak boleh dipakai (nama dan foto bisa bocor antar akun). */
+let currentUid: string | null = null;
+
+function writeCache(p: UserProfile) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(CACHE_KEY, JSON.stringify({ ...p, _uid: currentUid }));
+}
+
+/** Hapus cache profil di perangkat ini (dipanggil saat keluar akun). */
+export function clearProfileCache() {
+  currentUid = null;
+  try { if (typeof window !== "undefined") localStorage.removeItem(CACHE_KEY); } catch {}
+}
+
 export async function getUserProfile(): Promise<UserProfile> {
   let profile = { ...DEFAULT_PROFILE };
+  let cachedUid: string | null | undefined;
 
   // 1. Baca dari localStorage terlebih dahulu (cepat & offline-ready)
   if (typeof window !== "undefined") {
@@ -39,6 +55,8 @@ export async function getUserProfile(): Promise<UserProfile> {
       const stored = localStorage.getItem("dompetku_user_profile");
       if (stored) {
         const parsed = JSON.parse(stored);
+        cachedUid = parsed._uid ?? null;
+        delete parsed._uid;
         if (parsed.name === "Sobat Finansial") {
           delete parsed.name;
         }
@@ -57,6 +75,12 @@ export async function getUserProfile(): Promise<UserProfile> {
     } = await supabase.auth.getSession();
 
     if (session?.user) {
+      currentUid = session.user.id;
+      // Cache tanpa pemilik, atau milik akun lain: jangan dipakai, supaya nama dan foto akun sebelumnya tidak tampil di akun ini.
+      if (cachedUid !== undefined && cachedUid !== session.user.id) {
+        profile = { ...DEFAULT_PROFILE };
+        try { localStorage.removeItem(CACHE_KEY); } catch {}
+      }
       const meta = session.user.user_metadata || {};
       const email = session.user.email || profile.email;
       const name =
@@ -104,7 +128,7 @@ export async function getUserProfile(): Promise<UserProfile> {
       };
 
       if (typeof window !== "undefined") {
-        localStorage.setItem("dompetku_user_profile", JSON.stringify(profile));
+        writeCache(profile);
       }
     }
   } catch (err) {
@@ -155,7 +179,7 @@ export async function saveUserProfile(
   // 1. Simpan ke localStorage (gambar lokal disimpan di sini, TIDAK di cookies)
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem("dompetku_user_profile", JSON.stringify(nextProfile));
+      writeCache(nextProfile);
       window.dispatchEvent(
         new CustomEvent("profile_updated", { detail: nextProfile })
       );
@@ -182,7 +206,7 @@ export async function saveUserProfile(
         if (uploaded) {
           nextProfile.avatarUrl = uploaded;
           if (typeof window !== "undefined") {
-            localStorage.setItem("dompetku_user_profile", JSON.stringify(nextProfile));
+            writeCache(nextProfile);
             window.dispatchEvent(new CustomEvent("profile_updated", { detail: nextProfile }));
           }
         }

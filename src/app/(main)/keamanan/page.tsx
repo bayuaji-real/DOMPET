@@ -1,5 +1,6 @@
 "use client";
 
+import { clearProfileCache } from "@/lib/user-profile";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, Trash2 } from "lucide-react";
@@ -39,6 +40,7 @@ export default function KeamananPage() {
       if (error) throw error;
       localStorage.removeItem(PIN_KEY); localStorage.removeItem(PIN_TRIES_KEY);
       await sb.auth.signOut().catch(() => {});
+      clearProfileCache();
       router.push("/login"); router.refresh();
     } catch { setDelErr("Akun belum bisa dihapus. Coba lagi sebentar."); setBusy(false); }
   };

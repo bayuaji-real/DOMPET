@@ -49,7 +49,7 @@ export function PinLock() {
         <Button type="submit" className="w-full" disabled={pin.length < 4}>Buka</Button>
       </form>
       <p className="text-center text-xs text-muted-foreground">Lupa PIN? Keluar dari akun lalu masuk lagi, PIN di perangkat ini akan dihapus.</p>
-      <button type="button" className="text-sm text-teal-600 underline" onClick={async () => { try { const { createClient } = await import("@/lib/supabase/client"); await createClient().auth.signOut(); } catch {} localStorage.removeItem(PIN_KEY); localStorage.removeItem(PIN_TRIES_KEY); window.location.href = "/login"; }}>Keluar dari akun</button>
+      <button type="button" className="text-sm text-teal-600 underline" onClick={async () => { try { const { createClient } = await import("@/lib/supabase/client"); await createClient().auth.signOut(); } catch {} localStorage.removeItem(PIN_KEY); localStorage.removeItem(PIN_TRIES_KEY); localStorage.removeItem("dompetku_user_profile"); window.location.href = "/login"; }}>Keluar dari akun</button>
     </div>
   );
 }

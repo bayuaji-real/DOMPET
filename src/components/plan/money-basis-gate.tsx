@@ -45,6 +45,8 @@ export function MoneyBasisGate({ snap, children }: { snap: FinanceSnapshot; chil
     }).catch(() => {});
   }, [res, incomeAvg]);
 
+  // Belum ada catatan sama sekali: tampilkan keadaan kosong bawaan halaman, jangan menanyai pengguna dulu.
+  if (!snap.hasData) return <>{children(snap)}</>;
   if (msg) return <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{msg}</p>;
   if (!ctx || !res) return <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" />;
 

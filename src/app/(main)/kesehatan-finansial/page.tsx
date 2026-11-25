@@ -3,6 +3,7 @@
 import * as React from "react";
 import { TopHeader } from "@/components/layout/top-header";
 import { MoneyBasisGate } from "@/components/plan/money-basis-gate";
+import { RubyAdvice } from "@/components/konsultan/ruby-advice";
 import { Gate } from "@/components/plan/gate";
 import { Skor } from "@/components/konsultan/panels";
 import { getFinanceSnapshot, type FinanceSnapshot } from "@/lib/data/finance-snapshot";
@@ -19,7 +20,7 @@ export default function Page() {
         <PageHero title="Kesehatan Finansial" desc="Skor kondisi keuanganmu." />
         {err && <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{err}</p>}
         <Gate feature="skor_kesehatan" redirect>
-          {!snap && !err ? <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" /> : snap && <MoneyBasisGate snap={snap}>{(s) => <Skor s={s} />}</MoneyBasisGate>}
+          {!snap && !err ? <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" /> : snap && <MoneyBasisGate snap={snap}>{(s) => <><Skor s={s} />{s.hasData && <RubyAdvice question="Jelaskan skor kesehatan finansialku dari Money Planner (gaji dikurangi biaya tetap) dan beri 3 saran singkat yang paling berpengaruh." />}</>}</MoneyBasisGate>}
         </Gate>
       </div>
     </div>
