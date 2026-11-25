@@ -686,7 +686,8 @@ export function BottomNav() {
                       isActive && "scale-105"
                     )}
                   >
-                    <Icon className="h-6 w-6" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/ruby-avatar.png" alt="" draggable={false} className="h-full w-full rounded-full bg-gradient-to-tr from-teal-200 to-emerald-100 object-cover" />
                     {sisaTanya && <SisaChip n={sisaTanya.n} large />}
                   </span>
                   <span className={cn("text-[9.5px] font-bold leading-tight", isActive ? "text-teal-600 dark:text-teal-400" : "text-muted-foreground")}>

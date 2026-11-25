@@ -250,7 +250,7 @@ describe("Gerbang: pengeluaran nyata di atas biaya tetap", () => {
     expect(await screen.findByText(/lebih besar dari biaya tetapmu/)).toBeTruthy();
     expect(screen.queryByText(/Bulan ke-/)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /Pakai pengeluaran nyata/ }));
-    expect(await screen.findByText(/pengeluaran memakai rata-rata nyata pilihanmu/)).toBeTruthy();
+    expect(await screen.findByText(/Perkiraan 3 bulan ke depan/)).toBeTruthy();
     expect(screen.getAllByText(/Bulan ke-/).length).toBe(3);
   });
 });

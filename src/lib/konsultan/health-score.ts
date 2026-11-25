@@ -54,14 +54,35 @@ export function unifyHealth(fh: FinancialHealth, snap: SnapLike | null, monthlyD
  * Penjelasan skor per bagian dalam bahasa biasa, dari angka yang sama dengan skor (tanpa AI, gratis, hasil selalu sama untuk angka yang sama).
  * Tiap bagian menyebut angkanya, hitungannya, targetnya, dan artinya.
  */
-export function explainHealthParts(i: HealthInput, r: HealthResult): { intro: string; items: { key: string; label: string; score: number; max: number; text: string }[]; closing: string } {
+export function explainHealthParts(i: HealthInput, r: HealthResult): { intro: string; items: { key: string; label: string; score: number; max: number; text: string; action: string | null }[]; closing: string } {
   const income = Math.max(i.monthlyIncome, 0);
   const exp = Math.max(i.monthlyExpense, 0);
   const rp = (n: number) => formatRupiah(Math.round(n));
   const dec = (n: number) => n.toFixed(1).replace(".", ",");
   const pct = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 100) : 0);
   const level = r.level === "sehat" ? "sehat" : r.level === "cukup" ? "cukup baik, masih ada yang bisa dirapikan" : "perlu perhatian";
-  const items: { key: string; label: string; score: number; max: number; text: string }[] = [];
+  const items: { key: string; label: string; score: number; max: number; text: string; action: string | null }[] = [];
+
+  const actionFor = (k: HealthPart["key"]): string => {
+    if (k === "tabung") {
+      if (income <= 0) return "Catat pemasukanmu dulu supaya bisa dihitung.";
+      const need = Math.max(0, income * 0.2 - Math.max(income - exp, 0));
+      return `Sisihkan ${rp(need)} lagi per bulan. Pindahkan langsung ke tabungan di awal gajian, atau kurangi pengeluaran sebesar itu.`;
+    }
+    if (k === "darurat") {
+      if (exp <= 0) return "Catat pengeluaranmu dulu supaya bisa dihitung.";
+      const target = i.liquidSavings / exp >= 3 ? exp * 6 : exp * 3;
+      const need = Math.max(0, target - i.liquidSavings);
+      const per = Math.ceil(need / 12 / 1000) * 1000;
+      return `Kumpulkan ${rp(need)} lagi untuk mencapai ${i.liquidSavings / exp >= 3 ? "6" : "3"} bulan pengeluaran. Menabung ${rp(per)} per bulan, tercapai dalam 12 bulan.`;
+    }
+    if (k === "utang") {
+      const max = Math.round(income * 0.3);
+      return `Usahakan total cicilan maksimal ${rp(max)} per bulan (30% pemasukan). Lunasi utang dengan cicilan terbesar atau bunga tertinggi dulu, dan jangan tambah cicilan baru.`;
+    }
+    if (income <= 0) return "Catat pemasukanmu dulu supaya bisa dihitung.";
+    return `Kurangi pengeluaran minimal ${rp(Math.max(0, exp - income))} per bulan, mulai dari belanja yang bisa ditunda.`;
+  };
 
   for (const p of r.parts) {
     let body = "";
@@ -83,7 +104,7 @@ export function explainHealthParts(i: HealthInput, r: HealthResult): { intro: st
       else if (exp <= income) body = `Pengeluaran lebih kecil dari pemasukan, jadi tiap bulan uangmu bertambah ${rp(income - exp)}.`;
       else body = `Pengeluaran lebih besar dari pemasukan, jadi tiap bulan uangmu berkurang ${rp(exp - income)}.`;
     }
-    items.push({ key: p.key, label: p.label, score: p.score, max: p.max, text: body });
+    items.push({ key: p.key, label: p.label, score: p.score, max: p.max, text: body, action: p.score >= p.max ? null : actionFor(p.key) });
   }
 
   const weak = [...r.parts].filter((p) => p.score < p.max).sort((a, b) => a.score / a.max - b.score / b.max)[0];
@@ -95,5 +116,5 @@ export function explainHealthParts(i: HealthInput, r: HealthResult): { intro: st
 export function explainHealth(i: HealthInput, r: HealthResult): string {
   const e = explainHealthParts(i, r);
   const weak = e.closing.startsWith("Yang paling") ? `**Yang paling perlu digarap:**${e.closing.slice("Yang paling perlu digarap:".length)}` : `**Kesimpulan:** ${e.closing.replace("Semua bagian penuh", "semua bagian penuh")}`;
-  return [`Skormu **${r.total} dari 100**, kondisi ${e.intro.split("kondisi ")[1].replace(/\.$/, "")}. Ini artinya per bagian:`, ...e.items.map((x) => `**${x.label} (${x.score}/${x.max})**\n${x.text}`), weak].join("\n\n");
+  return [`Skormu **${r.total} dari 100**, kondisi ${e.intro.split("kondisi ")[1].replace(/\.$/, "")}. Ini artinya per bagian:`, ...e.items.map((x) => `**${x.label} (${x.score}/${x.max})**\n${x.text}${x.action ? `\nLangkahnya: ${x.action}` : ""}`), weak].join("\n\n");
 }

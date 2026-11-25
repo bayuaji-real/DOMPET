@@ -78,9 +78,26 @@ export function quickSummary(r: PurchaseResult, rp: (n: number) => string, fmtDa
   }
   if (fe.monthlyNeeded !== null && fe.monthlyNeeded > 0) lines.push(`Sisihkan ${rp(fe.monthlyNeeded)} per bulan selama ${fe.monthsLeft} bulan.`);
   else if (r.remainingCash > 0) {
-    if (r.monthsToBuy !== null && r.monthsToBuy <= 120 && r.buyDate) lines.push(`Kalau semua sisa uang ditabung, terbeli sekitar ${fmtDate(r.buyDate)}.`);
-    else lines.push("Dengan sisa uang sekarang, belum terjangkau dalam waktu dekat.");
+    const free = fe.freeMonthly;
+    if (r.monthsToBuy !== null && r.monthsToBuy <= 120 && r.buyDate) {
+      lines.push(`Sisa uangmu tiap bulan sekitar ${rp(free)}. Paling cepat terbeli ${fmtDate(r.buyDate)} kalau semuanya ditabung.`);
+      // Solusi: tabungan per bulan untuk beberapa pilihan lama menabung, hanya yang masih muat di sisa uang bulanan.
+      const opts = [3, 6, 12, 24].map((n) => ({ n, per: Math.ceil(r.remainingCash / n) })).filter((o) => o.per <= free && o.per > 0).slice(0, 3);
+      if (opts.length > 0) lines.push(`Pilihan menabung: ${opts.map((o) => `${o.n} bulan = ${rp(o.per)} per bulan`).join(", ")}.`);
+    } else lines.push("Dengan sisa uang sekarang, belum terjangkau dalam waktu dekat.");
   } else lines.push("Uangnya sudah cukup.");
   if (r.priceAtTarget !== null && r.priceAtTarget > r.cashNeeded && r.installment === null) lines.push(`Harga di tanggal target diperkirakan ${rp(r.priceAtTarget)}.`);
-  return lines.slice(0, 3);
+  // Solusi yang bisa langsung dijalankan bila belum aman.
+  if (r.verdict === "berat" || r.verdict === "pas") {
+    if (r.installment !== null && r.installmentPctIncome) {
+      const income = r.installment / (r.installmentPctIncome / 100);
+      const maxInst = Math.floor((income * 0.3) / 1000) * 1000;
+      if (r.installment > maxInst) lines.push(`Solusi: cicilan sebaiknya maksimal ${rp(maxInst)} per bulan (30% pemasukan). Naikkan DP, perpanjang tenor, atau pilih harga lebih rendah.`);
+    } else if (fe.shortfallMonthly > 0) {
+      lines.push(`Solusi: kurang ${rp(fe.shortfallMonthly)} per bulan dari yang dibutuhkan. Mundurkan tanggal target${fe.earliestRealisticDate ? ` ke ${fmtDate(fe.earliestRealisticDate)}` : ""}, atau kurangi pengeluaran sebesar itu.`);
+    } else if (r.verdict === "pas") {
+      lines.push("Solusi: sisa uang bulananmu tipis. Sisihkan sedikit demi sedikit dan jangan ambil pembelian lain sebelum ini selesai.");
+    }
+  }
+  return lines.slice(0, 4);
 }

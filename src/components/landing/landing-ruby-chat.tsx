@@ -161,8 +161,9 @@ export function LandingRubyChat() {
               {/* Chat Header */}
               <div className="px-5 py-3.5 bg-muted/40 border-b border-border/60 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="relative size-10 rounded-2xl bg-gradient-to-tr from-teal-700 to-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                    <Sparkles className="size-5" />
+                  <div className="relative size-10 rounded-full bg-gradient-to-tr from-teal-200 to-emerald-100 flex items-center justify-center shadow-sm">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/ruby-avatar.png" alt="Ruby" draggable={false} className="size-10 rounded-full object-cover" />
                     <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-emerald-500 border-2 border-background" />
                   </div>
                   <div>
@@ -196,9 +197,8 @@ export function LandingRubyChat() {
                 {/* Ruby Response Bubble */}
                 {isTyping ? (
                   <div className="flex items-start gap-2.5">
-                    <div className="size-7 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0">
-                      <Sparkles className="size-4" />
-                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/ruby-avatar.png" alt="Ruby" draggable={false} className="size-7 shrink-0 rounded-full bg-gradient-to-tr from-teal-200 to-emerald-100 object-cover shadow-xs" />
                     <div className="rounded-2xl rounded-tl-xs bg-muted/60 p-3.5 text-xs text-muted-foreground flex items-center gap-1.5">
                       <span className="size-2 rounded-full bg-teal-500 animate-bounce" />
                       <span className="size-2 rounded-full bg-teal-500 animate-bounce [animation-delay:0.2s]" />
@@ -208,9 +208,8 @@ export function LandingRubyChat() {
                   </div>
                 ) : (
                   <div className="flex items-start gap-2.5 animate-in fade-in duration-200">
-                    <div className="size-7 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                      <Sparkles className="size-4" />
-                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/ruby-avatar.png" alt="Ruby" draggable={false} className="size-7 shrink-0 rounded-full bg-gradient-to-tr from-teal-200 to-emerald-100 object-cover shadow-xs" />
 
                     <div className="max-w-[92%] sm:max-w-[85%] rounded-2xl rounded-tl-xs bg-muted/50 border border-border/80 p-4 space-y-3 text-foreground text-xs sm:text-sm">
                       {/* Verdict Banner */}

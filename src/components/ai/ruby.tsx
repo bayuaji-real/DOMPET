@@ -1,19 +1,23 @@
 import * as React from "react";
-import { Sparkles } from "lucide-react";
 
 /** Identitas asisten AI Dompetku. */
 export const ASSISTANT_NAME = "Ruby Personal Finance Assistant";
 export const ASSISTANT_AVATAR = "/icons/icon-192.png";
 
-/** Foto/badge Ruby ala preview: gradient teal-emerald dengan ikon Sparkles putih. */
+/** Foto Ruby (maskot) di lingkaran dengan latar teal-emerald lembut. */
+export const RUBY_PHOTO = "/ruby-avatar.png";
 export function RubyAvatar({ size = 32, className = "" }: { size?: number; className?: string }) {
   return (
-    <div
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={RUBY_PHOTO}
+      alt="Ruby"
+      width={size}
+      height={size}
       style={{ width: size, height: size }}
-      className={`shrink-0 rounded-xl bg-gradient-to-tr from-teal-700 to-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-xs ${className}`}
-    >
-      <Sparkles className="size-4" />
-    </div>
+      className={`shrink-0 rounded-full bg-gradient-to-tr from-teal-200 to-emerald-100 object-cover shadow-xs ring-1 ring-border ${className}`}
+      draggable={false}
+    />
   );
 }
 

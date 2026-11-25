@@ -238,9 +238,8 @@ export function LandingPhonePreview() {
                 onClick={() => handleActionClick("Konsultasi Ruby Siap")}
                 className="flex flex-col items-center justify-center gap-1 p-2 rounded-2xl bg-gradient-to-br from-teal-500/15 to-emerald-500/25 border border-teal-500/40 hover:bg-muted/50 transition-all active:scale-95"
               >
-                <div className="size-8 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs">
-                  <Sparkles className="size-4" />
-                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/ruby-avatar.png" alt="Ruby" draggable={false} className="size-8 rounded-full bg-gradient-to-tr from-teal-200 to-emerald-100 object-cover shadow-xs" />
                 <span className="text-[10px] font-bold text-teal-700 dark:text-teal-300">Ruby</span>
               </button>
             </div>
@@ -407,9 +406,8 @@ export function LandingPhonePreview() {
               }}
               className="flex flex-col items-center -mt-3.5"
             >
-              <div className="size-10 rounded-full bg-gradient-to-tr from-teal-700 to-emerald-600 text-white flex items-center justify-center shadow-md shadow-teal-700/30">
-                <Sparkles className="size-5" />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/ruby-avatar.png" alt="Ruby" draggable={false} className="size-10 rounded-full bg-gradient-to-tr from-teal-200 to-emerald-100 object-cover shadow-md shadow-teal-700/30" />
               <span className="text-[8px] font-bold text-teal-700 dark:text-teal-300 mt-0.5">
                 Ruby
               </span>
@@ -463,9 +461,8 @@ export function LandingPhonePreview() {
 
       <div className="hidden sm:block absolute top-[26%] -right-8 lg:-right-14 z-20">
         <div className="rounded-2xl border border-border/80 bg-background/90 backdrop-blur-md px-3.5 py-2 shadow-lg flex items-center gap-2.5">
-          <div className="size-7 rounded-xl bg-teal-600 text-white flex items-center justify-center">
-            <Sparkles className="size-4" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/ruby-avatar.png" alt="Ruby" draggable={false} className="size-7 rounded-full bg-gradient-to-tr from-teal-200 to-emerald-100 object-cover" />
           <div>
             <p className="text-[11px] font-extrabold text-foreground leading-tight">
               Tanya Ruby AI ✨

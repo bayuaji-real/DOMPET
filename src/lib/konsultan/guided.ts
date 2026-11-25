@@ -85,6 +85,9 @@ export const DANA_DARURAT: Flow = {
       `Target ideal: ${rp(e.maxAmount)} (${e.maxMonths} bulan)`,
       `Sekarang cukup untuk ${String(e.coveredMonths).replace(".", ",")} bulan`,
       e.gapToMin > 0 ? `Kurang ke minimum: **${rp(e.gapToMin)}**` : "Dana daruratmu sudah mencapai minimum.",
+      e.gapToMin > 0
+        ? `**Langkahnya:** tabung ${rp(Math.ceil(e.gapToMin / 6 / 1000) * 1000)} per bulan selama 6 bulan, atau ${rp(Math.ceil(e.gapToMin / 12 / 1000) * 1000)} per bulan selama 12 bulan, sampai minimum tercapai. Simpan di dompet terpisah supaya tidak terpakai.`
+        : e.maxAmount - num(a, "cur") > 0 ? `**Langkahnya:** tambah ${rp(Math.ceil((e.maxAmount - num(a, "cur")) / 12 / 1000) * 1000)} per bulan selama 12 bulan untuk mencapai target ideal.` : "**Langkahnya:** pertahankan, dan tinjau lagi kalau pengeluaranmu naik.",
     ].join("\n");
   },
 };

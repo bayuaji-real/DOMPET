@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import type { AIChatResponse, SavingsProposal } from "@/app/api/ai-chat/route";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
-import { ASSISTANT_NAME, RUBY_MENU } from "@/components/ai/ruby";
+import { ASSISTANT_NAME, RUBY_MENU, RUBY_PHOTO } from "@/components/ai/ruby";
 import { cn } from "@/lib/utils";
 
 export type { SavingsProposal };
@@ -211,9 +211,8 @@ function RichText({ text }: { text: string }) {
 function Avatar({ who, profile }: { who: "user" | "model"; profile: UserProfile | null }) {
   if (who === "model") {
     return (
-      <div className="size-7 sm:size-8 rounded-xl bg-gradient-to-tr from-teal-700 to-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-        <Sparkles className="size-4" />
-      </div>
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={RUBY_PHOTO} alt="Ruby" draggable={false} className="size-7 sm:size-8 shrink-0 rounded-full bg-gradient-to-tr from-teal-200 to-emerald-100 object-cover shadow-xs ring-1 ring-border" />
     );
   }
   if (profile?.avatarUrl) {
@@ -423,9 +422,8 @@ function TypingBubble() {
       role="status"
       aria-label={`${ASSISTANT_NAME} sedang mengetik`}
     >
-      <div className="size-7 sm:size-8 rounded-xl bg-gradient-to-tr from-teal-700 to-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-        <Sparkles className="size-4" />
-      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={RUBY_PHOTO} alt="" draggable={false} className="size-7 sm:size-8 shrink-0 rounded-full bg-gradient-to-tr from-teal-200 to-emerald-100 object-cover shadow-xs ring-1 ring-border" />
       <div className="rounded-2xl rounded-tl-xs bg-card border border-border/80 px-4 py-3 text-xs text-muted-foreground flex items-center gap-1.5 shadow-xs">
         <span className="size-2 rounded-full bg-teal-500 animate-bounce" />
         <span className="size-2 rounded-full bg-teal-500 animate-bounce [animation-delay:0.2s]" />
