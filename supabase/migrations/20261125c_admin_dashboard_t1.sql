@@ -374,6 +374,7 @@ begin
 end $$;
 
 -- Perbarui admin_resolve_request agar menyertakan alasan
+drop function if exists public.admin_resolve_request(uuid, text, integer);
 create or replace function public.admin_resolve_request(p_id uuid, p_status text, p_days integer default 30) returns void
 language plpgsql security definer set search_path = public as $$
 declare r public.subscription_requests%rowtype;
