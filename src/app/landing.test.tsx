@@ -43,7 +43,7 @@ describe("Landing Page Components & User Flow", () => {
     expect(
       screen.getByText(/Bukan Aplikasi Finansial Ribet tapi Asisten & Penasihat/i)
     ).toBeDefined();
-    expect(screen.getAllByText(/Cukup Foto Struk atau Ngomong 3 Detik/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Foto struk & voice note 3 detik/i).length).toBeGreaterThan(0);
   });
 
   it("allows toggling balance privacy (hide/show) in phone preview", () => {
