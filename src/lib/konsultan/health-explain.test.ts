@@ -5,20 +5,22 @@ describe("explainHealth (penjelasan tanpa AI)", () => {
   it("menyebut bagian terlemah dengan selisih rupiah", () => {
     const i = { monthlyIncome: 5_000_000, monthlyExpense: 4_800_000, liquidSavings: 2_000_000, monthlyDebtPayment: 2_000_000 };
     const t = explainHealth(i, healthScore(i));
-    expect(t).toMatch(/Skormu \d+ dari 100/);
-    expect(t).toMatch(/Yang paling berpengaruh/);
-    expect(t).toMatch(/masih kurang Rp/);
-    expect(t).toMatch(/Cicilan Rp\s?2\.000\.000/);
+    expect(t).toMatch(/Skormu \*\*\d+ dari 100\*\*/);
+    expect(t).toMatch(/Yang paling perlu digarap/);
+    expect(t).toMatch(/Masih kurang Rp/);
+    expect(t).toMatch(/Cicilan utangmu Rp\s?2\.000\.000/);
+    expect(t.match(/\*\*[^*]+\(\d+\/\d+\)\*\*/g)?.length).toBe(4);
   });
   it("semua sehat: tanpa daftar kekurangan", () => {
     const i = { monthlyIncome: 10_000_000, monthlyExpense: 3_000_000, liquidSavings: 30_000_000, monthlyDebtPayment: 0 };
     const t = explainHealth(i, healthScore(i));
-    expect(t).toMatch(/Semua bagian sudah baik/);
-    expect(t).not.toMatch(/Yang paling berpengaruh/);
+    expect(t).toMatch(/semua bagian penuh/);
+    expect(t).toMatch(/Sisa uangmu sudah di atas target/);
+    expect(t).not.toMatch(/Yang paling perlu digarap/);
   });
   it("angka sama menghasilkan teks sama, dan pengeluaran melebihi pemasukan disebut", () => {
     const i = { monthlyIncome: 5_000_000, monthlyExpense: 6_000_000, liquidSavings: 0, monthlyDebtPayment: 0 };
     expect(explainHealth(i, healthScore(i))).toBe(explainHealth(i, healthScore(i)));
-    expect(explainHealth(i, healthScore(i))).toMatch(/melebihi pemasukan/);
+    expect(explainHealth(i, healthScore(i))).toMatch(/lebih besar dari pemasukan/);
   });
 });
