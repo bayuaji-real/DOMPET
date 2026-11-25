@@ -1,11 +1,10 @@
 "use client";
 import * as React from "react";
 import { getDebts } from "@/lib/data/debts";
-import { healthScore, explainHealth } from "@/lib/konsultan/health-score";
+import { healthScore, explainHealthParts } from "@/lib/konsultan/health-score";
 import { forecastCashflow } from "@/lib/konsultan/cashflow-forecast";
 import { formatRupiah } from "@/lib/utils";
 import type { FinanceSnapshot } from "@/lib/data/finance-snapshot";
-import { RubyAdvice } from "@/components/konsultan/ruby-advice";
 import { EmptyState, Notice, Pill, IconBox } from "@/components/ui/form-kit";
 
 export const Empty = () => <EmptyState emoji="📝">Belum ada catatan 3 bulan terakhir. Catat beberapa transaksi dulu supaya hitungannya berarti.</EmptyState>;
@@ -15,6 +14,7 @@ export function Skor({ s }: { s: FinanceSnapshot }) {
   React.useEffect(() => { getDebts().then((d) => setDebt(d.reduce((x, r) => x + Number(r.min_payment), 0))).catch(() => {}); }, []);
   if (!s.hasData) return <Empty />;
   const r = healthScore({ monthlyIncome: s.monthlyIncome, monthlyExpense: s.monthlyExpense, liquidSavings: s.freeCash ?? s.liquidSavings, monthlyDebtPayment: debt });
+  const ex = explainHealthParts({ monthlyIncome: s.monthlyIncome, monthlyExpense: s.monthlyExpense, liquidSavings: s.freeCash ?? s.liquidSavings, monthlyDebtPayment: debt }, r);
   const lvTone = r.level === "sehat" ? "neon" : r.level === "cukup" ? "amber" : "rose";
   const face = r.level === "sehat" ? "😄" : r.level === "cukup" ? "🙂" : "😟";
   const BAR = ["bg-teal-500", "bg-indigo-500", "bg-amber-500", "bg-sky-500", "bg-violet-500"];
@@ -42,12 +42,12 @@ export function Skor({ s }: { s: FinanceSnapshot }) {
         </ul>
       </div>
       <ul className="space-y-1.5">
-        {r.parts.map((p, i) => (
-          <li key={p.key} className="flex items-start gap-2 rounded-2xl border border-border/70 bg-card p-2.5 text-[11px] shadow-xs"><span aria-hidden className="text-sm leading-none">{EMO[i % EMO.length]}</span><span><b className="font-extrabold">{p.label}:</b> <span className="text-muted-foreground">{p.tip}</span></span></li>
+        {ex.items.map((x, i) => (
+          <li key={x.key} className="flex items-start gap-2 rounded-2xl border border-border/70 bg-card p-2.5 text-[11px] shadow-xs"><span aria-hidden className="text-sm leading-none">{EMO[i % EMO.length]}</span><span className="min-w-0"><b className="block text-xs font-extrabold">{x.label} ({x.score}/{x.max})</b><span className="mt-0.5 block leading-relaxed text-muted-foreground">{x.text}</span></span></li>
         ))}
+        <li className="flex items-start gap-2 rounded-2xl border border-teal-500/30 bg-teal-500/10 p-2.5 text-[11px] shadow-xs"><span aria-hidden className="text-sm leading-none">🎯</span><span className="leading-relaxed font-semibold">{ex.closing}</span></li>
       </ul>
-      <Notice tone="sky" emoji="🧮">Per bulan: pemasukan {formatRupiah(s.monthlyIncome)}, pengeluaran {formatRupiah(s.monthlyExpense)}. Saldo yang bisa dipakai sekarang {formatRupiah(s.freeCash ?? s.liquidSavings)} (di luar tabungan dan investasi).</Notice>
-      <RubyAdvice text={explainHealth({ monthlyIncome: s.monthlyIncome, monthlyExpense: s.monthlyExpense, liquidSavings: s.freeCash ?? s.liquidSavings, monthlyDebtPayment: debt }, r)} />
+      <p className="px-1 text-[10px] text-muted-foreground">Dihitung dari angka keuanganmu, bukan dari AI. Bukan nasihat keuangan profesional.</p>
     </div>
   );
 }

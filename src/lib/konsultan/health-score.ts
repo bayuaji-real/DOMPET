@@ -54,17 +54,16 @@ export function unifyHealth(fh: FinancialHealth, snap: SnapLike | null, monthlyD
  * Penjelasan skor per bagian dalam bahasa biasa, dari angka yang sama dengan skor (tanpa AI, gratis, hasil selalu sama untuk angka yang sama).
  * Tiap bagian menyebut angkanya, hitungannya, targetnya, dan artinya.
  */
-export function explainHealth(i: HealthInput, r: HealthResult): string {
+export function explainHealthParts(i: HealthInput, r: HealthResult): { intro: string; items: { key: string; label: string; score: number; max: number; text: string }[]; closing: string } {
   const income = Math.max(i.monthlyIncome, 0);
   const exp = Math.max(i.monthlyExpense, 0);
   const rp = (n: number) => formatRupiah(Math.round(n));
   const dec = (n: number) => n.toFixed(1).replace(".", ",");
   const pct = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 100) : 0);
   const level = r.level === "sehat" ? "sehat" : r.level === "cukup" ? "cukup baik, masih ada yang bisa dirapikan" : "perlu perhatian";
-  const out: string[] = [`Skormu **${r.total} dari 100**, kondisi ${level}. Ini artinya per bagian:`];
+  const items: { key: string; label: string; score: number; max: number; text: string }[] = [];
 
   for (const p of r.parts) {
-    const head = `**${p.label} (${p.score}/${p.max})**`;
     let body = "";
     if (p.key === "tabung") {
       const left = income - exp;
@@ -84,10 +83,17 @@ export function explainHealth(i: HealthInput, r: HealthResult): string {
       else if (exp <= income) body = `Pengeluaran lebih kecil dari pemasukan, jadi tiap bulan uangmu bertambah ${rp(income - exp)}.`;
       else body = `Pengeluaran lebih besar dari pemasukan, jadi tiap bulan uangmu berkurang ${rp(exp - income)}.`;
     }
-    out.push(`${head}\n${body}`);
+    items.push({ key: p.key, label: p.label, score: p.score, max: p.max, text: body });
   }
 
   const weak = [...r.parts].filter((p) => p.score < p.max).sort((a, b) => a.score / a.max - b.score / b.max)[0];
-  out.push(weak ? `**Yang paling perlu digarap:** ${weak.label.toLowerCase()} (${weak.score} dari ${weak.max}). ${weak.tip}` : "**Kesimpulan:** semua bagian penuh. Pertahankan kebiasaanmu dan tinjau lagi tiap bulan.");
-  return out.join("\n\n");
+  const closing = weak ? `Yang paling perlu digarap: ${weak.label.toLowerCase()} (${weak.score} dari ${weak.max}). ${weak.tip}` : "Semua bagian penuh. Pertahankan kebiasaanmu dan tinjau lagi tiap bulan.";
+  return { intro: `Skormu ${r.total} dari 100, kondisi ${level}.`, items, closing };
+}
+
+/** Versi teks tunggal (dipakai tes dan tempat yang butuh satu string). */
+export function explainHealth(i: HealthInput, r: HealthResult): string {
+  const e = explainHealthParts(i, r);
+  const weak = e.closing.startsWith("Yang paling") ? `**Yang paling perlu digarap:**${e.closing.slice("Yang paling perlu digarap:".length)}` : `**Kesimpulan:** ${e.closing.replace("Semua bagian penuh", "semua bagian penuh")}`;
+  return [`Skormu **${r.total} dari 100**, kondisi ${e.intro.split("kondisi ")[1].replace(/\.$/, "")}. Ini artinya per bagian:`, ...e.items.map((x) => `**${x.label} (${x.score}/${x.max})**\n${x.text}`), weak].join("\n\n");
 }
