@@ -7,7 +7,7 @@ interface MobileFrameProps {
 export function MobileFrame({ children }: MobileFrameProps) {
   return (
     <div className="min-h-screen w-full bg-slate-100 dark:bg-zinc-950 flex justify-center">
-      <main className="w-full max-w-[430px] min-h-screen bg-background border-x border-border/50 flex flex-col relative shadow-xl overflow-x-clip">
+      <main className="w-full max-w-[430px] min-h-screen bg-background border-x border-border/50 flex flex-col relative shadow-xl overflow-x-clip md:has-[[data-admin-root]]:max-w-6xl md:has-[[data-admin-root]]:border-x-0 md:has-[[data-admin-root]]:shadow-none">
         {children}
       </main>
     </div>

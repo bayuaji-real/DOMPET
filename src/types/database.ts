@@ -455,6 +455,7 @@ export interface Database {
           input_tokens: number;
           output_tokens: number;
           cost_idr: number;
+          status?: "success" | "failed";
           created_at?: string;
         };
         Insert: {
@@ -465,6 +466,7 @@ export interface Database {
           input_tokens?: number;
           output_tokens?: number;
           cost_idr?: number;
+          status?: "success" | "failed";
           created_at?: string;
         };
         Update: Record<string, never>;
@@ -580,9 +582,15 @@ export interface Database {
       planner_create_invite: { Args: { p_event: string }; Returns: string };
       planner_join: { Args: { p_code: string }; Returns: string };
       planner_reset_invite: { Args: { p_event: string }; Returns: undefined };
+      admin_dashboard_summary: { Args: { p_from?: string | null; p_to?: string | null }; Returns: Json };
+      admin_list_prices: { Args: Record<string, never>; Returns: { months: number; amount: number }[] };
+      admin_set_price: { Args: { p_months: number; p_amount: number }; Returns: undefined };
+      admin_get_ai_controls: { Args: Record<string, never>; Returns: Json };
+      admin_set_ai_controls: { Args: { p_controls: Json; p_usd_idr_rate?: number | null }; Returns: undefined };
+      get_ai_runtime_guard: { Args: Record<string, never>; Returns: Json };
       my_admin_role: { Args: Record<string, never>; Returns: string | null };
       admin_list_users: { Args: Record<string, never>; Returns: { user_id: string; email: string; created_at: string; last_sign_in_at: string | null; admin_role: string | null; plan: string; source: string; plan_expires_at: string | null; trial_ends_at: string | null; ai_used: number }[] };
-      admin_set_plan: { Args: { p_user: string; p_plan: string; p_days?: number | null }; Returns: undefined };
+      admin_set_plan: { Args: { p_user: string; p_plan: string; p_days?: number | null; p_reason?: string | null }; Returns: undefined };
       admin_set_role: { Args: { p_user: string; p_role: string }; Returns: undefined };
       admin_list_requests: { Args: Record<string, never>; Returns: { id: string; user_id: string; email: string; plan: string; note: string | null; status: string; created_at: string }[] };
       admin_resolve_request: { Args: { p_id: string; p_status: string; p_days?: number }; Returns: undefined };
