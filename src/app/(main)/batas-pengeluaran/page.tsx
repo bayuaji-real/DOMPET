@@ -9,9 +9,10 @@ import { MoneyInput } from "@/components/konsultan/money-input";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { notify } from "@/lib/notify";
 import { formatRupiah } from "@/lib/utils";
-import { addLimit, deleteLimit, getLimits, updateLimit, getLimitStatuses } from "@/lib/data/limits";
+import { addLimit, deleteLimit, getLimits, updateLimit, getLimitStatuses, getMasterView, type MasterView } from "@/lib/data/limits";
+import { todayJakarta } from "@/lib/data/sample-mode";
 import { getCategories, type Category } from "@/lib/data/categories";
-import { limitMessage, type Period, type Status } from "@/lib/konsultan/spend-limit";
+import { limitMessage, splitLimit, type Period, type Status } from "@/lib/konsultan/spend-limit";
 import { Select } from "@/components/ui/select";
 import { PageHero, Cta, FormCard, Field, IconBox, Pill, Notice, EmptyState, chipCls } from "@/components/ui/form-kit";
 
@@ -22,6 +23,7 @@ export default function BatasPengeluaranPage() {
   const [list, setList] = React.useState<Status[] | null>(null);
   const [inactive, setInactive] = React.useState<{ id: string; name: string }[]>([]);
   const [cats, setCats] = React.useState<Category[]>([]);
+  const [master, setMaster] = React.useState<MasterView | null>(null);
   const [err, setErr] = React.useState("");
   const [ask, dialog] = useConfirm();
   const empty = { name: "", period: "harian" as Period, amount: 0, warn: "80", cats: [] as string[] };
@@ -30,8 +32,8 @@ export default function BatasPengeluaranPage() {
 
   const load = React.useCallback(async () => {
     try {
-      const [s, all] = await Promise.all([getLimitStatuses(), getLimits()]);
-      setList(s); setInactive(all.filter((x) => !x.is_active).map((x) => ({ id: x.id, name: x.name }))); setErr("");
+      const [s, all, mv] = await Promise.all([getLimitStatuses(), getLimits(), getMasterView().catch(() => null)]);
+      setMaster(mv); setList(s); setInactive(all.filter((x) => !x.is_active).map((x) => ({ id: x.id, name: x.name }))); setErr("");
     } catch { setErr("Batas pengeluaran belum bisa dimuat. Coba lagi sebentar."); }
   }, []);
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -50,8 +52,8 @@ export default function BatasPengeluaranPage() {
       {dialog}
       <TopHeader title="Batas Pengeluaran" />
       <div className="space-y-4 px-4 pt-2">
-        <PageHero title="Batas Pengeluaran" desc="Atur batas belanja, kamu diingatkan saat hampir habis." />
-        <Pill icon="🎯">Batas per hari, minggu, atau bulan, boleh khusus kategori</Pill>
+        <PageHero title="Batas Pengeluaran" desc="Isi batas harian, mingguan, atau bulanan. Dua lainnya dihitung otomatis, dan lebihnya jadi utang batas." />
+        <Pill icon="🎯">Isi satu batas, hari-minggu-bulan terhitung otomatis</Pill>
         {err && <Notice tone="rose" emoji="⚠️" role="alert">{err}</Notice>}
         <Cta onClick={() => setOpen(!open)}><span aria-hidden>{open ? "✖️" : "➕"}</span> {open ? "Tutup" : "Tambah batas"}</Cta>
         {open && (
@@ -62,7 +64,7 @@ export default function BatasPengeluaranPage() {
               <label className="block space-y-1 text-xs font-semibold">Peringatkan di (%)<Input inputMode="numeric" aria-label="Peringatkan di persen" value={f.warn} onChange={(e) => setF({ ...f, warn: e.target.value.replace(/\D/g, "").slice(0, 2) })} /></label>
             </div>
             <label className="block space-y-1 text-xs">Batas jumlah<MoneyInput value={f.amount} onChange={(n) => setF({ ...f, amount: n })} aria-label="Batas jumlah" suffix="Rp" /></label>
-            <div><p className="mb-1 text-xs">Kategori yang dihitung (kosongkan untuk semua pengeluaran)</p>
+            <div><p className="mb-1 text-xs">Kategori yang dihitung (kosongkan untuk semua pengeluaran: jadi batas utama, tampil sebagai lingkaran di Beranda)</p>
               <div className="flex flex-wrap gap-1.5">{cats.map((c) => (<button type="button" key={c.id} aria-pressed={f.cats.includes(c.id)} onClick={() => toggleCat(c.id)} className={chipCls(f.cats.includes(c.id))}>{c.name}</button>))}{cats.length === 0 && <span className="text-xs text-muted-foreground">Belum ada kategori.</span>}</div></div>
             <Cta disabled={!f.name.trim() || f.amount <= 0} onClick={save}>Simpan batas</Cta>
           </FormCard>
@@ -78,6 +80,13 @@ export default function BatasPengeluaranPage() {
                 <Pill tone={s.level === "lewat" ? "rose" : s.level === "hampir" ? "amber" : "neon"} className="shrink-0">{s.pct}%</Pill></div>
               <div className="h-2.5 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${s.level === "lewat" ? "bg-gradient-to-r from-rose-500 to-red-400" : s.level === "hampir" ? "bg-gradient-to-r from-amber-500 to-yellow-300" : "bg-gradient-to-r from-emerald-500 to-lime-300"}`} style={{ width: `${Math.min(100, s.pct)}%` }} /></div>
               <p className="text-xs text-muted-foreground">Terpakai {rp(s.spent)}{s.remaining >= 0 ? `, sisa ${rp(s.remaining)}` : `, lebih ${rp(-s.remaining)}`}</p>
+              {master && master.limit.id === l.id && (() => { const a = splitLimit(l, todayJakarta()); return (
+                <div className="space-y-1.5 rounded-xl bg-muted/50 p-2.5 text-xs">
+                  <p className="font-bold">Otomatis dipecah dari batas ini</p>
+                  <p className="text-muted-foreground">Per hari {rp(a.harian)} · per minggu {rp(a.mingguan)} · per bulan {rp(a.bulanan)}</p>
+                  <p className="text-muted-foreground">Hari ini: terpakai {rp(master.debt.spentToday)} dari jatah {rp(master.debt.available)}{master.debt.debtIn > 0 ? ` (jatah ${rp(master.debt.allowance)} dipotong utang batas ${rp(master.debt.debtIn)})` : ""}.</p>
+                  {master.debt.debtAfterToday > 0 && <p className="font-semibold text-amber-800 dark:text-amber-300">Utang batas {rp(master.debt.debtAfterToday)}: dipotong dari jatah besok sampai lunas. Ini bukan utang sungguhan, hanya pengingat dari batas yang kamu buat sendiri.</p>}
+                </div>); })()}
               {msg && <p role="alert" className={`rounded-lg p-2 text-xs ${s.level === "lewat" ? "bg-red-500/10 text-red-700 dark:text-red-300" : "bg-amber-500/10 text-amber-800 dark:text-amber-300"}`}>{msg}</p>}
               <div className="flex gap-2"><Button size="sm" variant="outline" className="flex-1" onClick={async () => { try { await updateLimit(l.id, { is_active: false }); await load(); } catch { notify("Belum bisa diubah."); } }}>Nonaktifkan</Button>
                 <Button size="sm" variant="outline" aria-label={`Hapus ${l.name}`} onClick={async () => { if (await ask(`Hapus batas "${l.name}"?`, "Hapus")) { try { await deleteLimit(l.id); await load(); } catch { notify("Belum bisa dihapus."); } } }}><Trash2 className="size-4" /></Button></div>

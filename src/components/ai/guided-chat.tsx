@@ -1,4 +1,5 @@
 "use client";
+import { useKeyboardOpen } from "@/hooks/use-keyboard-open";
 
 import * as React from "react";
 import { Send, RotateCcw } from "lucide-react";
@@ -27,7 +28,8 @@ export function GuidedChat({ flow, prefill }: { flow: Flow; prefill?: () => Prom
     getUserProfile().then(setProfile).catch(() => {});
     prefill?.().then((p) => setPre(p)).catch(() => {});
   }, [prefill]);
-  React.useEffect(() => { const id = requestAnimationFrame(() => endRef.current?.scrollIntoView?.({ block: "end" })); return () => cancelAnimationFrame(id); }, [msgs]);
+  const kb = useKeyboardOpen();
+  React.useEffect(() => { const id = requestAnimationFrame(() => endRef.current?.scrollIntoView?.({ block: "end" })); const t = setTimeout(() => endRef.current?.scrollIntoView?.({ block: "end" }), 250); return () => { cancelAnimationFrame(id); clearTimeout(t); }; }, [msgs, kb]);
 
   const done = idx >= steps.length;
   const step = done ? null : steps[idx];
@@ -65,7 +67,7 @@ export function GuidedChat({ flow, prefill }: { flow: Flow; prefill?: () => Prom
        ...(step!.kind === "choice" ? step!.options!.map((o) => ({ label: o.label, run: () => send(o.label) })) : (step!.chips ?? []).map((c) => ({ label: c, run: () => send(c) })))];
 
   return (
-    <div className="fixed inset-x-0 top-0 z-30 mx-auto flex max-w-[430px] flex-col bg-background" style={{ bottom: "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
+    <div className="fixed inset-x-0 top-0 z-30 mx-auto flex max-w-[430px] flex-col bg-background" style={{ bottom: kb ? 0 : "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
       <TopHeader title={flow.title} subtitle={flow.subtitle} />
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-background/50 px-3.5 py-4">
         <div className="flex-1" aria-hidden />
@@ -84,7 +86,7 @@ export function GuidedChat({ flow, prefill }: { flow: Flow; prefill?: () => Prom
       </div>
       <p className="bg-background px-3 pt-1.5 text-center text-[10px] leading-tight text-muted-foreground">{flow.footer}</p>
       <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="p-3 bg-card/90 border-t border-border/80 flex items-center gap-2 shrink-0 backdrop-blur-md">
-        <input value={input} onChange={(e) => setInput(e.target.value)} maxLength={100} aria-label={`Pesan ${flow.title}`} placeholder={done ? "Ketuk Hitung lagi" : (step?.placeholder ?? "Ketik jawabanmu di sini")} disabled={done} className="flex-1 bg-muted/40 border border-border/70 rounded-xl px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-teal-500/40 disabled:opacity-50 transition-all" />
+        <input value={input} onChange={(e) => setInput(e.target.value)} onFocus={() => setTimeout(() => endRef.current?.scrollIntoView?.({ block: "end" }), 300)} maxLength={100} aria-label={`Pesan ${flow.title}`} placeholder={done ? "Ketuk Hitung lagi" : (step?.placeholder ?? "Ketik jawabanmu di sini")} disabled={done} className="flex-1 bg-muted/40 border border-border/70 rounded-xl px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-teal-500/40 disabled:opacity-50 transition-all" />
         <button type="submit" disabled={done || !input.trim()} aria-label="Kirim" className="size-10 rounded-xl bg-teal-600 text-white flex items-center justify-center hover:bg-teal-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs shrink-0 cursor-pointer"><Send className="size-4" /></button>
       </form>
     </div>

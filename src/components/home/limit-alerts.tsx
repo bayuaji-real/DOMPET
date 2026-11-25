@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { getLimitStatuses } from "@/lib/data/limits";
-import { limitMessage, type Status } from "@/lib/konsultan/spend-limit";
+import { limitMessage, masterLimit, type Status } from "@/lib/konsultan/spend-limit";
 import { formatRupiah } from "@/lib/utils";
 
 /** Peringatan batas pengeluaran di beranda. Tidak tampil kalau semua aman atau belum ada batas. */
@@ -15,7 +15,9 @@ export function LimitAlerts() {
     window.addEventListener("transaction_created", load);
     return () => window.removeEventListener("transaction_created", load);
   }, []);
-  const warn = list.filter((s) => s.level !== "aman");
+  // Batas utama (semua pengeluaran) sudah tampil di kartu kuota, jangan diperingatkan dua kali.
+  const masterId = masterLimit(list.map((s) => s.limit))?.id;
+  const warn = list.filter((s) => s.level !== "aman" && s.limit.id !== masterId);
   if (warn.length === 0) return null;
   return (
     <section aria-label="Peringatan batas pengeluaran" className="space-y-2">

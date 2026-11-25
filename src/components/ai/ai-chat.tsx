@@ -1,4 +1,5 @@
 "use client";
+import { useKeyboardOpen } from "@/hooks/use-keyboard-open";
 
 import * as React from "react";
 import Link from "next/link";
@@ -477,9 +478,15 @@ export function AiChat({
     };
   }, []);
 
+  const kb = useKeyboardOpen();
   React.useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, loading, proposal]);
+  // Keyboard terbuka/tutup: layar mengecil, jadi langsung gulung ke pesan terbaru supaya tidak tertutup
+  React.useEffect(() => {
+    const t = setTimeout(() => endRef.current?.scrollIntoView({ block: "end" }), 250);
+    return () => clearTimeout(t);
+  }, [kb]);
 
   const reset = () => {
     setMessages([]);
@@ -557,6 +564,7 @@ export function AiChat({
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onFocus={() => setTimeout(() => endRef.current?.scrollIntoView({ block: "end" }), 300)}
           maxLength={1000}
           placeholder={placeholder ?? "Ketik pertanyaanmu untuk Ruby..."}
           className="flex-1 bg-muted/40 border border-border/70 rounded-xl px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-teal-500/40 transition-all"

@@ -44,3 +44,77 @@ export function neededRange(limits: Limit[], today: string): { from: string; to:
   const rs = limits.map((l) => periodRange(l.period, today));
   return { from: rs.reduce((a, r) => (r.from < a ? r.from : a), today), to: today };
 }
+
+// ---------------------------------------------------------------------------------------------
+// Batas utama: satu angka (harian, mingguan, atau bulanan) dipecah otomatis ke tiga periode, plus "utang batas".
+// Utang batas = kelebihan di atas jatah harian yang terbawa ke hari berikutnya sampai lunas (bukan utang sungguhan).
+// Murni, tanpa database. Tidak ada angka yang ditebak: semua turunan dari angka yang diisi pengguna.
+// ---------------------------------------------------------------------------------------------
+export const daysInMonthOf = (date: string): number => new Date(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)), 0)).getUTCDate();
+
+/** Batas utama = batas aktif tanpa kategori (semua pengeluaran). Pilih periode terkecil, lalu yang paling lama dibuat. */
+export function masterLimit<T extends Limit & { created_at?: string }>(limits: T[]): T | null {
+  const order: Record<Period, number> = { harian: 0, mingguan: 1, bulanan: 2 };
+  const all = limits.filter((l) => l.is_active && l.category_ids.length === 0);
+  if (all.length === 0) return null;
+  return [...all].sort((a, b) => order[a.period] - order[b.period] || (a.created_at ?? "").localeCompare(b.created_at ?? ""))[0];
+}
+
+/** Jatah satu hari pada tanggal tertentu, diturunkan dari periode yang diisi pengguna. */
+export function dailyAllowance(limit: Pick<Limit, "period" | "amount">, date: string): number {
+  if (limit.period === "harian") return limit.amount;
+  if (limit.period === "mingguan") return Math.round(limit.amount / 7);
+  return Math.round(limit.amount / daysInMonthOf(date));
+}
+
+/** Tiga angka batas dari satu angka. Periode yang diisi pengguna dipakai apa adanya. */
+export function splitLimit(limit: Pick<Limit, "period" | "amount">, today: string): Record<Period, number> {
+  const d = dailyAllowance(limit, today);
+  return {
+    harian: limit.period === "harian" ? limit.amount : d,
+    mingguan: limit.period === "mingguan" ? limit.amount : limit.period === "harian" ? limit.amount * 7 : Math.round(d * 7),
+    bulanan: limit.period === "bulanan" ? limit.amount : d * daysInMonthOf(today),
+  };
+}
+
+export type DebtView = {
+  /** Utang batas yang terbawa MASUK hari ini (dari hari-hari sebelumnya). */
+  debtIn: number;
+  /** Jatah harian penuh hari ini. */
+  allowance: number;
+  /** Jatah yang masih boleh dipakai hari ini setelah dipotong utang (tidak pernah negatif). */
+  available: number;
+  spentToday: number;
+  /** Sisa jatah hari ini (negatif = lebih). */
+  remainingToday: number;
+  /** Utang batas bila hari ini ditutup dengan pengeluaran sekarang. */
+  debtAfterToday: number;
+  /** Paling cepat berapa hari lagi lunas bila tidak belanja sama sekali (null = sudah lunas). */
+  daysToClear: number | null;
+};
+
+/**
+ * Hitung utang batas dari `startDate` sampai kemarin: tiap hari utang = max(0, utang kemarin + pengeluaran - jatah).
+ * Hari hemat melunasi utang; tidak ada saldo lebih yang disimpan.
+ */
+export function debtView(limit: Pick<Limit, "period" | "amount">, txs: Tx[], startDate: string, today: string): DebtView {
+  const spentOn = new Map<string, number>();
+  for (const t of txs) if (t.type === "expense") spentOn.set(t.date, (spentOn.get(t.date) ?? 0) + Number(t.amount));
+  let debt = 0;
+  for (let d = startDate; d < today; d = addDays(d, 1)) {
+    debt = Math.max(0, debt + (spentOn.get(d) ?? 0) - dailyAllowance(limit, d));
+  }
+  const allowance = dailyAllowance(limit, today);
+  const spentToday = spentOn.get(today) ?? 0;
+  const debtAfterToday = Math.max(0, debt + spentToday - allowance);
+  // Patokan paling cepat: berapa hari utang lunas bila pengguna tidak belanja sama sekali (bukan tebakan kebiasaan).
+  const daysToClear = debtAfterToday === 0 ? null : Math.ceil(debtAfterToday / Math.max(allowance, 1));
+  return { debtIn: debt, allowance, available: Math.max(0, allowance - debt), spentToday, remainingToday: allowance - debt - spentToday, debtAfterToday, daysToClear };
+}
+
+/** Status tiga periode untuk batas utama (semua pengeluaran), siap ditampilkan. */
+export function masterStatuses(limit: Limit, txs: Tx[], today: string): Record<Period, Status> {
+  const amounts = splitLimit(limit, today);
+  const one = (p: Period): Status => limitStatus({ ...limit, period: p, amount: amounts[p] }, txs, today);
+  return { harian: one("harian"), mingguan: one("mingguan"), bulanan: one("bulanan") };
+}

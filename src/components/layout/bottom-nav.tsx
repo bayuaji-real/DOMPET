@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { MORE_ACTIVE_PREFIXES } from "@/lib/nav-items";
 import { useEntitlement } from "@/hooks/use-entitlement";
+import { useKeyboardOpen } from "@/hooks/use-keyboard-open";
 import { sisaLabel } from "@/lib/plans";
 import { cn, parseRupiahInput, formatRupiah } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -56,6 +57,7 @@ function SisaChip({ n, large = false }: { n: number; large?: boolean }) {
 
 export function BottomNav() {
   const pathname = usePathname();
+  const keyboardOpen = useKeyboardOpen();
   const { ent, reload: reloadEnt } = useEntitlement();
   const sisaStruk = ent.plan === "free" ? sisaLabel(ent.cicip.struk) : null;
   const sisaSuara = ent.plan === "free" ? sisaLabel(ent.cicip.suara) : null;
@@ -663,6 +665,7 @@ export function BottomNav() {
 
       <nav
         aria-label="Navigasi Bawah"
+        hidden={keyboardOpen}
         className="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 w-full max-w-[430px] border-t border-border/80 bg-background/95 backdrop-blur-md px-3 pt-2.5"
         style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 1.25rem)" }}
       >
@@ -686,8 +689,7 @@ export function BottomNav() {
                       isActive && "scale-105"
                     )}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/ruby-avatar.png" alt="" draggable={false} className="h-full w-full rounded-full bg-gradient-to-tr from-teal-200 to-emerald-100 object-cover" />
+                    <Icon className="h-6 w-6" />
                     {sisaTanya && <SisaChip n={sisaTanya.n} large />}
                   </span>
                   <span className={cn("text-[9.5px] font-bold leading-tight", isActive ? "text-teal-600 dark:text-teal-400" : "text-muted-foreground")}>

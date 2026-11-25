@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { periodRange, limitStatus, limitStatuses, limitMessage, neededRange, type Limit, type Tx } from "./spend-limit";
+import { periodRange, limitStatus, limitStatuses, limitMessage, neededRange, masterLimit, dailyAllowance, splitLimit, debtView, masterStatuses, type Limit, type Tx } from "./spend-limit";
 
 const lim = (o: Partial<Limit> = {}): Limit => ({ id: "l1", name: "Makan & main", period: "harian", amount: 50_000, category_ids: [], warn_pct: 80, is_active: true, ...o });
 const tx = (o: Partial<Tx>): Tx => ({ type: "expense", amount: 10_000, date: "2026-11-24", category_id: null, ...o });
@@ -41,4 +41,57 @@ describe("pesan dan rentang", () => {
     expect(limitMessage(limitStatus(lim(), [tx({ amount: 60_000 })], "2026-11-24"), f)).toMatch(/terlewati.*lebih Rp10000/);
   });
   it("rentang data terlebar", () => { expect(neededRange([lim(), lim({ period: "bulanan" })], "2026-11-24")).toEqual({ from: "2026-11-01", to: "2026-11-24" }); expect(neededRange([], "2026-11-24")).toEqual({ from: "2026-11-24", to: "2026-11-24" }); });
+});
+
+describe("batas utama dipecah otomatis", () => {
+  it("harian 50rb -> mingguan 350rb, bulanan x jumlah hari (November 30 hari)", () => {
+    expect(splitLimit({ period: "harian", amount: 50_000 }, "2026-11-24")).toEqual({ harian: 50_000, mingguan: 350_000, bulanan: 1_500_000 });
+  });
+  it("mingguan 350rb -> harian 50rb, bulanan 1,5jt; angka yang diisi tidak diubah", () => {
+    expect(splitLimit({ period: "mingguan", amount: 350_000 }, "2026-11-24")).toEqual({ harian: 50_000, mingguan: 350_000, bulanan: 1_500_000 });
+  });
+  it("bulanan 1,5jt di November -> harian 50rb; Desember 31 hari beda", () => {
+    expect(splitLimit({ period: "bulanan", amount: 1_500_000 }, "2026-11-24").harian).toBe(50_000);
+    expect(dailyAllowance({ period: "bulanan", amount: 1_550_000 }, "2026-12-10")).toBe(50_000);
+  });
+  it("batas utama: hanya aktif dan tanpa kategori, periode terkecil dulu", () => {
+    const a = lim({ id: "a", period: "bulanan" }), b = lim({ id: "b", period: "harian", category_ids: ["x"] }), c = lim({ id: "c", period: "mingguan", is_active: false });
+    expect(masterLimit([a, b, c])?.id).toBe("a");
+    expect(masterLimit([b, c])).toBeNull();
+    expect(masterLimit([a, lim({ id: "d", period: "harian" })])?.id).toBe("d");
+  });
+  it("status tiga periode memakai angka turunan", () => {
+    const s = masterStatuses(lim({ period: "harian", amount: 50_000 }), [tx({ amount: 20_000, date: "2026-11-24" }), tx({ amount: 30_000, date: "2026-11-23" })], "2026-11-24");
+    expect(s.harian.spent).toBe(20_000);
+    expect(s.mingguan.limit.amount).toBe(350_000);
+    expect(s.mingguan.spent).toBe(50_000);
+    expect(s.bulanan.limit.amount).toBe(1_500_000);
+  });
+});
+describe("utang batas", () => {
+  const L = { period: "harian" as const, amount: 50_000 };
+  it("tanpa kelebihan: tidak ada utang", () => {
+    const v = debtView(L, [tx({ date: "2026-11-22", amount: 40_000 })], "2026-11-22", "2026-11-24");
+    expect(v.debtIn).toBe(0); expect(v.available).toBe(50_000); expect(v.daysToClear).toBeNull();
+  });
+  it("lebih 35rb kemarin -> jatah hari ini 15rb", () => {
+    const v = debtView(L, [tx({ date: "2026-11-23", amount: 85_000 })], "2026-11-23", "2026-11-24");
+    expect(v.debtIn).toBe(35_000); expect(v.available).toBe(15_000); expect(v.remainingToday).toBe(15_000);
+  });
+  it("hari ini belanja 10rb dari jatah 15rb: utang lunas, sisa 5rb", () => {
+    const v = debtView(L, [tx({ date: "2026-11-23", amount: 85_000 }), tx({ date: "2026-11-24", amount: 10_000 })], "2026-11-23", "2026-11-24");
+    expect(v.remainingToday).toBe(5_000); expect(v.debtAfterToday).toBe(0);
+  });
+  it("lebih besar dari sehari penuh: dicicil lintas hari (120rb -> utang 70rb, jatah 0)", () => {
+    const v = debtView(L, [tx({ date: "2026-11-23", amount: 120_000 })], "2026-11-23", "2026-11-24");
+    expect(v.debtIn).toBe(70_000); expect(v.available).toBe(0); expect(v.debtAfterToday).toBe(70_000 - 50_000 + 0); expect(v.daysToClear).toBe(1);
+  });
+  it("hari hemat melunasi utang bertahap, tidak pernah negatif", () => {
+    const v = debtView(L, [tx({ date: "2026-11-21", amount: 120_000 }), tx({ date: "2026-11-22", amount: 10_000 })], "2026-11-21", "2026-11-24");
+    expect(v.debtIn).toBe(0);
+  });
+  it("hanya pengeluaran yang dihitung; pemasukan dan transfer diabaikan", () => {
+    const v = debtView(L, [tx({ date: "2026-11-23", type: "income", amount: 999_999 }), tx({ date: "2026-11-23", type: "transfer", amount: 999_999 })], "2026-11-23", "2026-11-24");
+    expect(v.debtIn).toBe(0);
+  });
 });

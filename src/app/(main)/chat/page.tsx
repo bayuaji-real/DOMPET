@@ -2,10 +2,12 @@
 
 import { TopHeader } from "@/components/layout/top-header";
 import { AiChat } from "@/components/ai/ai-chat";
+import { useKeyboardOpen } from "@/hooks/use-keyboard-open";
 
 export default function ChatKeuanganPage() {
+  const kb = useKeyboardOpen();
   return (
-    <div className="fixed inset-x-0 top-0 z-30 mx-auto flex max-w-[430px] flex-col bg-background" style={{ bottom: "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
+    <div className="fixed inset-x-0 top-0 z-30 mx-auto flex max-w-[430px] flex-col bg-background" style={{ bottom: kb ? 0 : "calc(max(env(safe-area-inset-bottom, 0px), 1.25rem) + 3.75rem)" }}>
       <TopHeader title="Tanya Ruby" subtitle="Konsultasi dengan Ruby berdasarkan datamu" />
       <div className="min-h-0 flex-1">
         <AiChat
