@@ -214,8 +214,15 @@ export function isSpendableWallet(w: { type: string; is_archived?: boolean }): b
   return w.type !== "tabungan" && !w.is_archived;
 }
 
+/**
+ * Dompet yang boleh dipilih sebagai sumber bayar. Tabungan adalah dompet juga (keputusan Owner 25 Nov),
+ * jadi ikut masuk; urutannya paling akhir supaya dompet harian tetap jadi pilihan awal.
+ * isSpendableWallet (tanpa tabungan) tetap dipakai untuk tujuan pindah transaksi saat hapus dompet.
+ */
 export async function getSpendableWallets(): Promise<WalletBalance[]> {
-  return (await getWallets()).filter(isSpendableWallet);
+  const list = (await getWallets()).filter((w) => !w.is_archived);
+  const isSv = (w: WalletBalance) => w.type === "tabungan" || Boolean(w.goal_id);
+  return [...list.filter((w) => !isSv(w)), ...list.filter(isSv)];
 }
 
 /** Pilih dompet bawaan dari daftar: Uang Tunai dulu, kalau tidak ada dompet pertama. */
