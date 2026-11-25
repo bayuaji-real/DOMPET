@@ -35,8 +35,14 @@ const cashNeededOf = (g: PurchaseRow) => (g.mode === "cicilan" ? Number(g.down_p
  * Dasar hitung Money Planner: gaji - biaya tetap, antrean bersama tabungan dan target beli lain.
  * Data yang kurang tidak ditebak: hasilnya "resolved" berisi pertanyaan untuk pengguna.
  */
-function basisFor(ctx: PlanContext, hints: PlanHints, purchases: PurchaseRow[], selfId: string | null): { resolved: PlanBasis; basis: QueueBasis | null } {
-  const resolved = resolvePlanBasis(ctx.basisInput, hints);
+function basisFor(ctx: PlanContext, hints: PlanHints, purchases: PurchaseRow[], selfId: string | null, avgIncome = 0): { resolved: PlanBasis; basis: QueueBasis | null } {
+  const input = { ...ctx.basisInput };
+  // Pemasukan rata-rata hanya dipakai kalau pengguna sendiri memilihnya.
+  if ((!input.payday || input.scheduleIncomeMonthly <= 0) && avgIncome > 0) {
+    input.payday = { first: input.today, amount: Math.round(avgIncome), frequency: "monthly" };
+    input.scheduleIncomeMonthly = Math.round(avgIncome);
+  }
+  const resolved = resolvePlanBasis(input, hints);
   if (!resolved.ok) return { resolved, basis: null };
   const others: QueueGoal[] = [
     ...ctx.savingsGoals,
@@ -81,6 +87,7 @@ function TargetBeliInner() {
   const [ctx, setCtx] = React.useState<PlanContext | null>(null);
   const [hints, setHints] = React.useState<PlanHints>({});
   const [awaitBasis, setAwaitBasis] = React.useState<{ kind: AskKind; question: string } | null>(null);
+  const [incomeAvg, setIncomeAvg] = React.useState(false);
   const [askField, setAskField] = React.useState<Field | null>(null);
   const [profile, setProfile] = React.useState<UserProfile | null>(null);
   const [msgs, setMsgs] = React.useState<Msg[]>([]);
@@ -111,11 +118,11 @@ function TargetBeliInner() {
 
   const reply = (text: string) => setMsgs((m) => [...m, { role: "model", text, time: nowLabel() }]);
 
-  const finish = async (merged: ParsedPurchase, h: PlanHints) => {
+  const finish = async (merged: ParsedPurchase, h: PlanHints, avg = incomeAvg) => {
     const loaded = ctx && snap && list ? { l: list, s: snap, c: ctx } : await load();
     if (!loaded) { reply("Belum bisa membaca datamu. Coba lagi sebentar."); return; }
     const { l, s, c } = loaded;
-    const bp = basisFor(c, h, l, null);
+    const bp = basisFor(c, h, l, null, avg ? s.monthlyIncome : 0);
     if (!bp.resolved.ok) {
       // Gaji, biaya hidup, atau komitmen rutin belum ada: tanya, jangan tebak dan jangan pakai rata-rata tanpa persetujuan.
       setPending(merged);
@@ -124,8 +131,8 @@ function TargetBeliInner() {
       return;
     }
     const rb = bp.resolved;
-    if (rb.newPayday || rb.livingSource !== "rencana" || rb.otherFixedNew) {
-      await persistPlanAnswers({ newPayday: rb.newPayday ? rb.payday : null, livingMonthly: rb.livingSource !== "rencana" ? rb.livingMonthly : null, otherFixedMonthly: rb.otherFixedNew ? rb.otherFixedMonthly : null });
+    if ((rb.newPayday && !avg) || rb.livingSource !== "rencana" || rb.otherFixedNew) {
+      await persistPlanAnswers({ newPayday: rb.newPayday && !avg ? rb.payday : null, livingMonthly: rb.livingSource !== "rencana" ? rb.livingMonthly : null, otherFixedMonthly: rb.otherFixedNew ? rb.otherFixedMonthly : null });
     }
     const cicil = merged.mode === "cicilan";
     const months = cicil ? Math.min(Math.max(merged.months ?? 1, 1), 360) : null;
@@ -134,12 +141,25 @@ function TargetBeliInner() {
     const today = s.today;
     const row = { name: merged.name!, price: merged.price!, mode: cicil ? "cicilan" as const : "tunai" as const, down_payment: dp, months, rate_pct: rate, saved: merged.saved ?? 0, target_date: merged.targetMonths ? addMonths(today, merged.targetMonths) : null };
     await addPurchase(row);
-    setPending(null); setAwaitBasis(null); setHints({}); setAskField(null);
+    setPending(null); setAwaitBasis(null); setHints({}); setAskField(null); setIncomeAvg(false);
     const g = { ...row, id: "", status: "aktif" } as unknown as PurchaseRow;
     const r = analyze(g, today, infl, bp.basis);
     const head = `**${row.name}** ${rp(row.price)}, ${cicil ? `cicilan ${months} bulan` : "tunai"}: ${LABEL[r.verdict]}.`;
     reply([head, ...quickSummary(r, rp, fmtDate).map((x) => `- ${x}`)].join("\n"));
     await load();
+  };
+
+  const chips: { label: string; run: () => void }[] = [];
+  if (awaitBasis && pending && !busy) {
+    if (awaitBasis.kind === "gaji" && (snap?.monthlyIncome ?? 0) > 0) chips.push({ label: `Pakai rata-rata (${rp(snap!.monthlyIncome)})`, run: () => { setIncomeAvg(true); void finish(pending, hints, true); } });
+    if (awaitBasis.kind === "biaya_hidup" && (ctx?.basisInput.avgMonthlyExpense ?? 0) > 0) chips.push({ label: `Pakai rata-rata (${rp(ctx!.basisInput.avgMonthlyExpense)})`, run: () => { const n = { ...hints, living_use_average: true }; setHints(n); void finish(pending, n); } });
+    if (awaitBasis.kind === "komitmen_rutin") chips.push({ label: "Tidak ada", run: () => { const n = { ...hints, other_fixed_monthly: 0 }; setHints(n); void finish(pending, n); } });
+  }
+  const pickChip = async (label: string, run: () => void) => {
+    if (busy) return;
+    setMsgs((m) => [...m, { role: "user", text: label, time: nowLabel() }]);
+    setBusy(true);
+    try { run(); } finally { setBusy(false); }
   };
 
   const send = async (raw: string) => {
@@ -193,7 +213,7 @@ function TargetBeliInner() {
       {dialog}
       <TopHeader title="Target Beli" subtitle="Ketik barang dan harganya" />
       <div className="flex-1 overflow-y-auto bg-background/50 px-3.5 py-4 space-y-3">
-        <Bubble msg={{ role: "model", text: "Mau beli apa? Ketik barang dan harganya, nanti aku hitung mampu atau tidak.", time: openedAt || undefined }} first profile={profile} />
+        <Bubble msg={{ role: "model", text: "Mau beli apa? Ketik barang dan harganya, nanti aku bantu budgetingnya.", time: openedAt || undefined }} first profile={profile} />
         {msgs.length === 0 && (
           <ReplyBubble>
             <p className="mb-1.5">Ketuk salah satu, atau ketik sendiri di bawah ya:</p>
@@ -201,6 +221,12 @@ function TargetBeliInner() {
           </ReplyBubble>
         )}
         {msgs.map((m, i) => (<Bubble key={i} msg={m} first={i === 0 || msgs[i - 1].role !== m.role} profile={profile} />))}
+        {chips.length > 0 && (
+          <ReplyBubble>
+            <p className="mb-1.5">Ketuk salah satu, atau ketik sendiri di bawah ya:</p>
+            <div className="flex flex-col gap-1.5">{chips.map((c) => (<ReplyRow key={c.label} label={c.label} onClick={() => void pickChip(c.label, c.run)} />))}</div>
+          </ReplyBubble>
+        )}
         {busy && <p className="ml-10 mt-2 text-[11px] text-zinc-500">Menghitung...</p>}
         {showList && (
           <ul className="mt-3 space-y-2">
