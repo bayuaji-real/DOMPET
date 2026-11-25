@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import * as React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup, waitFor, within } from "@testing-library/react";
+import { render, screen, cleanup, waitFor, within, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { parseEntitlement } from "@/lib/plans";
 
@@ -163,7 +163,7 @@ describe("Kesehatan Finansial dan Prediksi", () => {
     render(<PrediksiPage />);
     expect(await screen.findByText(/Gajimu belum diatur/)).toBeTruthy();
     expect(screen.queryByText(/Bulan ke-/)).toBeNull();
-    expect(screen.getByRole("button", { name: /Pakai rata-rata pemasukan/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Pakai rata-rata/ })).toBeTruthy();
     planCtx.v = null;
   });
 });
@@ -226,4 +226,18 @@ describe("THR & Zakat", () => {
     expect(within(sec).getByText("Rp25.000")).toBeTruthy();
   });
   it("THR terkunci di Gratis, zakat tetap terbuka", () => { entRaw = { plan: "free" }; render(<ThrZakatPage />); expect(screen.getByText("Kalkulator zakat")).toBeTruthy(); expect(screen.getByText(/Tersedia di paket Pro/)).toBeTruthy(); });
+});
+
+describe("Gerbang Money Planner (gaya chat)", () => {
+  it("jawaban tidak terbaca menampilkan pesan tanpa menghilangkan pertanyaan", async () => {
+    const c = fullCtx(); c.basisInput.payday = null as never; c.basisInput.scheduleIncomeMonthly = 0; planCtx.v = c;
+    render(<PrediksiPage />);
+    expect(await screen.findByText(/Gajimu belum diatur/)).toBeTruthy();
+    const box = screen.getByLabelText("Jawabanmu");
+    fireEvent.change(box, { target: { value: "entahlah" } });
+    fireEvent.submit(box.closest("form")!);
+    expect(await screen.findByText(/belum terbaca/)).toBeTruthy();
+    expect(screen.getByText(/Gajimu belum diatur/)).toBeTruthy();
+    planCtx.v = null;
+  });
 });

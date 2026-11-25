@@ -23,13 +23,15 @@ export function MoneyBasisGate({ snap, children }: { snap: FinanceSnapshot; chil
   const [incomeAvg, setIncomeAvg] = React.useState(false);
   const [text, setText] = React.useState("");
   const [msg, setMsg] = React.useState("");
+  const [loadErr, setLoadErr] = React.useState("");
   const saved = React.useRef(false);
+  const endRef = React.useRef<HTMLDivElement>(null);
   const [log, setLog] = React.useState<Msg[]>([]);
   const [profile, setProfile] = React.useState<UserProfile | null>(null);
   const [openedAt] = React.useState(() => nowLabel());
   React.useEffect(() => { getUserProfile().then(setProfile).catch(() => {}); }, []);
 
-  React.useEffect(() => { loadPlanContext(snap.monthlyExpense).then(setCtx).catch(() => setMsg("Data rencanamu belum bisa dimuat.")); }, [snap.monthlyExpense]);
+  React.useEffect(() => { loadPlanContext(snap.monthlyExpense).then(setCtx).catch(() => setLoadErr("Data rencanamu belum bisa dimuat.")); }, [snap.monthlyExpense]);
 
   const res = React.useMemo<PlanBasis | null>(() => {
     if (!ctx) return null;
@@ -52,8 +54,10 @@ export function MoneyBasisGate({ snap, children }: { snap: FinanceSnapshot; chil
   }, [res, incomeAvg]);
 
   // Belum ada catatan sama sekali: tampilkan keadaan kosong bawaan halaman, jangan menanyai pengguna dulu.
+  React.useEffect(() => { endRef.current?.scrollIntoView?.({ block: "end" }); }, [log.length, msg]);
+
   if (!snap.hasData) return <>{children(snap)}</>;
-  if (msg) return <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{msg}</p>;
+  if (loadErr) return <p role="alert" className="rounded-2xl bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300">{loadErr}</p>;
   if (!ctx || !res) return <div className="h-32 animate-pulse rounded-3xl bg-muted" aria-busy="true" />;
 
   if (res.ok) {
@@ -76,13 +80,13 @@ export function MoneyBasisGate({ snap, children }: { snap: FinanceSnapshot; chil
   const submit = (e: React.FormEvent) => { e.preventDefault(); if (text.trim()) answer(text.trim()); };
 
   const options: { label: string; run: () => void }[] = [];
-  if (ask === "gaji" && snap.monthlyIncome > 0) options.push({ label: `Pakai rata-rata pemasukan (${formatRupiah(snap.monthlyIncome)})`, run: () => setIncomeAvg(true) });
+  if (ask === "gaji" && snap.monthlyIncome > 0) options.push({ label: `Pakai rata-rata (${formatRupiah(snap.monthlyIncome)})`, run: () => setIncomeAvg(true) });
   if (ask === "biaya_hidup" && ctx.basisInput.avgMonthlyExpense > 0) options.push({ label: `Pakai rata-rata (${formatRupiah(ctx.basisInput.avgMonthlyExpense)})`, run: () => setHints((p) => ({ ...p, living_use_average: true })) });
   if (ask === "komitmen_rutin") options.push({ label: "Tidak ada", run: () => setHints((p) => ({ ...p, other_fixed_monthly: 0 })) });
 
   return (
     <div className="flex flex-col overflow-hidden rounded-3xl border border-border/70 bg-background/50 shadow-xs">
-      <div className="space-y-3 px-3.5 py-4">
+      <div className="max-h-[min(60vh,28rem)] space-y-3 overflow-y-auto px-3.5 py-4">
         {log.map((m, i) => (<Bubble key={i} msg={m} first={i === 0 || log[i - 1].role !== m.role} profile={profile} />))}
         <Bubble msg={{ role: "model", text: res.question, time: openedAt || undefined }} first={log.length === 0 || log[log.length - 1].role !== "model"} profile={profile} />
         {options.length > 0 && (
@@ -94,6 +98,7 @@ export function MoneyBasisGate({ snap, children }: { snap: FinanceSnapshot; chil
           </ReplyBubble>
         )}
         {msg && <p role="alert" className="text-xs font-semibold text-rose-700 dark:text-rose-300">{msg}</p>}
+        <div ref={endRef} />
       </div>
       <form onSubmit={submit} className="flex shrink-0 items-center gap-2 border-t border-border/80 bg-card/90 p-3 backdrop-blur-md">
         <input value={text} onChange={(e) => setText(e.target.value)} maxLength={100} aria-label="Jawabanmu" placeholder="Ketik jawabanmu di sini…" className="flex-1 rounded-xl border border-border/70 bg-muted/40 px-3.5 py-2.5 text-xs text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-teal-500/40" />
