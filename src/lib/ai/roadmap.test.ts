@@ -68,3 +68,11 @@ describe("tambahan sekali", () => {
     expect(roadmapToText(r)).toContain("SEKALI");
   });
 });
+
+describe("teks jadwal", () => {
+  it("menggabungkan gajian yang pembagiannya sama dan tidak menulis Rp0", () => {
+    const t = roadmapToText(buildRoadmap({ ...base, goals }));
+    expect(t).toContain("sampai");
+    expect(t.split("\n").slice(5).join("\n")).not.toMatch(/Rp0\b/);
+  });
+});

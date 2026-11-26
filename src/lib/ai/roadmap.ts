@@ -130,7 +130,7 @@ export function buildRoadmap(i: AllocationInput): Roadmap {
 }
 
 const rp = (n: number) => `Rp${Math.round(n).toLocaleString("id-ID")}`;
-const MAX_STEPS_SHOWN = 6;
+const MAX_GROUPS_SHOWN = 8;
 
 /** Teks untuk prompt. Ruby memakai ini untuk peta jalan dan strategi (bukan menghitung sendiri). */
 export function roadmapToText(r: Roadmap): string {
@@ -146,11 +146,21 @@ export function roadmapToText(r: Roadmap): string {
     return `lunas ±${g.doneDate}, TERLAMBAT ${g.lateDays} hari dari tenggat ${g.deadline}`;
   };
   r.goals.forEach((g, idx) => lines.push(`${idx + 1}. ${g.name} (sisa ${rp(g.remaining)}): ${doneText(g)}.`));
-  lines.push("Jadwal bagi uang per gajian:");
-  for (const s of r.steps.slice(0, MAX_STEPS_SHOWN)) {
-    lines.push(`- ${s.date}: dana ${rp(s.pool)} -> ${s.gives.length ? s.gives.map((x) => `${x.name} ${rp(x.amount)}`).join(", ") : "tidak ada yang dibagi"}`);
-  }
-  if (r.steps.length > MAX_STEPS_SHOWN) lines.push(`- ... dan ${r.steps.length - MAX_STEPS_SHOWN} gajian berikutnya sampai semua lunas (${r.steps[r.steps.length - 1].date}).`);
+  lines.push("Jadwal bagi uang per gajian (nominal Rp0 tidak ditulis; gajian dengan pembagian sama digabung):");
+  const groups: { from: string; to: string; n: number; text: string }[] = [];
+  r.steps.forEach((st, idx) => {
+    const text = st.gives.map((x) => `${x.name} ${rp(x.amount)}`).join(", ");
+    if (!text) return;
+    const last = groups[groups.length - 1];
+    if (last && last.text === text) {
+      last.to = st.date;
+      last.n += 1;
+    } else groups.push({ from: st.date, to: st.date, n: 1, text: `${text}` });
+  });
+  groups.slice(0, MAX_GROUPS_SHOWN).forEach((g) => {
+    lines.push(g.n === 1 ? `- Gajian ${g.from}: ${g.text}` : `- Gajian ${g.from} sampai ${g.to} (${g.n} gajian, tiap gajian): ${g.text}`);
+  });
+  if (groups.length > MAX_GROUPS_SHOWN) lines.push(`- ... lalu ${groups.length - MAX_GROUPS_SHOWN} tahap lagi sampai semua lunas (${r.steps[r.steps.length - 1].date}).`);
   if (r.extraPerPaydayToBeOnTime === 0) lines.push("Strategi: kemampuan sekarang sudah cukup untuk semua tenggat.");
   else if (r.extraPerPaydayToBeOnTime === null) lines.push("Strategi: tenggat tidak mungkin tercapai hanya dengan menambah sedikit; perlu menggeser tenggat atau menurunkan target.");
   else {

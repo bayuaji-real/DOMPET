@@ -164,6 +164,18 @@ export async function buildFinanceSummary(
   };
 }
 
+/** Data yang belum ada dan memengaruhi rencana. Ruby menanyakannya di akhir jawaban (satu pertanyaan per giliran). */
+export function missingDataText(s: FinanceSummary): string {
+  const miss: string[] = [];
+  if (!s.nextPaydayAmount || !s.nextPayday) miss.push("gaji dan tanggal gajian belum diatur");
+  if (s.planBasis === "rencana" && s.planLivingMonthly <= 0) miss.push("biaya hidup per gajian belum diisi (hitungan memakai rata-rata riwayat)");
+  if (s.planOtherFixedMonthly === null) miss.push("komitmen rutin lain (zakat, kiriman keluarga, asuransi, investasi) belum ditanyakan");
+  const noDeadline = s.goals.filter((g) => !g.deadline).map((g) => g.name);
+  if (noDeadline.length) miss.push(`target tanpa tenggat: ${noDeadline.join(", ")}`);
+  if (miss.length === 0) return "";
+  return `DATA YANG KURANG (setelah memberi rencana dengan data yang ada, tanyakan SATU hal paling penting dari daftar ini): ${miss.join("; ")}.`;
+}
+
 const rp = (n: number) => `Rp${Math.round(n).toLocaleString("id-ID")}`;
 
 /** Teks ringkas untuk dimasukkan ke prompt. */
@@ -191,5 +203,8 @@ export function summaryToText(s: FinanceSummary): string {
     `Gajian berikutnya: ${s.nextPayday ?? "belum diatur"}`,
     allocationToText(buildAllocation(alloc), s.nextPayday),
     roadmapToText(buildRoadmap(alloc)),
-  ].join("\n");
+    missingDataText(s),
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
