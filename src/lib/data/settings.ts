@@ -12,6 +12,8 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
   pin_hash: null,
   pin_enabled: false,
   hide_balance: false,
+  payday_reminder: false,
+  payday_reminder_offered_at: null,
   created_at: "2026-11-01T00:00:00Z",
   updated_at: "2026-11-01T00:00:00Z",
 };

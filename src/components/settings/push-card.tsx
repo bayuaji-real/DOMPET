@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 import { disablePush, enablePush, isPushOn, pushSupported, type PushResult } from "@/lib/push/client";
 
 const TEXT: Record<PushResult, string> = {
@@ -17,7 +18,24 @@ export function PushCard() {
   const [on, setOn] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [msg, setMsg] = React.useState<string | null>(null);
+  const [remind, setRemind] = React.useState(false);
   const supported = pushSupported();
+  React.useEffect(() => {
+    // Kolom bisa belum ada: gagal membaca = dianggap mati.
+    try {
+      createClient().from("user_settings").select("payday_reminder").maybeSingle().then(({ data }) => setRemind(!!data?.payday_reminder), () => setRemind(false));
+    } catch {
+      /* tanpa data: tetap mati */
+    }
+  }, []);
+  const toggleRemind = async () => {
+    setBusy(true); setMsg(null);
+    try {
+      const res = await fetch("/api/ruby-reminder", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: !remind }) });
+      if (res.ok) { setRemind(!remind); setMsg(!remind ? "Pengingat gajian dari Ruby aktif." : "Pengingat gajian dimatikan."); }
+      else setMsg(res.status === 409 ? "Aktifkan notifikasi di perangkat ini dulu, lalu coba lagi." : "Belum berhasil. Coba lagi sebentar.");
+    } finally { setBusy(false); }
+  };
   React.useEffect(() => { isPushOn().then(setOn).catch(() => setOn(false)); }, []);
   const toggle = async () => {
     setBusy(true); setMsg(null);
@@ -33,6 +51,8 @@ export function PushCard() {
       {msg && <p role="status" className="rounded-2xl bg-muted px-3 py-2 text-xs">{msg}</p>}
       {!supported && <p className="text-sm text-amber-700 dark:text-amber-300">{TEXT.tidak_didukung}</p>}
       <Button className="w-full" variant={on ? "outline" : "default"} disabled={busy || !supported} onClick={toggle}>{on ? "Matikan notifikasi" : "Aktifkan notifikasi"}</Button>
+      <p className="text-xs text-muted-foreground">Pengingat gajian dari Ruby: pagi hari gajian, kamu dikirimi pembagian uangnya ke tiap target.</p>
+      <Button className="w-full" variant={remind ? "outline" : "default"} disabled={busy || !supported} onClick={toggleRemind}>{remind ? "Matikan pengingat gajian" : "Aktifkan pengingat gajian"}</Button>
     </section>
   );
 }

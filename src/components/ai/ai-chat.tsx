@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useConfirm } from "@/components/ui/use-confirm";
 import type { AIChatResponse, SavingsProposal } from "@/app/api/ai-chat/route";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
+import { enablePush, isPushOn, type PushResult } from "@/lib/push/client";
 import { ASSISTANT_NAME, RUBY_MENU, RUBY_PHOTO } from "@/components/ai/ruby";
 import { cn } from "@/lib/utils";
 
@@ -477,6 +478,9 @@ export function AiChat({
   const [openedAt, setOpenedAt] = React.useState<string>("");
   // Percakapan yang tersimpan di database (Tanya Ruby dan Rencana dilanjutkan; Buat Tabungan mulai sesi baru).
   const [threadId, setThreadId] = React.useState<string | null>(null);
+  // Kartu tawaran bantuan dari Ruby (pengingat gajian). Hilang setelah dijawab.
+  const [offer, setOffer] = React.useState<AIChatResponse["offer"]>(null);
+  const [offerBusy, setOfferBusy] = React.useState(false);
   const [askConfirm, confirmDialog] = useConfirm();
   const endRef = React.useRef<HTMLDivElement>(null);
 
@@ -542,6 +546,42 @@ export function AiChat({
     }
   };
 
+  const OFFER_TEXT: Record<PushResult, string> = {
+    ok: "",
+    ditolak: "Izin notifikasi ditolak, jadi pengingat belum bisa aktif. Izinkan notifikasi untuk Dompetku di pengaturan browser atau HP, lalu minta aku lagi ya.",
+    tidak_didukung: "Perangkat ini belum mendukung notifikasi. Di iPhone, pasang Dompetku ke layar utama dulu (Bagikan, lalu Tambah ke Layar Utama), lalu minta aku lagi ya.",
+    kunci_kosong: "Notifikasi belum disiapkan di server. Hubungi admin.",
+    gagal: "Belum berhasil mengaktifkan notifikasi. Coba lagi sebentar ya.",
+  };
+
+  const answerOffer = async (yes: boolean) => {
+    if (offerBusy) return;
+    setOffer(null);
+    if (!yes) {
+      setMessages((prev) => [...prev, { role: "model", text: "Oke, kapan pun kamu mau, bilang saja ya.", time: nowLabel() }]);
+      return;
+    }
+    setOfferBusy(true);
+    try {
+      if (!(await isPushOn())) {
+        const r = await enablePush();
+        if (r !== "ok") {
+          setMessages((prev) => [...prev, { role: "model", text: OFFER_TEXT[r], time: nowLabel() }]);
+          return;
+        }
+      }
+      const res = await fetch("/api/ruby-reminder", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: true }) });
+      const text = res.ok
+        ? "Siap! Di pagi hari gajian aku kirim notifikasi: taruh berapa ke tiap target, supaya uangmu langsung ke tempat yang benar. Bisa dimatikan kapan saja di Pengaturan."
+        : "Belum berhasil menyimpan pengingat. Coba lagi sebentar ya.";
+      setMessages((prev) => [...prev, { role: "model", text, time: nowLabel() }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: "model", text: "Belum berhasil menyimpan pengingat. Coba lagi sebentar ya.", time: nowLabel() }]);
+    } finally {
+      setOfferBusy(false);
+    }
+  };
+
   const reset = () => {
     setMessages([]);
     setProposal(null);
@@ -558,6 +598,7 @@ export function AiChat({
     setInput("");
     setError(null);
     setProposal(null);
+    setOffer(null);
     setLoading(true);
     try {
       const res = await fetch("/api/ai-chat", {
@@ -574,6 +615,7 @@ export function AiChat({
       setProposal(json.proposal);
       setPending(json.pending ?? null);
       if (json.threadId) setThreadId(json.threadId);
+      setOffer(json.offer ?? null);
     } catch {
       setError("Tidak bisa terhubung. Cek internet lalu coba lagi.");
     } finally {
@@ -612,6 +654,22 @@ export function AiChat({
         ))}
         {loading && <TypingBubble />}
         {proposal && <div className="mt-3">{renderProposal?.(proposal, reset)}</div>}
+        {offer === "payday_reminder" && !loading && (
+          <div className="ml-10 rounded-2xl border border-teal-500/30 bg-teal-500/5 p-3.5 text-xs">
+            <p className="font-bold text-foreground">Mau aku ingatkan saat gajian?</p>
+            <p className="mt-1 text-muted-foreground">
+              Di pagi hari gajian, aku kirim notifikasi berisi pembagian uangmu: taruh berapa ke tiap target, biar uangmu langsung ke tempat yang benar dan keuanganmu aman.
+            </p>
+            <div className="mt-3 flex gap-2">
+              <button type="button" disabled={offerBusy} onClick={() => void answerOffer(true)} className="flex-1 cursor-pointer rounded-xl bg-teal-600 px-3 py-2 font-bold text-white hover:bg-teal-700 disabled:opacity-50">
+                Ya, ingatkan aku
+              </button>
+              <button type="button" disabled={offerBusy} onClick={() => void answerOffer(false)} className="cursor-pointer rounded-xl border border-border px-3 py-2 font-semibold text-foreground hover:bg-muted disabled:opacity-50">
+                Nanti saja
+              </button>
+            </div>
+          </div>
+        )}
         {error && (
           <div className="mt-3 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-600 dark:text-rose-400">
             {error}

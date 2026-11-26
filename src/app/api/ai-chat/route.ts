@@ -6,6 +6,7 @@ import { evaluateSavingsQueue, generatePaydaysFromInfo, resolvePlanBasis } from 
 import { verifyServerAuth } from "@/lib/auth/server-auth";
 import { guardAi } from "@/lib/ai/entitlement";
 import { firstNameFrom, nameToText } from "@/lib/ai/user-name";
+import { shouldOfferPaydayReminder } from "@/lib/ai/reminder-offer";
 import { loadMemory, memoryToText, saveTurn, refreshMemoryIfDue } from "@/lib/ai/ruby-memory";
 import { createClient } from "@/lib/supabase/server";
 import { aiChatSchema, type SavingsPending } from "@/lib/validation";
@@ -36,6 +37,8 @@ export interface AIChatResponse {
   pending?: SavingsPending | null;
   /** Percakapan tempat pesan ini disimpan; klien mengirimnya kembali di pesan berikutnya. */
   threadId?: string | null;
+  /** Bantuan yang ditawarkan Ruby lewat kartu (tombol Ya / Nanti saja). */
+  offer?: "payday_reminder" | null;
   usage: { inputTokens: number; outputTokens: number; costIdr: number };
 }
 
@@ -68,7 +71,8 @@ const ALLOCATION_RULES = `LANGKAH WAJIB sebelum menjawab apa pun soal uang (paka
 4. Kamu konsultan: susun rencana gajian demi gajian sampai SEMUA target lunas, bukan satu langkah saja. Pakai blok "RENCANA JANGKA PANJANG" dan salin tanggal serta nominalnya persis (jangan hitung ulang). Total tiap gajian tidak boleh melebihi dananya.
 5. Tulis seperti perintah konsultan, satu baris per gajian (gabungkan gajian yang pembagiannya sama): "Gajian pertama (27 Nov): taruh **Rp3.661.143** ke Lamaran karena harus selesai." lalu "Gajian 27 Des: taruh **Rp566.504** ke Lamaran biar lunas, sisanya **Rp3.034.639** ke Kuliah." dan seterusnya. JANGAN menulis baris atau target yang nominalnya Rp0.
 6. Kalau uang tidak cukup untuk semua tenggat, katakan terus terang mana yang kurang berapa, lalu beri opsi bernomor di bagian Strategi (tambahan sekali atau per gajian, geser tenggat, hemat biaya).
-7. Kalau ada blok "DATA YANG KURANG", beri rencana dengan data yang ada dulu, lalu tutup dengan SATU pertanyaan singkat untuk melengkapi data yang paling penting. Jangan menunda rencana demi menunggu data.`;
+7. Aplikasi sendiri menampilkan kartu tawaran pengingat gajian (tombol Ya/Nanti saja) setelah jawabanmu; jangan menawarkannya dengan kata-katamu dan jangan menulis tombolnya.
+8. Kalau ada blok "DATA YANG KURANG", beri rencana dengan data yang ada dulu, lalu tutup dengan SATU pertanyaan singkat untuk melengkapi data yang paling penting. Jangan menunda rencana demi menunggu data.`;
 
 const COMMON_RULES = `Aturan:
 - Namamu Ruby, asisten keuangan pribadi di aplikasi Dompetku. Pengguna sudah disapa Ruby di awal obrolan, jadi jangan memperkenalkan diri lagi kecuali ditanya.
@@ -372,11 +376,26 @@ export async function POST(request: NextRequest) {
     const savedThreadId = await saveTurn(supabase, mode, sentThreadId, messages[messages.length - 1].text, reply);
     if (savedThreadId) after(() => refreshMemoryIfDue(supabase, auth.userId, today));
 
+    // Tawaran bantuan: pengingat gajian beserta pembagian uangnya (kartu di layar; maksimal sekali per 3 hari).
+    let offer: AIChatResponse["offer"] = null;
+    if (mode !== "savings") {
+      try {
+        const { data: st, error: stErr } = await supabase.from("user_settings").select("payday_reminder, payday_reminder_offered_at").maybeSingle();
+        if (!stErr && shouldOfferPaydayReminder({ enabled: !!st?.payday_reminder, offeredAt: st?.payday_reminder_offered_at ?? null, nowMs: Date.now(), hasPayday: summaryData.nextPaydayAmount > 0 && !!summaryData.nextPayday, hasGoals: summaryData.goals.length > 0 })) {
+          offer = "payday_reminder";
+          await supabase.from("user_settings").upsert({ user_id: auth.userId, payday_reminder_offered_at: new Date().toISOString() }, { onConflict: "user_id" });
+        }
+      } catch {
+        /* kolom belum ada atau gagal membaca: tidak menawarkan */
+      }
+    }
+
     const body: AIChatResponse = {
       success: true,
       reply,
       proposal,
       pending: nextPending,
+      offer,
       threadId: savedThreadId ?? sentThreadId ?? null,
       usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, costIdr },
     };

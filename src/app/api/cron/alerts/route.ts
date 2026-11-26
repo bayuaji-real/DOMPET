@@ -5,6 +5,10 @@ import { configurePush, sendPush } from "@/lib/push/send";
 import { apiPush, billPushes, limitPushes, proExpiryPush, type PlannedPush } from "@/lib/push/alerts";
 import { limitStatuses, neededRange, masterLimit, debtView, type DebtView, type Limit, type Tx } from "@/lib/konsultan/spend-limit";
 import type { ApiUsage } from "@/lib/data/admin";
+import { buildFinanceSummary } from "@/lib/ai/finance-summary";
+import { paydayReminderMsg } from "@/lib/push/payday-reminder";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
 
 const jakartaToday = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
 
@@ -66,7 +70,28 @@ export async function GET(req: Request) {
   const { data: subs2 } = await sb.from("user_subscriptions").select("user_id,plan,plan_expires_at,trial_plan,trial_ends_at").or(`plan_expires_at.lte.${soon},trial_ends_at.lte.${soon}`).limit(5000);
   for (const s2 of subs2 ?? []) { const p = proExpiryPush(s2, Date.now()); if (p) planned.push({ userId: s2.user_id, p }); }
 
-  // 5) Buang yang sudah pernah dikirim, lalu kirim.
+  // 5) Pengingat gajian dari Ruby: pagi hari gajian, untuk pengguna yang mengaktifkannya (isi pesan dihitung kode).
+  try {
+    const { data: pd } = await sb.from("payday_schedule").select("user_id").eq("date", today).is("actual_amount", null).limit(2000);
+    const ids = [...new Set((pd ?? []).map((r) => String(r.user_id)))];
+    if (ids.length > 0) {
+      const { data: on } = await sb.from("user_settings").select("user_id").eq("payday_reminder", true).in("user_id", ids).limit(500);
+      for (const row of on ?? []) {
+        try {
+          const uid = String(row.user_id);
+          const sum = await buildFinanceSummary(sb as unknown as SupabaseClient<Database>, today, uid);
+          const msg = paydayReminderMsg(sum, today);
+          if (msg) planned.push({ userId: uid, p: { kind: "gajian", key: today, msg } });
+        } catch (e) {
+          console.warn("[cron] pengingat gajian gagal disusun:", e instanceof Error ? e.message : e);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("[cron] pengingat gajian dilewati:", e instanceof Error ? e.message : e);
+  }
+
+  // 6) Buang yang sudah pernah dikirim, lalu kirim.
   let sent = 0, skipped = 0, removed = 0, failed = 0;
   for (const { userId, p } of planned) {
     const { error } = await sb.from("push_log").insert({ user_id: userId, kind: p.kind, dedupe_key: p.key });

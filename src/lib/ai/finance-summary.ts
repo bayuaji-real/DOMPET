@@ -45,35 +45,46 @@ export interface FinanceSummary {
 }
 
 
+/**
+ * userId: wajib bila dipanggil dengan klien kunci layanan (pekerjaan terjadwal), karena klien itu tidak dibatasi RLS.
+ * Dari sesi pengguna biasa boleh dikosongkan (RLS sudah membatasi ke pemilik).
+ */
 export async function buildFinanceSummary(
   supabase: SupabaseClient<Database>,
-  today: string
+  today: string,
+  userId?: string
 ): Promise<FinanceSummary> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const own = <T,>(q: T): T => (userId ? (q as any).eq("user_id", userId) : q);
   const monthStart = `${today.slice(0, 7)}-01`;
   const threeAgo = addMonths(monthStart, -3);
 
   const [txRes, walletRes, goalRes, catRes, payRes, planPayRes, settingsRes, recRes, debtRes] = await Promise.all([
-    supabase
-      .from("transactions")
-      .select("type, amount, date, category_id")
-      .in("type", ["income", "expense"])
-      .gte("date", threeAgo)
-      .lte("date", today)
-      .limit(5000),
-    supabase.from("wallet_balances").select("balance, type, is_archived"),
-    supabase.from("goal_progress").select("name, target_amount, saved, deadline, planned_per_payday, status"),
+    own(
+      supabase
+        .from("transactions")
+        .select("type, amount, date, category_id")
+        .in("type", ["income", "expense"])
+        .gte("date", threeAgo)
+        .lte("date", today)
+        .limit(5000)
+    ),
+    own(supabase.from("wallet_balances").select("balance, type, is_archived")),
+    own(supabase.from("goal_progress").select("name, target_amount, saved, deadline, planned_per_payday, status")),
     supabase.from("categories").select("id, name"),
-    supabase.from("payday_schedule").select("date").gte("date", today).order("date", { ascending: true }).limit(1),
-    supabase
-      .from("payday_schedule")
-      .select("date, expected_amount")
-      .gte("date", today)
-      .is("actual_amount", null)
-      .order("date", { ascending: true })
-      .limit(6),
-    supabase.from("user_settings").select("living_cost_per_payday, other_fixed_monthly").maybeSingle(),
-    supabase.from("recurring_transactions").select("amount, rule").eq("is_active", true).eq("type", "expense"),
-    supabase.from("debts").select("min_payment"),
+    own(supabase.from("payday_schedule").select("date").gte("date", today).order("date", { ascending: true }).limit(1)),
+    own(
+      supabase
+        .from("payday_schedule")
+        .select("date, expected_amount")
+        .gte("date", today)
+        .is("actual_amount", null)
+        .order("date", { ascending: true })
+        .limit(6)
+    ),
+    own(supabase.from("user_settings").select("living_cost_per_payday, other_fixed_monthly")).maybeSingle(),
+    own(supabase.from("recurring_transactions").select("amount, rule").eq("is_active", true).eq("type", "expense")),
+    own(supabase.from("debts").select("min_payment")),
   ]);
 
   const catName = new Map((catRes.data ?? []).map((c) => [c.id, c.name]));
@@ -179,8 +190,8 @@ export function missingDataText(s: FinanceSummary): string {
 const rp = (n: number) => `Rp${Math.round(n).toLocaleString("id-ID")}`;
 
 /** Teks ringkas untuk dimasukkan ke prompt. */
-export function summaryToText(s: FinanceSummary): string {
-  const alloc: AllocationInput = {
+export function allocationInputFromSummary(s: FinanceSummary): AllocationInput {
+  return {
     today: s.today,
     totalBalance: s.totalBalance,
     savingsBalance: s.savingsBalance,
@@ -190,6 +201,10 @@ export function summaryToText(s: FinanceSummary): string {
     fixedMonthly: s.planFixedMonthly,
     goals: s.goals,
   };
+}
+
+export function summaryToText(s: FinanceSummary): string {
+  const alloc = allocationInputFromSummary(s);
   return [
     `Hari ini: ${s.today}`,
     `Rata-rata per bulan (${s.monthsOfData || "bulan ini"} bulan data): pemasukan ${rp(s.avgMonthlyIncome)}, pengeluaran ${rp(s.avgMonthlyExpense)}`,

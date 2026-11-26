@@ -323,6 +323,8 @@ export interface Database {
           pin_hash: string | null;
           pin_enabled: boolean;
           hide_balance: boolean;
+          payday_reminder: boolean;
+          payday_reminder_offered_at: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -334,6 +336,8 @@ export interface Database {
           pin_hash?: string | null;
           pin_enabled?: boolean;
           hide_balance?: boolean;
+          payday_reminder?: boolean;
+          payday_reminder_offered_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -345,6 +349,8 @@ export interface Database {
           pin_hash?: string | null;
           pin_enabled?: boolean;
           hide_balance?: boolean;
+          payday_reminder?: boolean;
+          payday_reminder_offered_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

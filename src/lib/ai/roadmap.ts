@@ -148,7 +148,7 @@ export function roadmapToText(r: Roadmap): string {
   r.goals.forEach((g, idx) => lines.push(`${idx + 1}. ${g.name} (sisa ${rp(g.remaining)}): ${doneText(g)}.`));
   lines.push("Jadwal bagi uang per gajian (nominal Rp0 tidak ditulis; gajian dengan pembagian sama digabung):");
   const groups: { from: string; to: string; n: number; text: string }[] = [];
-  r.steps.forEach((st, idx) => {
+  r.steps.forEach((st) => {
     const text = st.gives.map((x) => `${x.name} ${rp(x.amount)}`).join(", ");
     if (!text) return;
     const last = groups[groups.length - 1];
