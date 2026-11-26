@@ -12,7 +12,7 @@ import { formatRupiah } from "@/lib/utils";
 import { addLimit, deleteLimit, getLimits, updateLimit, getLimitStatuses, getMasterView, type MasterView } from "@/lib/data/limits";
 import { todayJakarta } from "@/lib/data/sample-mode";
 import { getCategories, type Category } from "@/lib/data/categories";
-import { limitMessage, splitLimit, type Period, type Status } from "@/lib/konsultan/spend-limit";
+import { limitMessage, masterMessage, splitLimit, dailyGauge, type Period, type Status } from "@/lib/konsultan/spend-limit";
 import { Select } from "@/components/ui/select";
 import { PageHero, Cta, FormCard, Field, IconBox, Pill, Notice, EmptyState, chipCls } from "@/components/ui/form-kit";
 
@@ -72,22 +72,28 @@ export default function BatasPengeluaranPage() {
         {!list && !err && <div className="h-24 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
         {list && list.length === 0 && inactive.length === 0 && <EmptyState emoji="🎯">Belum ada batas. Contoh: 50 ribu per hari untuk makan dan hiburan, atau 100 ribu per minggu untuk hiburan.</EmptyState>}
         <ul className="space-y-2">{list?.map((s) => {
-          const l = s.limit, msg = limitMessage(s, rp);
+          const l = s.limit;
+          // Batas utama: angka utama = jatah HARI INI setelah dipotong hutang batas, sama persis dengan Beranda.
+          const isMaster = !!master && master.limit.id === l.id;
+          const g = isMaster ? dailyGauge(master.debt, l.warn_pct) : null;
+          const pct = g ? g.pct : s.pct, level = g ? g.level : s.level;
+          const msg = g ? masterMessage(l.name, master!.debt, l.warn_pct, rp) : limitMessage(s, rp);
           const catNames = l.category_ids.map((id) => cats.find((c) => c.id === id)?.name).filter(Boolean).join(", ");
           return (
             <li key={l.id} className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">
-              <div className="flex items-start justify-between gap-2"><div className="flex min-w-0 items-start gap-2.5"><IconBox tone={s.level === "lewat" ? "rose" : s.level === "hampir" ? "amber" : "neon"}>{s.level === "lewat" ? "🚨" : s.level === "hampir" ? "⚠️" : "🎯"}</IconBox><div className="min-w-0"><p className="truncate text-sm font-extrabold">{l.name}</p><p className="text-xs text-muted-foreground">{rp(l.amount)} {PERIOD_LABEL[l.period]} · {catNames || "semua pengeluaran"}</p></div></div>
-                <Pill tone={s.level === "lewat" ? "rose" : s.level === "hampir" ? "amber" : "neon"} className="shrink-0">{s.pct}%</Pill></div>
-              <div className="h-2.5 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${s.level === "lewat" ? "bg-gradient-to-r from-rose-500 to-red-400" : s.level === "hampir" ? "bg-gradient-to-r from-amber-500 to-yellow-300" : "bg-gradient-to-r from-emerald-500 to-lime-300"}`} style={{ width: `${Math.min(100, s.pct)}%` }} /></div>
-              <p className="text-xs text-muted-foreground">Terpakai {rp(s.spent)}{s.remaining >= 0 ? `, sisa ${rp(s.remaining)}` : `, lebih ${rp(-s.remaining)}`}</p>
-              {master && master.limit.id === l.id && (() => { const a = splitLimit(l, todayJakarta()); return (
+              <div className="flex items-start justify-between gap-2"><div className="flex min-w-0 items-start gap-2.5"><IconBox tone={level === "lewat" ? "rose" : level === "hampir" ? "amber" : "neon"}>{level === "lewat" ? "🚨" : level === "hampir" ? "⚠️" : "🎯"}</IconBox><div className="min-w-0"><p className="truncate text-sm font-extrabold">{l.name}</p><p className="text-xs text-muted-foreground">{rp(l.amount)} {PERIOD_LABEL[l.period]} · {catNames || "semua pengeluaran"}</p></div></div>
+                <Pill tone={level === "lewat" ? "rose" : level === "hampir" ? "amber" : "neon"} className="shrink-0">{pct}%</Pill></div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${level === "lewat" ? "bg-gradient-to-r from-rose-500 to-red-400" : level === "hampir" ? "bg-gradient-to-r from-amber-500 to-yellow-300" : "bg-gradient-to-r from-emerald-500 to-lime-300"}`} style={{ width: `${Math.min(100, pct)}%` }} /></div>
+              {g ? <p className="text-xs text-muted-foreground">Hari ini terpakai {rp(g.spent)} dari jatah {rp(g.cap)}{g.over ? `, lebih ${rp(g.spent - g.cap)}` : `, sisa ${rp(g.cap - g.spent)}`}</p> : <p className="text-xs text-muted-foreground">Terpakai {rp(s.spent)}{s.remaining >= 0 ? `, sisa ${rp(s.remaining)}` : `, lebih ${rp(-s.remaining)}`}</p>}
+              {isMaster && master && (() => { const a = splitLimit(l, todayJakarta()); return (
                 <div className="space-y-1.5 rounded-xl bg-muted/50 p-2.5 text-xs">
                   <p className="font-bold">Otomatis dipecah dari batas ini</p>
                   <p className="text-muted-foreground">Per hari {rp(a.harian)} · per minggu {rp(a.mingguan)} · per bulan {rp(a.bulanan)}</p>
+                  {([["Minggu ini", master.statuses.mingguan], ["Bulan ini", master.statuses.bulanan]] as const).map(([lbl, w]) => <p key={lbl} className="text-muted-foreground">{lbl}: terpakai {rp(w.spent)} dari {rp(w.limit.amount)} ({w.pct}%)</p>)}
                   <p className="text-muted-foreground">Hari ini: terpakai {rp(master.debt.spentToday)} dari jatah {rp(master.debt.available)}{master.debt.debtIn > 0 ? ` (jatah ${rp(master.debt.allowance)} dipotong utang batas ${rp(master.debt.debtIn)})` : ""}.</p>
                   {master.debt.debtAfterToday > 0 && <p className="font-semibold text-amber-800 dark:text-amber-300">Utang batas {rp(master.debt.debtAfterToday)}: dipotong dari jatah besok sampai lunas. Ini bukan utang sungguhan, hanya pengingat dari batas yang kamu buat sendiri.</p>}
                 </div>); })()}
-              {msg && <p role="alert" className={`rounded-lg p-2 text-xs ${s.level === "lewat" ? "bg-red-500/10 text-red-700 dark:text-red-300" : "bg-amber-500/10 text-amber-800 dark:text-amber-300"}`}>{msg}</p>}
+              {msg && <p role="alert" className={`rounded-lg p-2 text-xs ${level === "lewat" ? "bg-red-500/10 text-red-700 dark:text-red-300" : "bg-amber-500/10 text-amber-800 dark:text-amber-300"}`}>{msg}</p>}
               <div className="flex gap-2"><Button size="sm" variant="outline" className="flex-1" onClick={async () => { try { await updateLimit(l.id, { is_active: false }); await load(); } catch { notify("Belum bisa diubah."); } }}>Nonaktifkan</Button>
                 <Button size="sm" variant="outline" aria-label={`Hapus ${l.name}`} onClick={async () => { if (await ask(`Hapus batas "${l.name}"?`, "Hapus")) { try { await deleteLimit(l.id); await load(); } catch { notify("Belum bisa dihapus."); } } }}><Trash2 className="size-4" /></Button></div>
             </li>);

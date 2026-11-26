@@ -25,6 +25,7 @@ import {
   AlertTriangle,
   Building2,
   TrendingUp,
+  TrendingDown,
   History,
   CheckCircle2,
   Clock,
@@ -34,6 +35,7 @@ import {
   ChevronRight,
   Loader2,
 } from "lucide-react";
+import { StatPair } from "@/components/ui/form-kit";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -628,19 +630,11 @@ export default function TabunganPage() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-3 text-xs">
-            <div>
-              <span className="text-[10px] text-white/90">Total Target</span>
-              <p className="font-bold text-white text-sm">
-                {formatRupiah(totalTarget)}
-              </p>
-            </div>
-            <div>
-              <span className="text-[10px] text-white/90">Total Kekurangan</span>
-              <p className="font-bold text-rose-300 text-sm">
-                {formatRupiah(totalKekurangan)}
-              </p>
-            </div>
+          <div className="pt-3">
+            <StatPair items={[
+              { label: "Total Target", value: formatRupiah(totalTarget), tone: "plus", icon: <TrendingUp className="h-4 w-4" /> },
+              { label: "Total Kekurangan", value: formatRupiah(totalKekurangan), tone: "minus", icon: <TrendingDown className="h-4 w-4" /> },
+            ]} />
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { periodRange, limitStatus, limitStatuses, limitMessage, neededRange, masterLimit, dailyAllowance, splitLimit, debtView, masterStatuses, type Limit, type Tx } from "./spend-limit";
+import { periodRange, limitStatus, limitStatuses, limitMessage, neededRange, masterLimit, dailyAllowance, splitLimit, debtView, dailyGauge, masterStatuses, type Limit, type Tx } from "./spend-limit";
 
 const lim = (o: Partial<Limit> = {}): Limit => ({ id: "l1", name: "Makan & main", period: "harian", amount: 50_000, category_ids: [], warn_pct: 80, is_active: true, ...o });
 const tx = (o: Partial<Tx>): Tx => ({ type: "expense", amount: 10_000, date: "2026-11-24", category_id: null, ...o });
@@ -93,5 +93,17 @@ describe("utang batas", () => {
   it("hanya pengeluaran yang dihitung; pemasukan dan transfer diabaikan", () => {
     const v = debtView(L, [tx({ date: "2026-11-23", type: "income", amount: 999_999 }), tx({ date: "2026-11-23", type: "transfer", amount: 999_999 })], "2026-11-23", "2026-11-24");
     expect(v.debtIn).toBe(0);
+  });
+});
+
+describe("dailyGauge (Beranda dan halaman Batas harus sama)", () => {
+  it("utang menghabiskan jatah: 100% lewat walau belum belanja hari ini", () => {
+    const d = debtView({ period: "harian", amount: 50_000 }, [{ type: "expense", amount: 100_000, date: "2026-11-24", category_id: null }], "2026-11-24", "2026-11-25");
+    expect(d.available).toBe(0);
+    expect(dailyGauge(d, 80)).toMatchObject({ pct: 100, level: "lewat", cap: 0, spent: 0 });
+  });
+  it("tanpa utang: persen biasa", () => {
+    const d = debtView({ period: "harian", amount: 50_000 }, [{ type: "expense", amount: 10_000, date: "2026-11-25", category_id: null }], "2026-11-25", "2026-11-25");
+    expect(dailyGauge(d, 80)).toMatchObject({ pct: 20, level: "aman" });
   });
 });

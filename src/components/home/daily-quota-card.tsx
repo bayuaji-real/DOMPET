@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronDown, Gauge } from "lucide-react";
+import { ChevronDown, Gauge, Plus } from "lucide-react";
 import { getHomeLimits, type HomeLimits } from "@/lib/data/limits";
-import { splitLimit, type DebtView, type Level, type Period, type Status } from "@/lib/konsultan/spend-limit";
+import { splitLimit, dailyGauge, type DebtView, type Level, type Period, type Status } from "@/lib/konsultan/spend-limit";
 import { todayJakarta } from "@/lib/data/sample-mode";
 
 const n = (v: number) => Math.round(v).toLocaleString("id-ID");
@@ -31,8 +31,7 @@ type Item = {
 };
 
 function levelOf(spent: number, cap: number, debtIn: number, warn: number): { pct: number; level: Level } {
-  const pct = cap > 0 ? Math.round((spent / cap) * 100) : spent > 0 || debtIn > 0 ? 100 : 0;
-  const level: Level = spent > cap || (cap === 0 && debtIn > 0) ? "lewat" : pct >= warn ? "hampir" : "aman";
+  const { pct, level } = dailyGauge({ available: cap, spentToday: spent, debtIn } as DebtView, warn);
   return { pct, level };
 }
 
@@ -82,7 +81,7 @@ function Donut({ pct, level }: { pct: number; level: Level }) {
 /**
  * Batas pengeluaran di Beranda, gaya Analisis Keuangan: satu donat + tiga baris singkat (Jatah, Uang dipakai, Hutang).
  * Banyak batas: pilih lewat deretan nama di atas donat. Rincian lengkap muncul saat "Lihat rincian" diketuk.
- * Tersembunyi kalau belum ada batas aktif.
+ * Kalau belum ada batas aktif: tampil ajakan dengan tombol "Atur batas" (tidak disembunyikan, tidak bisa ditutup).
  */
 export function DailyQuotaCard() {
   const [all, setAll] = React.useState<HomeLimits | null>(null);
@@ -94,7 +93,24 @@ export function DailyQuotaCard() {
     window.addEventListener("transaction_created", load);
     return () => window.removeEventListener("transaction_created", load);
   }, []);
-  if (!all || (!all.master && all.others.length === 0)) return null;
+  if (!all) return null;
+  if (!all.master && all.others.length === 0) {
+    return (
+      <section aria-labelledby="ringkas-batas" className="space-y-3 rounded-3xl border border-dashed border-teal-500/40 bg-card p-4 shadow-sm">
+        <div className="flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-500/15 text-teal-600 dark:text-teal-400"><Gauge className="h-4 w-4" /></span>
+          <div>
+            <h3 id="ringkas-batas" className="text-sm font-extrabold leading-tight text-foreground">Batas Pengeluaran</h3>
+            <p className="text-[11px] text-muted-foreground">Belum diatur</p>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">Mau jajanmu terkontrol? Atur batas harian, mingguan, atau bulanan. Isi satu angka, sisanya dihitung otomatis.</p>
+        <Link href="/batas-pengeluaran" className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-teal-600 py-2.5 text-xs font-bold text-white transition-all active:scale-95">
+          <Plus className="size-4" /> Atur batas pengeluaran
+        </Link>
+      </section>
+    );
+  }
   const items = buildItems(all);
   const sel = items.find((i) => i.id === pick) ?? items[0];
   const hutang = sel.debt ? sel.debt.debtAfterToday : 0;

@@ -118,3 +118,29 @@ export function masterStatuses(limit: Limit, txs: Tx[], today: string): Record<P
   const one = (p: Period): Status => limitStatus({ ...limit, period: p, amount: amounts[p] }, txs, today);
   return { harian: one("harian"), mingguan: one("mingguan"), bulanan: one("bulanan") };
 }
+
+/**
+ * Ukuran "terpakai" untuk batas utama HARI INI, dipakai sama persis di Beranda dan halaman Batas Pengeluaran.
+ * Pembagi = jatah setelah dipotong utang batas. Jatah 0 karena utang dihitung 100% (lewat).
+ */
+export function dailyGauge(d: DebtView, warnPct: number): { pct: number; level: Level; cap: number; spent: number; over: boolean } {
+  const cap = d.available, spent = d.spentToday;
+  const pct = cap > 0 ? Math.round((spent / cap) * 100) : spent > 0 || d.debtIn > 0 ? 100 : 0;
+  const level: Level = spent > cap || (cap === 0 && d.debtIn > 0) ? "lewat" : pct >= warnPct ? "hampir" : "aman";
+  return { pct, level, cap, spent, over: spent > cap };
+}
+
+/** Status batas utama HARI INI yang sudah memperhitungkan hutang batas (dipakai push dan peringatan). */
+export function masterDailyStatus(limit: Limit, d: DebtView, today: string): Status {
+  const g = dailyGauge(d, limit.warn_pct);
+  return { limit: { ...limit, period: "harian", amount: g.cap }, spent: g.spent, remaining: g.cap - g.spent, pct: g.pct, level: g.level, from: today, to: today };
+}
+
+/** Pesan peringatan batas utama hari ini, menyebut hutang batas bila ada. Null bila aman. */
+export function masterMessage(name: string, d: DebtView, warnPct: number, fmt: (n: number) => string): string | null {
+  const g = dailyGauge(d, warnPct);
+  if (g.level === "aman") return null;
+  const cut = d.debtIn > 0 ? ` (jatah ${fmt(d.allowance)} sudah dipotong hutang batas ${fmt(d.debtIn)})` : "";
+  if (g.level === "lewat") return `Batas "${name}" terlewati hari ini: terpakai ${fmt(g.spent)} dari jatah ${fmt(g.cap)}${cut}${g.over ? `, lebih ${fmt(g.spent - g.cap)}` : ""}.`;
+  return `Batas "${name}" hampir habis hari ini: terpakai ${fmt(g.spent)} dari jatah ${fmt(g.cap)}${cut}, sisa ${fmt(g.cap - g.spent)}.`;
+}

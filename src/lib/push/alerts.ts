@@ -1,6 +1,6 @@
 // Menyusun pesan push (murni, bisa dites). Pengiriman ada di route cron.
 import { apiAlert } from "@/lib/admin-alert";
-import { limitMessage, type Status } from "@/lib/konsultan/spend-limit";
+import { limitMessage, masterMessage, type DebtView, type Status } from "@/lib/konsultan/spend-limit";
 import type { ApiUsage } from "@/lib/data/admin";
 
 export type PushMsg = { title: string; body: string; url: string; tag: string };
@@ -16,10 +16,11 @@ export function apiPush(u: Pick<ApiUsage, "configured" | "level" | "used_pct" | 
 }
 
 /** Peringatan batas pengeluaran yang hampir habis atau terlewati; sekali per batas per periode per tingkat. */
-export function limitPushes(statuses: Status[]): PlannedPush[] {
+export function limitPushes(statuses: Status[], master?: { id: string; debt: DebtView } | null): PlannedPush[] {
   const out: PlannedPush[] = [];
   for (const s of statuses) {
-    const body = limitMessage(s, rp);
+    // Batas utama: pesan memakai jatah setelah dipotong hutang batas, sama dengan Beranda.
+    const body = master && s.limit.id === master.id ? masterMessage(s.limit.name, master.debt, s.limit.warn_pct, rp) : limitMessage(s, rp);
     if (!body) continue;
     out.push({ kind: "limit", key: `${s.limit.id}:${s.from}:${s.level}`, msg: { title: s.level === "lewat" ? "Batas pengeluaran terlewati" : "Batas pengeluaran hampir habis", body, url: "/batas-pengeluaran", tag: `limit-${s.limit.id}` } });
   }

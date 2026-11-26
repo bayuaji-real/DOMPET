@@ -3,7 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { serviceClient } from "@/lib/supabase/service";
 import { configurePush, sendPush } from "@/lib/push/send";
 import { apiPush, billPushes, limitPushes, proExpiryPush, type PlannedPush } from "@/lib/push/alerts";
-import { limitStatuses, neededRange, type Limit, type Tx } from "@/lib/konsultan/spend-limit";
+import { limitStatuses, neededRange, masterLimit, debtView, masterDailyStatus, type Limit, type Tx } from "@/lib/konsultan/spend-limit";
 import type { ApiUsage } from "@/lib/data/admin";
 
 const jakartaToday = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
@@ -27,19 +27,35 @@ export async function GET(req: Request) {
   if (ap) for (const id of admins) planned.push({ userId: id, p: ap });
 
   // 2) Batas pengeluaran semua pengguna.
-  const { data: lims } = await sb.from("spend_limits").select("id,user_id,name,period,amount,category_ids,warn_pct,is_active").eq("is_active", true);
-  const byUser = new Map<string, Limit[]>();
+  const { data: lims } = await sb.from("spend_limits").select("id,user_id,name,period,amount,category_ids,warn_pct,is_active,created_at").eq("is_active", true);
+  const byUser = new Map<string, (Limit & { created_at?: string })[]>();
+  const addDays = (d: string, n: number) => new Date(Date.parse(d + "T00:00:00Z") + n * 86_400_000).toISOString().slice(0, 10);
+  const wib = (iso?: string) => (iso ? new Date(Date.parse(iso) + 7 * 3600_000).toISOString().slice(0, 10) : "");
   for (const r of lims ?? []) {
-    const l: Limit = { id: r.id, name: r.name, period: r.period, amount: Number(r.amount), category_ids: r.category_ids ?? [], warn_pct: r.warn_pct, is_active: true };
+    const l: Limit & { created_at?: string } = { created_at: r.created_at, id: r.id, name: r.name, period: r.period, amount: Number(r.amount), category_ids: r.category_ids ?? [], warn_pct: r.warn_pct, is_active: true };
     byUser.set(r.user_id, [...(byUser.get(r.user_id) ?? []), l]);
   }
   if (byUser.size > 0) {
     const all = [...byUser.values()].flat();
-    const { from } = neededRange(all, today);
+    const { from: f0 } = neededRange(all, today);
+    const from = [f0, addDays(today, -60)].sort()[0]; // utang batas dihitung paling jauh 60 hari ke belakang
     const { data: txs } = await sb.from("transactions").select("user_id,type,amount,date,category_id").in("user_id", [...byUser.keys()]).eq("type", "expense").gte("date", from).lte("date", today).limit(50000);
     const txByUser = new Map<string, Tx[]>();
     for (const t of txs ?? []) txByUser.set(t.user_id, [...(txByUser.get(t.user_id) ?? []), { type: t.type, amount: Number(t.amount), date: t.date, category_id: t.category_id }]);
-    for (const [uid, ls] of byUser) for (const p of limitPushes(limitStatuses(ls, txByUser.get(uid) ?? [], today))) planned.push({ userId: uid, p });
+    for (const [uid, ls] of byUser) {
+      const txs = txByUser.get(uid) ?? [];
+      const m = masterLimit(ls);
+      const rest = ls.filter((l) => l.id !== m?.id);
+      const sts = limitStatuses(rest, txs, today);
+      let master: { id: string; debt: ReturnType<typeof debtView> } | null = null;
+      if (m) {
+        const floor = addDays(today, -60), cd = wib(m.created_at);
+        const debt = debtView(m, txs, cd && cd > floor ? cd : floor, today);
+        master = { id: m.id, debt };
+        sts.unshift(masterDailyStatus(m, debt, today));
+      }
+      for (const p of limitPushes(sts, master)) planned.push({ userId: uid, p });
+    }
   }
 
   // 3) Tagihan berulang jatuh tempo hari ini atau besok.

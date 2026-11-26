@@ -4,6 +4,7 @@ import * as React from "react";
 import { Check, ChevronDown, ChevronRight, Eye, EyeOff, TrendingDown, TrendingUp } from "lucide-react";
 import { WalletIcon } from "@/components/wallet/wallet-icon";
 import { cn } from "@/lib/utils";
+import { StatPair } from "@/components/ui/form-kit";
 import type { WalletBalance } from "@/lib/data/wallets";
 import type { Transaction } from "@/lib/data/transactions";
 
@@ -201,25 +202,11 @@ export function TotalSaldoCarousel({
         )}
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/10 pt-4">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10">
-            <TrendingUp className="h-4 w-4 text-white/90" />
-          </div>
-          <div>
-            <p className="text-[10px] text-white/90">Pemasukan Bulan Ini</p>
-            <p className="text-xs font-bold">{display(masuk)}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10">
-            <TrendingDown className="h-4 w-4 text-rose-300" />
-          </div>
-          <div>
-            <p className="text-[10px] text-white/90">Pengeluaran Bulan Ini</p>
-            <p className="text-xs font-bold">{display(keluar)}</p>
-          </div>
-        </div>
+      <div className="mt-4 border-t border-white/15 pt-4">
+        <StatPair items={[
+          { label: "Pemasukan Bulan Ini", value: display(masuk), tone: "plus", icon: <TrendingUp className="h-4 w-4" /> },
+          { label: "Pengeluaran Bulan Ini", value: display(keluar), tone: "minus", icon: <TrendingDown className="h-4 w-4" /> },
+        ]} />
       </div>
     </section>
   );
