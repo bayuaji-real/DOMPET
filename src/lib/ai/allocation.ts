@@ -62,12 +62,12 @@ export function daysBetween(a: string, b: string): number {
   return Math.round(f(b) - f(a));
 }
 
-function addDays(d: string, n: number): string {
+export function addDays(d: string, n: number): string {
   const [y, m, dd] = d.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, dd + n)).toISOString().slice(0, 10);
 }
 
-function addMonthKeepDay(d: string, n: number, day: number): string {
+export function addMonthKeepDay(d: string, n: number, day: number): string {
   const [y, m] = d.split("-").map(Number);
   const first = new Date(Date.UTC(y, m - 1 + n, 1));
   const last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();

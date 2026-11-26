@@ -254,8 +254,10 @@ export async function generateChat(turns: ChatTurn[], opts: ChatOptions = {}): P
  * (GEMINI_PRICE_IN_USD, GEMINI_PRICE_OUT_USD, USD_IDR). Ini PERKIRAAN, cocokkan dengan tagihan asli.
  */
 export function estimateCostIdr(u: UsageInfo): number {
-  const pin = Number(process.env.GEMINI_PRICE_IN_USD ?? 0.1);
-  const pout = Number(process.env.GEMINI_PRICE_OUT_USD ?? 0.4);
+  // Default = harga resmi gemini-3.5-flash-lite (paid tier, Standard): US$0,30 masuk dan US$2,50 keluar per 1 juta token
+  // (token keluar sudah termasuk token berpikir). Cek lagi di ai.google.dev/gemini-api/docs/pricing bila model diganti.
+  const pin = Number(process.env.GEMINI_PRICE_IN_USD ?? 0.3);
+  const pout = Number(process.env.GEMINI_PRICE_OUT_USD ?? 2.5);
   const fx = Number(process.env.USD_IDR ?? 16500);
   return ((u.inputTokens * pin + u.outputTokens * pout) / 1_000_000) * fx;
 }

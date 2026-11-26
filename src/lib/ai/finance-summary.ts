@@ -6,7 +6,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { addMonths } from "@/lib/savings-feasibility";
 import { billsMonthlyFromRules, paydayInfoFromRows } from "@/lib/savings-queue";
-import { allocationToText, buildAllocation } from "@/lib/ai/allocation";
+import { allocationToText, buildAllocation, type AllocationInput } from "@/lib/ai/allocation";
+import { buildRoadmap, roadmapToText } from "@/lib/ai/roadmap";
 
 export interface FinanceSummary {
   today: string;
@@ -167,6 +168,16 @@ const rp = (n: number) => `Rp${Math.round(n).toLocaleString("id-ID")}`;
 
 /** Teks ringkas untuk dimasukkan ke prompt. */
 export function summaryToText(s: FinanceSummary): string {
+  const alloc: AllocationInput = {
+    today: s.today,
+    totalBalance: s.totalBalance,
+    savingsBalance: s.savingsBalance,
+    nextPayday: s.nextPayday,
+    nextPaydayAmount: s.nextPaydayAmount,
+    perMonth: s.paydaysPerMonth,
+    fixedMonthly: s.planFixedMonthly,
+    goals: s.goals,
+  };
   return [
     `Hari ini: ${s.today}`,
     `Rata-rata per bulan (${s.monthsOfData || "bulan ini"} bulan data): pemasukan ${rp(s.avgMonthlyIncome)}, pengeluaran ${rp(s.avgMonthlyExpense)}`,
@@ -178,18 +189,7 @@ export function summaryToText(s: FinanceSummary): string {
     `Pengeluaran terbesar bulan ini: ${s.topCategories.map((c) => `${c.name} ${rp(c.amount)}`).join(", ") || "belum ada"}`,
     `Tabungan aktif: ${s.goals.map((g) => `${g.name} (terkumpul ${rp(g.saved)} dari ${rp(g.target)}${g.deadline ? `, tenggat ${g.deadline}` : ""}, setoran ${rp(g.monthly)}/bulan)`).join("; ") || "belum ada"}`,
     `Gajian berikutnya: ${s.nextPayday ?? "belum diatur"}`,
-    allocationToText(
-      buildAllocation({
-        today: s.today,
-        totalBalance: s.totalBalance,
-        savingsBalance: s.savingsBalance,
-        nextPayday: s.nextPayday,
-        nextPaydayAmount: s.nextPaydayAmount,
-        perMonth: s.paydaysPerMonth,
-        fixedMonthly: s.planFixedMonthly,
-        goals: s.goals,
-      }),
-      s.nextPayday
-    ),
+    allocationToText(buildAllocation(alloc), s.nextPayday),
+    roadmapToText(buildRoadmap(alloc)),
   ].join("\n");
 }

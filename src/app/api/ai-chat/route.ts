@@ -5,6 +5,7 @@ import type { FeasibilityResult } from "@/lib/savings-feasibility";
 import { evaluateSavingsQueue, generatePaydaysFromInfo, resolvePlanBasis } from "@/lib/savings-queue";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
 import { guardAi } from "@/lib/ai/entitlement";
+import { firstNameFrom, nameToText } from "@/lib/ai/user-name";
 import { loadMemory, memoryToText, saveTurn, refreshMemoryIfDue } from "@/lib/ai/ruby-memory";
 import { createClient } from "@/lib/supabase/server";
 import { aiChatSchema, type SavingsPending } from "@/lib/validation";
@@ -64,7 +65,8 @@ const ALLOCATION_RULES = `LANGKAH WAJIB sebelum menjawab apa pun soal uang (paka
 1. Pisahkan uang bebas dari uang terikat di tabungan. Jangan pernah menyebut total saldo sebagai "sisa uang" atau "uang yang ada"; uang terikat sudah punya tujuan.
 2. Cek semua target. Bila ada yang bertanda DEKAT TENGGAT, SUDAH LEWAT, atau ada KURANG, sebut itu lebih dulu, walaupun pengguna tidak menyebutnya.
 3. Jawab pertanyaan pengguna memakai angka dari blok itu. Kebutuhan baru yang disebut pengguna (misal kuliah Rp2.700.000 di Januari) diletakkan sesuai tenggatnya, lalu sebut cukup atau kurangnya berapa. Hanya boleh penjumlahan dan pengurangan sederhana; jangan mengarang angka baru.
-4. Selalu akhiri dengan rencana nominal yang bisa langsung dijalankan: "Sisihkan RpX untuk A, RpY untuk B, ...". Total sisihan tidak boleh melebihi uang yang bisa dibagi. Kalau uang tidak cukup untuk semua, katakan terus terang mana yang kurang dan beri pilihan (geser tenggat, kurangi target, atau cari tambahan).`;
+4. Selalu akhiri dengan rencana nominal yang bisa langsung dijalankan: "Sisihkan RpX untuk A, RpY untuk B, ...". Total sisihan tidak boleh melebihi uang yang bisa dibagi. Kalau uang tidak cukup untuk semua, katakan terus terang mana yang kurang dan beri pilihan (geser tenggat, kurangi target, atau cari tambahan).
+5. Jangan berhenti di satu langkah. Pakai blok "RENCANA JANGKA PANJANG" untuk memberi peta jalan beberapa bulan ke depan: target mana lunas kapan, gajian mana dialihkan ke target berikutnya, dan strategi agar semua tenggat tercapai (tambahan sekali atau per gajian, geser tenggat). Salin tanggal dan nominalnya dari blok itu; jangan menghitung ulang. Kalau gajian belum diatur, minta pengguna mengaturnya di halaman Rencana.`;
 
 const COMMON_RULES = `Aturan:
 - Namamu Ruby, asisten keuangan pribadi di aplikasi Dompetku. Pengguna sudah disapa Ruby di awal obrolan, jadi jangan memperkenalkan diri lagi kecuali ditanya.
@@ -137,7 +139,11 @@ Jawab pertanyaan pengguna berdasarkan data itu dan hal yang pernah pengguna ceri
 ${ALLOCATION_RULES}
 Kalau ditanya "aman nggak beli X", bandingkan X dengan UANG BEBAS (bukan total saldo) dan dengan uang yang bisa dibagi, sebut angkanya.
 Jangan membahas pembuatan tabungan baru (itu fitur lain di halaman Tabungan).
-FORMAT JAWABAN: satu kalimat pembuka yang langsung menjawab, maksimal 4 poin ("- ", tiap poin satu kalimat pendek) berisi hitungannya, lalu bagian "**Rencana:**" berisi 2 sampai 6 baris "- Sisihkan **RpX** untuk Y" (ambil dari usulan aplikasi, sesuaikan bila pengguna menyebut kebutuhan baru). Boleh **tebal** untuk angka penting.
+FORMAT JAWABAN: satu kalimat pembuka yang langsung menjawab, maksimal 3 poin ("- ", tiap poin satu kalimat pendek) berisi hitungannya, lalu tiga bagian:
+**Langkah sekarang:** 2 sampai 4 baris "- Sisihkan **RpX** untuk Y".
+**Peta jalan:** maksimal 4 baris per fase (gabungkan gajian berurutan yang sama), memuat bulan atau tanggal dan target yang lunas.
+**Strategi:** 2 sampai 3 opsi bernomor beserta angkanya (tambahan per gajian, geser tenggat, atau hemat biaya).
+Boleh **tebal** untuk angka penting. Kalau pertanyaan sederhana dan tidak menyangkut uang atau target, jawab singkat saja tanpa tiga bagian itu.
 ${COMMON_RULES}`;
 }
 
@@ -155,7 +161,7 @@ Tugas: susun rencana pembagian uang lewat obrolan. Kumpulkan SATU hal per gilira
 Di tiap giliran: tulis satu pertanyaan pendek, dan beri contoh jawaban, misal "Contoh: Rp5.000.000 tiap tanggal 25". Jangan tanya hal yang sudah dijawab atau sudah ada di data.
 Setelah semua terkumpul, beri rencana: sisa uang = pemasukan dikurangi biaya hidup dan cicilan, bagi untuk target yang tenggatnya paling dekat lebih dulu, lalu dana darurat dan tujuan lain. Pakai angka dari jawaban pengguna dan dari blok ALOKASI UANG, jangan mengarang.
 ${ALLOCATION_RULES}
-FORMAT JAWABAN: satu kalimat pembuka, lalu poin-poin ("- ", maksimal 5 poin, tiap poin satu kalimat pendek). Saat rencana sudah lengkap, tutup dengan bagian "**Rencana:**" berisi baris "- Sisihkan **RpX** untuk Y". Jangan paragraf panjang.
+FORMAT JAWABAN: satu kalimat pembuka, lalu poin-poin ("- ", maksimal 4 poin, tiap poin satu kalimat pendek). Saat rencana sudah lengkap, tutup dengan tiga bagian: "**Langkah sekarang:**" (baris "- Sisihkan **RpX** untuk Y"), "**Peta jalan:**" (fase per bulan/tanggal sampai semua target lunas), dan "**Strategi:**" (2-3 opsi bernomor dengan angka). Jangan paragraf panjang.
 ${COMMON_RULES}`;
 }
 
@@ -315,11 +321,19 @@ export async function POST(request: NextRequest) {
     }
 
     const memoryText = memoryToText(await loadMemory(supabase));
+    let nameText = "";
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      nameText = nameToText(firstNameFrom(userData.user?.user_metadata, userData.user?.email));
+    } catch {
+      /* tanpa nama: Ruby tidak menyebut nama */
+    }
     const summaryText = summaryToText(summaryData);
     const turns: ChatTurn[] = messages.map((m) => ({ role: m.role, text: m.text }));
     const { text, usage } = await generateChat(turns, {
       system:
         (mode === "savings" ? savingsSystem(summaryText, today) : mode === "plan" ? planSystem(summaryText) : advisorSystem(summaryText)) +
+        (nameText ? `\n\n${nameText}` : "") +
         (memoryText ? `\n\n${memoryText}` : ""),
       responseSchema: mode === "savings" ? SAVINGS_SCHEMA : undefined,
       temperature: mode === "savings" ? 0.2 : 0.5,
