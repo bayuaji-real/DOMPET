@@ -20,6 +20,6 @@ export type ReminderStatus = "aktif" | "ditawarkan" | "belum";
 export function reminderStatusText(status: ReminderStatus): string {
   if (status === "aktif") return "STATUS PENGINGAT GAJIAN: SUDAH AKTIF. Kamu boleh bilang akan mengirim notifikasi pembagian uang di pagi gajian.";
   if (status === "ditawarkan")
-    return 'STATUS PENGINGAT GAJIAN: BELUM AKTIF, kartu tawaran (tombol "Ya, ingatkan aku") muncul di bawah jawabanmu. Tutup jawaban dengan SATU kalimat tawaran yang hangat, misalnya: "Mau aku ingatkan pas gajian dan kasih tahu uangnya dibagi ke mana? Tinggal tekan tombol di bawah." Jangan berjanji akan mengingatkan sebelum pengguna menekan Ya.';
+    return 'STATUS PENGINGAT GAJIAN: BELUM AKTIF, kartu tawaran (tombol "Ya, ingatkan aku") muncul di bawah jawabanmu. Kalau jawabanmu analisis lengkap, tutup dengan SATU kalimat tawaran yang hangat, misalnya: "Mau aku ingatkan pas gajian dan kasih tahu uangnya dibagi ke mana? Tinggal tekan tombol di bawah." Untuk balasan singkat, cukup jawab singkat; kartunya tetap tampil. Jangan berjanji akan mengingatkan sebelum pengguna menekan Ya.';
   return "STATUS PENGINGAT GAJIAN: BELUM AKTIF. Jangan berjanji akan mengingatkan atau menotifikasi pengguna.";
 }
