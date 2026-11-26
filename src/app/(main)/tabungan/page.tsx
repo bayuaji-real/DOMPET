@@ -619,19 +619,19 @@ export default function TabunganPage() {
 
           {/* Header & Hero Saldo */}
           <div className="relative z-10 flex items-start justify-between gap-3 border-b border-white/15 pb-4">
-            <div>
+            <div className="min-w-0">
               <div className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-100 backdrop-blur-xs">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
                 <span>Total Terkumpul</span>
               </div>
-              <h2 className="mt-2 text-3xl font-black tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.2)] sm:text-4xl">
+              <h2 className="mt-2 text-2xl min-[400px]:text-3xl font-black tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.2)] sm:text-4xl">
                 {formatRupiah(totalTerkumpul)}
               </h2>
             </div>
             <Button
               onClick={() => setIsChatOpen(true)}
               size="sm"
-              className="h-9 cursor-pointer gap-1.5 rounded-xl border border-white/40 bg-white px-3 text-xs font-black text-teal-900 shadow-md transition-all hover:bg-white/95 active:scale-95"
+              className="h-9 shrink-0 cursor-pointer gap-1.5 rounded-xl border border-white/40 bg-white px-3 text-xs font-black text-teal-900 shadow-md transition-all hover:bg-white/95 active:scale-95"
             >
               <Plus className="h-3.5 w-3.5" /> Buat Target
             </Button>
