@@ -278,7 +278,10 @@ export async function POST(request: NextRequest) {
   }
   const { mode, messages: sentMessages, pending, threadId: sentThreadId } = parsed.data;
   // Hemat token: tanya bebas cukup 8 pesan terakhir (konteks lama ada di memori). Tabungan dan rencana butuh seluruh sesi (maks 14).
-  const messages = mode === "advisor" ? sentMessages.slice(-8) : sentMessages;
+  // Jawaban Ruby lama dipotong di riwayat yang dikirim ke AI (angka terbaru selalu datang dari data hidup, bukan dari riwayat).
+  const MODEL_HISTORY_MAX = 1200;
+  const trimmed = sentMessages.map((m) => (m.role === "model" && m.text.length > MODEL_HISTORY_MAX ? { ...m, text: `${m.text.slice(0, MODEL_HISTORY_MAX)}...` } : m));
+  const messages = mode === "advisor" ? trimmed.slice(-8) : trimmed;
   // Jenis jatah cicip Basic mengikuti mode: tabungan, rencana, atau tanya biasa.
   const cicipKey = mode === "savings" ? "tabungan" : mode === "plan" ? "rencana" : "konsultasi";
   const guard = await guardAi("ai_chat", auth.userId, cicipKey, mode === "plan");

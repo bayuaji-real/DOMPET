@@ -79,7 +79,13 @@ export const aiChatSchema = z.object({
   mode: z.enum(["savings", "advisor", "plan"]),
   // Riwayat dibatasi supaya biaya token terkendali
   messages: z
-    .array(z.object({ role: z.enum(["user", "model"]), text: z.string().min(1).max(1000) }))
+    .array(
+      z.discriminatedUnion("role", [
+        z.object({ role: z.literal("user"), text: z.string().min(1).max(1000) }),
+        // Jawaban Ruby (rencana gajian demi gajian + strategi) bisa panjang, dan ikut dikirim balik sebagai riwayat.
+        z.object({ role: z.literal("model"), text: z.string().min(1).max(4000) }),
+      ])
+    )
     .min(1)
     .max(14),
   /** Keadaan "menunggu jawaban gaji/biaya hidup" dari balasan sebelumnya (mode tabungan). */
