@@ -524,7 +524,12 @@ export function AiChat({
   const kb = useKeyboardOpen();
   React.useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, loading, proposal]);
+    // Kartu tawaran muncul setelah tata letak selesai; gulung lagi supaya tidak tertutup kolom ketik.
+    const t = offer ? setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), 350) : undefined;
+    return () => {
+      if (t) clearTimeout(t);
+    };
+  }, [messages, loading, proposal, offer]);
   // Keyboard terbuka/tutup: layar mengecil, jadi langsung gulung ke pesan terbaru supaya tidak tertutup
   React.useEffect(() => {
     const t = setTimeout(() => endRef.current?.scrollIntoView({ block: "end" }), 250);
