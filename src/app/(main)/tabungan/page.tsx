@@ -35,7 +35,6 @@ import {
   ChevronRight,
   Loader2,
 } from "lucide-react";
-import { StatPair } from "@/components/ui/form-kit";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -612,29 +611,57 @@ export default function TabunganPage() {
       )}
 
       <div className="space-y-4 p-4">
-        {/* A. Ringkasan Atas */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 p-4.5 text-white shadow-lg shadow-teal-700/25">
-          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+        {/* A. Ringkasan Atas - Varian 2: Crystal Glass Inlay & Crisp Luminous Badges */}
+        <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 p-5 text-white shadow-xl shadow-teal-900/30 ring-1 ring-white/10">
+          {/* Ambient light glow */}
+          <span aria-hidden="true" className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full bg-teal-300/20 blur-3xl" />
+          <span aria-hidden="true" className="pointer-events-none absolute -bottom-10 -left-10 h-36 w-36 rounded-full bg-emerald-300/15 blur-2xl" />
+
+          {/* Header & Hero Saldo */}
+          <div className="relative z-10 flex items-start justify-between gap-3 border-b border-white/15 pb-4">
             <div>
-              <p className="text-[11px] text-white/90 font-medium">Total Terkumpul</p>
-              <h2 className="text-2xl font-extrabold tracking-tight">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-100 backdrop-blur-xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                <span>Total Terkumpul</span>
+              </div>
+              <h2 className="mt-2 text-3xl font-black tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.2)] sm:text-4xl">
                 {formatRupiah(totalTerkumpul)}
               </h2>
             </div>
             <Button
               onClick={() => setIsChatOpen(true)}
               size="sm"
-              className="h-8 rounded-xl bg-teal-500 text-zinc-950 hover:bg-teal-400 font-bold text-xs gap-1 shadow-sm cursor-pointer"
+              className="h-9 cursor-pointer gap-1.5 rounded-xl border border-white/40 bg-white px-3 text-xs font-black text-teal-900 shadow-md transition-all hover:bg-white/95 active:scale-95"
             >
               <Plus className="h-3.5 w-3.5" /> Buat Target
             </Button>
           </div>
 
-          <div className="pt-3">
-            <StatPair items={[
-              { label: "Total Target", value: formatRupiah(totalTarget), tone: "plus", icon: <TrendingUp className="h-4 w-4" /> },
-              { label: "Total Kekurangan", value: formatRupiah(totalKekurangan), tone: "minus", icon: <TrendingDown className="h-4 w-4" /> },
-            ]} />
+          {/* Stat Area: Dual Crystal Glass Capsules */}
+          <div className="relative z-10 grid grid-cols-2 gap-2.5 pt-3.5">
+            <div className="flex items-center gap-2.5 rounded-2xl border border-white/20 bg-white/12 p-2.5 backdrop-blur-md shadow-xs transition-colors hover:bg-white/18">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-300 text-teal-950 font-bold shadow-xs">
+                <TrendingUp className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[10px] font-bold uppercase tracking-wider text-emerald-100">Total Target</p>
+                <p className="truncate text-xs font-black tracking-tight text-white drop-shadow-xs sm:text-sm">
+                  {formatRupiah(totalTarget)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 rounded-2xl border border-white/20 bg-white/12 p-2.5 backdrop-blur-md shadow-xs transition-colors hover:bg-white/18">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-300 text-amber-950 font-bold shadow-xs">
+                <TrendingDown className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[10px] font-bold uppercase tracking-wider text-amber-100">Total Kekurangan</p>
+                <p className="truncate text-xs font-black tracking-tight text-white drop-shadow-xs sm:text-sm">
+                  {formatRupiah(totalKekurangan)}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

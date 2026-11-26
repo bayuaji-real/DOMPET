@@ -4,7 +4,6 @@ import * as React from "react";
 import { Check, ChevronDown, ChevronRight, Eye, EyeOff, TrendingDown, TrendingUp } from "lucide-react";
 import { WalletIcon } from "@/components/wallet/wallet-icon";
 import { cn } from "@/lib/utils";
-import { StatPair } from "@/components/ui/form-kit";
 import type { WalletBalance } from "@/lib/data/wallets";
 import type { Transaction } from "@/lib/data/transactions";
 
@@ -145,16 +144,23 @@ export function TotalSaldoCarousel({
   return (
     <section
       aria-label="Saldo"
-      className="relative rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 p-5 text-white shadow-lg shadow-teal-700/25"
+      className="relative rounded-3xl border border-white/20 bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 p-5 text-white shadow-xl shadow-teal-900/30 ring-1 ring-white/10"
     >
-      <div className="flex items-center justify-between gap-2">
+      {/* Pendaran cahaya ambient (dikurung overflow-hidden tersendiri agar dropdown bebas muncul keluar) */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl" aria-hidden="true">
+        <span className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-teal-300/20 blur-3xl" />
+        <span className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-emerald-300/15 blur-2xl" />
+      </div>
+
+      {/* Header Kartu: Selector Dompet & Tombol Sembunyikan Saldo */}
+      <div className="relative z-10 flex items-center justify-between gap-2">
         <div ref={boxRef} className="relative min-w-0">
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-haspopup="listbox"
             aria-expanded={open}
-            className="flex max-w-full cursor-pointer items-center gap-1.5 rounded-xl bg-white/10 px-2.5 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white/20 active:scale-95"
+            className="flex max-w-full cursor-pointer items-center gap-1.5 rounded-xl border border-white/20 bg-white/15 px-3 py-1.5 text-xs font-bold text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
           >
             <span className="truncate">{heading}</span>
             <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 transition-transform", open && "rotate-180")} />
@@ -180,7 +186,7 @@ export function TotalSaldoCarousel({
         <button
           type="button"
           onClick={onToggleHide}
-          className="cursor-pointer rounded-lg p-1.5 text-white/90 transition-all hover:bg-white/10 hover:text-white active:scale-95"
+          className="cursor-pointer rounded-xl border border-white/20 bg-white/15 p-2 text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 hover:text-white active:scale-95"
           title={hideBalance ? "Tampilkan Saldo" : "Sembunyikan Saldo"}
           aria-label={hideBalance ? "Tampilkan Saldo" : "Sembunyikan Saldo"}
         >
@@ -188,25 +194,55 @@ export function TotalSaldoCarousel({
         </button>
       </div>
 
-      <div className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">{display(amount)}</div>
-      <div className="mt-1 flex items-center justify-between gap-2">
-        <p className="text-[11px] text-white/90">{subtitle}</p>
+      {/* Nilai Saldo Utama (Hero Typography yang Pop-out) */}
+      <div className="relative z-10 mt-3.5 text-3xl font-black tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.2)] sm:text-4xl">
+        {display(amount)}
+      </div>
+
+      {/* Subtitle / Keterangan Dompet */}
+      <div className="relative z-10 mt-1.5 flex flex-wrap items-center justify-between gap-2">
+        <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-2.5 py-0.5 text-[11px] font-medium text-white/95 backdrop-blur-xs">
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-300" />
+          <span className="truncate">{subtitle}</span>
+        </div>
         {selected && (
           <button
             type="button"
             onClick={() => onSelectWallet(selected)}
-            className="flex cursor-pointer items-center gap-0.5 text-[11px] font-bold text-white/90 hover:text-white"
+            className="flex cursor-pointer items-center gap-1 rounded-lg border border-white/20 bg-white/15 px-2.5 py-1 text-[11px] font-bold text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
           >
             Detail <ChevronRight className="h-3 w-3" />
           </button>
         )}
       </div>
 
-      <div className="mt-4 border-t border-white/15 pt-4">
-        <StatPair items={[
-          { label: "Pemasukan", value: display(masuk), tone: "plus", icon: <TrendingUp className="h-4 w-4" /> },
-          { label: "Pengeluaran", value: display(keluar), tone: "minus", icon: <TrendingDown className="h-4 w-4" /> },
-        ]} />
+      {/* Pemasukan & Pengeluaran: Kapsul Kaca Mikro untuk Kontras & Kejelasan Maksimal */}
+      <div className="relative z-10 mt-4.5 grid grid-cols-2 gap-2.5 border-t border-white/15 pt-3.5">
+        {/* Pemasukan */}
+        <div className="flex items-center gap-2.5 rounded-2xl border border-white/15 bg-black/20 p-2.5 backdrop-blur-md shadow-inner transition-colors hover:bg-black/25">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-400/20 text-emerald-300 ring-1 ring-emerald-400/30">
+            <TrendingUp className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[10px] font-bold uppercase tracking-wider text-emerald-200/90">Pemasukan</p>
+            <p className="truncate text-xs font-black tracking-tight text-white drop-shadow-xs sm:text-sm">
+              {display(masuk)}
+            </p>
+          </div>
+        </div>
+
+        {/* Pengeluaran */}
+        <div className="flex items-center gap-2.5 rounded-2xl border border-white/15 bg-black/20 p-2.5 backdrop-blur-md shadow-inner transition-colors hover:bg-black/25">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-400/20 text-rose-300 ring-1 ring-rose-400/30">
+            <TrendingDown className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[10px] font-bold uppercase tracking-wider text-rose-200/90">Pengeluaran</p>
+            <p className="truncate text-xs font-black tracking-tight text-white drop-shadow-xs sm:text-sm">
+              {display(keluar)}
+            </p>
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -108,14 +108,20 @@ export function LandingPhonePreview() {
           {/* Main Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto px-4 py-2 space-y-3.5 no-scrollbar">
             {/* The Iconic Total Saldo Card */}
-            <div className="relative rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 p-4 text-white shadow-md shadow-teal-700/25">
+            <div className="relative rounded-3xl border border-white/20 bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 p-4 text-white shadow-xl shadow-teal-900/30 ring-1 ring-white/10">
+              {/* Pendaran cahaya ambient */}
+              <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl" aria-hidden="true">
+                <span className="absolute -right-8 -top-8 h-36 w-36 rounded-full bg-teal-300/20 blur-2xl" />
+                <span className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-emerald-300/15 blur-xl" />
+              </div>
+
               {/* Card Header: Dropdown & Eye */}
-              <div className="flex items-center justify-between gap-2 relative">
+              <div className="relative z-10 flex items-center justify-between gap-2">
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-1.5 rounded-xl bg-white/15 hover:bg-white/20 px-2.5 py-1 text-xs font-bold text-white transition-all active:scale-95"
+                    className="flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/15 px-2.5 py-1 text-xs font-bold text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
                   >
                     <span className="truncate max-w-[130px]">{selectedWallet.name}</span>
                     <ChevronDown
@@ -153,7 +159,7 @@ export function LandingPhonePreview() {
                 <button
                   type="button"
                   onClick={() => setHideBalance(!hideBalance)}
-                  className="rounded-lg p-1.5 text-white/90 hover:bg-white/10 active:scale-95 transition-all"
+                  className="rounded-xl border border-white/20 bg-white/15 p-1.5 text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
                   aria-label={hideBalance ? "Tampilkan Saldo" : "Sembunyikan Saldo"}
                 >
                   {hideBalance ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -161,36 +167,41 @@ export function LandingPhonePreview() {
               </div>
 
               {/* Balance Number */}
-              <div className="mt-2.5 text-xl sm:text-2xl font-black tracking-tight">
+              <div className="relative z-10 mt-2.5 text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.2)]">
                 {formatIDR(selectedWallet.balance)}
               </div>
-              <p className="text-[10px] text-white/80 mt-0.5">
-                {selectedWalletId === "total"
-                  ? "4 Dompet Aktif + 1 Tabungan"
-                  : `Dompet ${selectedWallet.name}`}
-              </p>
+              <div className="relative z-10 mt-1">
+                <div className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/95 backdrop-blur-xs">
+                  <span className="size-1.5 rounded-full bg-emerald-300" />
+                  <span>
+                    {selectedWalletId === "total"
+                      ? "4 Dompet Aktif + 1 Tabungan"
+                      : `Dompet ${selectedWallet.name}`}
+                  </span>
+                </div>
+              </div>
 
-              {/* Income & Expense Month Stats */}
-              <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/15 pt-2.5">
-                <div className="flex items-center gap-1.5">
-                  <div className="size-6 rounded-lg bg-white/15 flex items-center justify-center">
-                    <TrendingUp className="size-3 text-emerald-200" />
+              {/* Income & Expense Month Stats: Dual Frosted Glass Capsules */}
+              <div className="relative z-10 mt-3 grid grid-cols-2 gap-2 border-t border-white/15 pt-2.5">
+                <div className="flex items-center gap-2 rounded-xl border border-white/15 bg-black/20 p-2 backdrop-blur-md shadow-inner">
+                  <div className="size-6 shrink-0 rounded-lg bg-emerald-400/20 text-emerald-300 ring-1 ring-emerald-400/30 flex items-center justify-center">
+                    <TrendingUp className="size-3" />
                   </div>
-                  <div>
-                    <p className="text-[9px] text-white/75 leading-none">Pemasukan</p>
-                    <p className="text-[11px] font-bold text-white mt-0.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[8px] font-bold uppercase tracking-wider text-emerald-200/90 leading-none">Pemasukan</p>
+                    <p className="truncate text-[11px] font-black text-white drop-shadow-xs mt-0.5">
                       {hideBalance ? "••••" : "Rp8.500.000"}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  <div className="size-6 rounded-lg bg-white/15 flex items-center justify-center">
-                    <TrendingDown className="size-3 text-rose-200" />
+                <div className="flex items-center gap-2 rounded-xl border border-white/15 bg-black/20 p-2 backdrop-blur-md shadow-inner">
+                  <div className="size-6 shrink-0 rounded-lg bg-rose-400/20 text-rose-300 ring-1 ring-rose-400/30 flex items-center justify-center">
+                    <TrendingDown className="size-3" />
                   </div>
-                  <div>
-                    <p className="text-[9px] text-white/75 leading-none">Pengeluaran</p>
-                    <p className="text-[11px] font-bold text-white mt-0.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[8px] font-bold uppercase tracking-wider text-rose-200/90 leading-none">Pengeluaran</p>
+                    <p className="truncate text-[11px] font-black text-white drop-shadow-xs mt-0.5">
                       {hideBalance ? "••••" : "Rp2.340.000"}
                     </p>
                   </div>

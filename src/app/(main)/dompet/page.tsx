@@ -293,22 +293,31 @@ export default function DompetPage() {
       )}
 
       <div className="space-y-4 p-4">
-        {/* 1. Kartu Saldo Total & Aksi Cepat */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 p-5 text-white shadow-lg shadow-teal-700/25 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/10 text-white">
+        {/* 1. Kartu Saldo Total & Aksi Cepat - Varian 3: Bold High-Contrast & Neumorphic Badge Depth */}
+        <div className="relative overflow-hidden rounded-3xl border border-white/25 bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 p-5 text-white shadow-2xl shadow-teal-950/40 ring-1 ring-white/15 space-y-4">
+          {/* Ambient Lighting */}
+          <span aria-hidden="true" className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-teal-300/20 blur-3xl" />
+          <span aria-hidden="true" className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-emerald-400/15 blur-2xl" />
+
+          <div className="relative z-10 flex items-start justify-between gap-2">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/30 bg-gradient-to-b from-white/25 to-white/10 text-white shadow-inner backdrop-blur-md">
                 <Wallet className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-[11px] font-semibold text-white/90">Total Kekayaan Likuid</p>
-                <h2 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+                <span className="inline-block rounded-md border border-teal-300/40 bg-teal-950/50 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-teal-200">
+                  Total Kekayaan Likuid
+                </span>
+                <h2 className="mt-1 text-3xl font-black tracking-tight text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)] sm:text-4xl">
                   {hideBalance ? "••••••••" : formatRupiah(totalBalance, { absolute: true })}
                 </h2>
                 {savingsTotal > 0 && (
-                  <p className="text-[11px] text-white/90">
-                    Termasuk tabungan {hideBalance ? "••••" : formatRupiah(savingsTotal, { absolute: true })} (lihat di tab Tabungan)
-                  </p>
+                  <div className="mt-2 inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-teal-950/40 px-2.5 py-1 text-[11px] font-semibold text-white/95 backdrop-blur-sm">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
+                    <span>
+                      Termasuk tabungan {hideBalance ? "••••" : formatRupiah(savingsTotal, { absolute: true })}
+                    </span>
+                  </div>
                 )}
               </div>
             </div>
@@ -316,14 +325,15 @@ export default function DompetPage() {
             <button
               type="button"
               onClick={toggleHideBalance}
-              className="cursor-pointer rounded-lg p-1.5 text-white/90 transition-all hover:bg-white/10 hover:text-white active:scale-95"
+              className="cursor-pointer rounded-xl border border-white/25 bg-white/15 p-2 text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
               title={hideBalance ? "Tampilkan Saldo" : "Sembunyikan Saldo"}
+              aria-label={hideBalance ? "Tampilkan Saldo" : "Sembunyikan Saldo"}
             >
               {hideBalance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
 
-          <div className="flex items-center gap-2 pt-1">
+          <div className="relative z-10 flex items-center gap-2.5 pt-1">
             <button
               type="button"
               onClick={() => {
@@ -331,7 +341,7 @@ export default function DompetPage() {
                 setAddStep(1);
                 setShowAddModal(true);
               }}
-              className="flex-1 py-2.5 px-3 rounded-2xl bg-white text-teal-800 hover:bg-white/90 text-xs font-bold shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+              className="flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-xs font-black text-teal-900 shadow-lg shadow-black/15 transition-all hover:bg-white/95 active:scale-95 flex"
             >
               <Plus className="h-4 w-4" />
               Tambah Dompet
@@ -347,7 +357,7 @@ export default function DompetPage() {
                 }
                 setShowTransferModal(true);
               }}
-              className="flex-1 py-2.5 px-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+              className="flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-white/25 bg-teal-950/50 px-4 py-3 text-xs font-black text-white shadow-inner backdrop-blur-md transition-all hover:bg-teal-950/70 active:scale-95 flex"
             >
               <ArrowRightLeft className="h-4 w-4 text-white" />
               Transfer Saldo
