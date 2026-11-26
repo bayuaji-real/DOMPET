@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SplashScreen } from "@/components/splash-screen";
+import { PwaBootstrap } from "@/components/pwa-bootstrap";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -62,6 +63,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SplashScreen />
+          <PwaBootstrap />
           {children}
         </ThemeProvider>
       </body>

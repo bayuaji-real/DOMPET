@@ -1,6 +1,8 @@
 // Service worker Dompetku: hanya untuk notifikasi push (tidak menyimpan cache).
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
+// Handler fetch kosong (tanpa cache): syarat sebagian browser agar aplikasi dianggap bisa dipasang.
+self.addEventListener("fetch", () => {});
 
 self.addEventListener("push", (event) => {
   let d = {};

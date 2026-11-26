@@ -11,6 +11,29 @@ export interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
+// Event "beforeinstallprompt" hanya ditembakkan sekali dan cepat. Ditangkap di tingkat modul (dipasang dari root
+// aplikasi lewat PwaBootstrap) supaya tidak terlewat walau halaman Login/Pengaturan belum dibuka.
+let captured: BeforeInstallPromptEvent | null = null;
+let capturedInstalled = false;
+let capturing = false;
+const subs = new Set<() => void>();
+const notify = () => subs.forEach((f) => f());
+
+export function initPwaCapture() {
+  if (typeof window === "undefined" || capturing) return;
+  capturing = true;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    captured = e as BeforeInstallPromptEvent;
+    notify();
+  });
+  window.addEventListener("appinstalled", () => {
+    capturedInstalled = true;
+    captured = null;
+    notify();
+  });
+}
+
 export function usePwaInstall() {
   const [deferredPrompt, setDeferredPrompt] = React.useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = React.useState(false);
@@ -32,25 +55,15 @@ export function usePwaInstall() {
     const isApple = /iphone|ipad|ipod/.test(ua);
     setIsIOS(isApple);
 
-    const handleBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setIsInstallable(true);
+    initPwaCapture();
+    const sync = () => {
+      setDeferredPrompt(captured);
+      setIsInstallable(captured !== null);
+      if (capturedInstalled) setIsInstalled(true);
     };
-
-    const handleAppInstalled = () => {
-      setIsInstalled(true);
-      setIsInstallable(false);
-      setDeferredPrompt(null);
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
-    window.addEventListener("appinstalled", handleAppInstalled);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
-      window.removeEventListener("appinstalled", handleAppInstalled);
-    };
+    sync();
+    subs.add(sync);
+    return () => { subs.delete(sync); };
   }, []);
 
   const promptInstall = async () => {
@@ -66,8 +79,8 @@ export function usePwaInstall() {
         if (choice.outcome === "accepted") {
           setIsInstalled(true);
         }
-        setDeferredPrompt(null);
-        setIsInstallable(false);
+        captured = null;
+        notify();
       } catch (err) {
         console.warn("Gagal menampilkan dialog instalasi PWA:", err);
         setShowModal(true);
