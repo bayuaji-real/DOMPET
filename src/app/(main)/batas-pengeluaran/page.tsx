@@ -9,10 +9,10 @@ import { MoneyInput } from "@/components/konsultan/money-input";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { notify } from "@/lib/notify";
 import { formatRupiah } from "@/lib/utils";
-import { addLimit, deleteLimit, getLimits, updateLimit, getLimitStatuses, getMasterView, type MasterView } from "@/lib/data/limits";
+import { addLimit, deleteLimit, getLimits, updateLimit, getLimitsWithDebt, getMasterView, type MasterView, type LimitWithDebt } from "@/lib/data/limits";
 import { todayJakarta } from "@/lib/data/sample-mode";
 import { getCategories, type Category } from "@/lib/data/categories";
-import { limitMessage, masterMessage, splitLimit, dailyGauge, type Period, type Status } from "@/lib/konsultan/spend-limit";
+import { limitMessage, masterMessage, splitLimit, dailyGauge, type Period } from "@/lib/konsultan/spend-limit";
 import { Select } from "@/components/ui/select";
 import { PageHero, Cta, FormCard, Field, IconBox, Pill, Notice, EmptyState, chipCls } from "@/components/ui/form-kit";
 
@@ -20,7 +20,7 @@ const PERIOD_LABEL: Record<Period, string> = { harian: "per hari", mingguan: "pe
 const rp = (n: number) => formatRupiah(Math.round(n));
 
 export default function BatasPengeluaranPage() {
-  const [list, setList] = React.useState<Status[] | null>(null);
+  const [list, setList] = React.useState<LimitWithDebt[] | null>(null);
   const [inactive, setInactive] = React.useState<{ id: string; name: string }[]>([]);
   const [cats, setCats] = React.useState<Category[]>([]);
   const [master, setMaster] = React.useState<MasterView | null>(null);
@@ -32,7 +32,7 @@ export default function BatasPengeluaranPage() {
 
   const load = React.useCallback(async () => {
     try {
-      const [s, all, mv] = await Promise.all([getLimitStatuses(), getLimits(), getMasterView().catch(() => null)]);
+      const [s, all, mv] = await Promise.all([getLimitsWithDebt(), getLimits(), getMasterView().catch(() => null)]);
       setMaster(mv); setList(s); setInactive(all.filter((x) => !x.is_active).map((x) => ({ id: x.id, name: x.name }))); setErr("");
     } catch { setErr("Batas pengeluaran belum bisa dimuat. Coba lagi sebentar."); }
   }, []);
@@ -71,13 +71,13 @@ export default function BatasPengeluaranPage() {
         )}
         {!list && !err && <div className="h-24 animate-pulse rounded-3xl bg-muted" aria-busy="true" />}
         {list && list.length === 0 && inactive.length === 0 && <EmptyState emoji="🎯">Belum ada batas. Contoh: 50 ribu per hari untuk makan dan hiburan, atau 100 ribu per minggu untuk hiburan.</EmptyState>}
-        <ul className="space-y-2">{list?.map((s) => {
+        <ul className="space-y-2">{list?.map(({ status: s, debt: ld }) => {
           const l = s.limit;
           // Batas utama: angka utama = jatah HARI INI setelah dipotong hutang batas, sama persis dengan Beranda.
           const isMaster = !!master && master.limit.id === l.id;
-          const g = isMaster ? dailyGauge(master.debt, l.warn_pct) : null;
+          const g = ld ? dailyGauge(ld, l.warn_pct) : null;
           const pct = g ? g.pct : s.pct, level = g ? g.level : s.level;
-          const msg = g ? masterMessage(l.name, master!.debt, l.warn_pct, rp) : limitMessage(s, rp);
+          const msg = ld ? masterMessage(l.name, ld, l.warn_pct, rp) : limitMessage(s, rp);
           const catNames = l.category_ids.map((id) => cats.find((c) => c.id === id)?.name).filter(Boolean).join(", ");
           return (
             <li key={l.id} className="space-y-3 rounded-3xl border border-border/70 bg-card p-4 shadow-xs">

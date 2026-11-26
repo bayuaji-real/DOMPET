@@ -144,3 +144,9 @@ export function masterMessage(name: string, d: DebtView, warnPct: number, fmt: (
   if (g.level === "lewat") return `Batas "${name}" terlewati hari ini: terpakai ${fmt(g.spent)} dari jatah ${fmt(g.cap)}${cut}${g.over ? `, lebih ${fmt(g.spent - g.cap)}` : ""}.`;
   return `Batas "${name}" hampir habis hari ini: terpakai ${fmt(g.spent)} dari jatah ${fmt(g.cap)}${cut}, sisa ${fmt(g.cap - g.spent)}.`;
 }
+
+/** Level dan pesan satu batas untuk peringatan: bila punya hutang batas (harian/utama) pakai hitungan hutang, selain itu hitungan biasa. */
+export function limitAlert(s: Status, debt: DebtView | null, fmt: (n: number) => string): { level: Level; msg: string | null } {
+  if (debt) return { level: dailyGauge(debt, s.limit.warn_pct).level, msg: masterMessage(s.limit.name, debt, s.limit.warn_pct, fmt) };
+  return { level: s.level, msg: limitMessage(s, fmt) };
+}

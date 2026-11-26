@@ -3,7 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { serviceClient } from "@/lib/supabase/service";
 import { configurePush, sendPush } from "@/lib/push/send";
 import { apiPush, billPushes, limitPushes, proExpiryPush, type PlannedPush } from "@/lib/push/alerts";
-import { limitStatuses, neededRange, masterLimit, debtView, masterDailyStatus, type Limit, type Tx } from "@/lib/konsultan/spend-limit";
+import { limitStatuses, neededRange, masterLimit, debtView, type DebtView, type Limit, type Tx } from "@/lib/konsultan/spend-limit";
 import type { ApiUsage } from "@/lib/data/admin";
 
 const jakartaToday = () => new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
@@ -44,17 +44,15 @@ export async function GET(req: Request) {
     for (const t of txs ?? []) txByUser.set(t.user_id, [...(txByUser.get(t.user_id) ?? []), { type: t.type, amount: Number(t.amount), date: t.date, category_id: t.category_id }]);
     for (const [uid, ls] of byUser) {
       const txs = txByUser.get(uid) ?? [];
-      const m = masterLimit(ls);
-      const rest = ls.filter((l) => l.id !== m?.id);
-      const sts = limitStatuses(rest, txs, today);
-      let master: { id: string; debt: ReturnType<typeof debtView> } | null = null;
-      if (m) {
-        const floor = addDays(today, -60), cd = wib(m.created_at);
-        const debt = debtView(m, txs, cd && cd > floor ? cd : floor, today);
-        master = { id: m.id, debt };
-        sts.unshift(masterDailyStatus(m, debt, today));
+      const m = masterLimit(ls), floor = addDays(today, -60);
+      const debts = new Map<string, DebtView>();
+      for (const l of ls) {
+        if (l.id !== m?.id && l.period !== "harian") continue; // hutang batas hanya untuk batas utama dan batas harian
+        const cats = new Set(l.category_ids), cd = wib(l.created_at);
+        const mine = cats.size === 0 ? txs : txs.filter((t) => t.category_id !== null && cats.has(t.category_id));
+        debts.set(l.id, debtView(l, mine, cd && cd > floor ? cd : floor, today));
       }
-      for (const p of limitPushes(sts, master)) planned.push({ userId: uid, p });
+      for (const p of limitPushes(limitStatuses(ls, txs, today), debts)) planned.push({ userId: uid, p });
     }
   }
 

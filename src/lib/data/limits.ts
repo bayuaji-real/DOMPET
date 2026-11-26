@@ -81,3 +81,13 @@ export async function getHomeLimits(): Promise<HomeLimits> {
   });
   return { master, others };
 }
+
+export type LimitWithDebt = { status: Status; debt: DebtView | null; isMaster: boolean };
+/** Semua batas aktif dengan hutang batasnya (batas utama dan batas harian), sama persis dengan yang dihitung Beranda. */
+export async function getLimitsWithDebt(): Promise<LimitWithDebt[]> {
+  const h = await getHomeLimits();
+  const out: LimitWithDebt[] = [];
+  if (h.master) out.push({ status: h.master.statuses[h.master.limit.period], debt: h.master.debt, isMaster: true });
+  for (const c of h.others) out.push({ status: c.status, debt: c.debt, isMaster: false });
+  return out;
+}
