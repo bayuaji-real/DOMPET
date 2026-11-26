@@ -13,3 +13,13 @@ export function shouldOfferPaydayReminder(i: {
   const t = Date.parse(i.offeredAt);
   return Number.isNaN(t) || i.nowMs - t >= OFFER_COOLDOWN_MS;
 }
+
+export type ReminderStatus = "aktif" | "ditawarkan" | "belum";
+
+/** Status pengingat gajian untuk Ruby, supaya dia tidak berjanji hal yang belum aktif dan menawarkan bantuan di kata-katanya. */
+export function reminderStatusText(status: ReminderStatus): string {
+  if (status === "aktif") return "STATUS PENGINGAT GAJIAN: SUDAH AKTIF. Kamu boleh bilang akan mengirim notifikasi pembagian uang di pagi gajian.";
+  if (status === "ditawarkan")
+    return 'STATUS PENGINGAT GAJIAN: BELUM AKTIF, kartu tawaran (tombol "Ya, ingatkan aku") muncul di bawah jawabanmu. Tutup jawaban dengan SATU kalimat tawaran yang hangat, misalnya: "Mau aku ingatkan pas gajian dan kasih tahu uangnya dibagi ke mana? Tinggal tekan tombol di bawah." Jangan berjanji akan mengingatkan sebelum pengguna menekan Ya.';
+  return "STATUS PENGINGAT GAJIAN: BELUM AKTIF. Jangan berjanji akan mengingatkan atau menotifikasi pengguna.";
+}

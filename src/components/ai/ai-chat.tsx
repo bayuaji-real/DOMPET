@@ -558,6 +558,8 @@ export function AiChat({
     if (offerBusy) return;
     setOffer(null);
     if (!yes) {
+      // Catat "nanti saja" supaya kartu tidak muncul lagi selama 3 hari.
+      void fetch("/api/ruby-reminder", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled: false }) }).catch(() => undefined);
       setMessages((prev) => [...prev, { role: "model", text: "Oke, kapan pun kamu mau, bilang saja ya.", time: nowLabel() }]);
       return;
     }
