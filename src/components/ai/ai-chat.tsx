@@ -2,6 +2,7 @@
 import { useKeyboardOpen } from "@/hooks/use-keyboard-open";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -586,7 +587,8 @@ export function AiChat({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      {confirmDialog}
+      {/* Dialog di lapisan paling atas halaman, kalau tidak tertutup menu bawah (halaman chat punya lapisan z-30 sendiri). */}
+      {typeof document !== "undefined" ? createPortal(confirmDialog, document.body) : null}
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-background/50 px-3.5 py-4">
         <div className="flex-1" aria-hidden />
         {messages.length > 0 && (
