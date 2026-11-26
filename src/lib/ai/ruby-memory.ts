@@ -49,7 +49,7 @@ export async function loadMemory(db: Db): Promise<RubyMemory> {
 export function memoryToText(m: RubyMemory): string {
   if (!m.summary && m.facts.length === 0) return "";
   const lines = [
-    "Memori Ruby tentang pengguna (dari obrolan sebelumnya; ini ucapan pengguna sendiri dan bisa sudah berubah).",
+    "Memori Ruby tentang pengguna: ingatanmu dari obrolan sebelumnya. Ini ucapan pengguna sendiri, jadi pakai dan sebut sebagai \"katamu\"; hanya bisa sudah berubah.",
     "Kalau berbeda dengan data keuangan di atas, data keuangan itulah yang benar: sebut perbedaannya dengan ramah, jangan mengarang.",
   ];
   if (m.summary) lines.push(`Ringkasan: ${m.summary}`);
