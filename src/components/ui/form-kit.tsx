@@ -210,21 +210,18 @@ export function PageHero({ title, desc, className }: { title: string; desc?: str
 
 /**
  * Dua angka berdampingan di kartu aurora (Pemasukan/Pengeluaran, Target/Kekurangan).
- * Hijau terang untuk yang baik, merah muda untuk yang kurang, supaya jelas beda dan terbaca di latar teal gelap.
+ * Tanpa kotak: hanya warna. Hijau menyala untuk yang baik, merah menyala untuk yang kurang.
  */
 export function StatPair({ items }: { items: { label: string; value: string; tone: "plus" | "minus"; icon: React.ReactNode }[] }) {
-  const T = {
-    plus: { box: "border-emerald-300/40 bg-emerald-300/15", chip: "bg-emerald-300 text-emerald-950", val: "text-emerald-200" },
-    minus: { box: "border-rose-300/40 bg-rose-400/15", chip: "bg-rose-300 text-rose-950", val: "text-rose-200" },
-  };
+  const T = { plus: "text-green-300", minus: "text-red-400" };
   return (
-    <div className="grid grid-cols-2 gap-2.5">
+    <div className="grid grid-cols-2 gap-3">
       {items.map((i) => (
-        <div key={i.label} className={`flex min-w-0 items-center gap-2.5 rounded-2xl border p-2.5 ${T[i.tone].box}`}>
-          <span className={`flex size-8 shrink-0 items-center justify-center rounded-xl ${T[i.tone].chip}`}>{i.icon}</span>
+        <div key={i.label} className="flex min-w-0 items-center gap-2">
+          <span className={`shrink-0 ${T[i.tone]}`}>{i.icon}</span>
           <div className="min-w-0">
-            <p className="truncate text-[10px] font-semibold text-white/90">{i.label}</p>
-            <p className={`truncate text-sm font-extrabold tabular-nums ${T[i.tone].val}`}>{i.value}</p>
+            <p className={`truncate text-[10px] font-bold ${T[i.tone]}`}>{i.label}</p>
+            <p className={`truncate text-sm font-extrabold tabular-nums ${T[i.tone]}`}>{i.value}</p>
           </div>
         </div>
       ))}

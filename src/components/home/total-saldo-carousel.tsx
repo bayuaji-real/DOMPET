@@ -204,8 +204,8 @@ export function TotalSaldoCarousel({
 
       <div className="mt-4 border-t border-white/15 pt-4">
         <StatPair items={[
-          { label: "Pemasukan Bulan Ini", value: display(masuk), tone: "plus", icon: <TrendingUp className="h-4 w-4" /> },
-          { label: "Pengeluaran Bulan Ini", value: display(keluar), tone: "minus", icon: <TrendingDown className="h-4 w-4" /> },
+          { label: "Pemasukan", value: display(masuk), tone: "plus", icon: <TrendingUp className="h-4 w-4" /> },
+          { label: "Pengeluaran", value: display(keluar), tone: "minus", icon: <TrendingDown className="h-4 w-4" /> },
         ]} />
       </div>
     </section>
