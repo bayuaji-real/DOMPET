@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { addMonths } from "@/lib/savings-feasibility";
 import { billsMonthlyFromRules, paydayInfoFromRows } from "@/lib/savings-queue";
+import { allocationToText, buildAllocation } from "@/lib/ai/allocation";
 
 export interface FinanceSummary {
   today: string;
@@ -22,6 +23,9 @@ export interface FinanceSummary {
   /** Total setoran bulanan semua tabungan aktif (asumsi 1 gajian per bulan). */
   otherMonthlyCommitments: number;
   nextPayday: string | null;
+  /** Gaji yang diharapkan pada gajian berikutnya (0 bila belum diatur) dan berapa kali gajian per bulan. */
+  nextPaydayAmount: number;
+  paydaysPerMonth: number;
   /**
    * Cara hitung ala Money Planner (dipakai untuk menilai tabungan baru):
    * gaji per bulan - (biaya hidup + tagihan rutin + cicilan utang) - setoran tabungan lain.
@@ -154,6 +158,8 @@ export async function buildFinanceSummary(
     goals,
     otherMonthlyCommitments: goalsMonthly,
     nextPayday: payRes.data?.[0]?.date ?? null,
+    nextPaydayAmount: Number(planPayRes.data?.[0]?.expected_amount ?? 0) || 0,
+    paydaysPerMonth: perMonth,
   };
 }
 
@@ -172,5 +178,18 @@ export function summaryToText(s: FinanceSummary): string {
     `Pengeluaran terbesar bulan ini: ${s.topCategories.map((c) => `${c.name} ${rp(c.amount)}`).join(", ") || "belum ada"}`,
     `Tabungan aktif: ${s.goals.map((g) => `${g.name} (terkumpul ${rp(g.saved)} dari ${rp(g.target)}${g.deadline ? `, tenggat ${g.deadline}` : ""}, setoran ${rp(g.monthly)}/bulan)`).join("; ") || "belum ada"}`,
     `Gajian berikutnya: ${s.nextPayday ?? "belum diatur"}`,
+    allocationToText(
+      buildAllocation({
+        today: s.today,
+        totalBalance: s.totalBalance,
+        savingsBalance: s.savingsBalance,
+        nextPayday: s.nextPayday,
+        nextPaydayAmount: s.nextPaydayAmount,
+        perMonth: s.paydaysPerMonth,
+        fixedMonthly: s.planFixedMonthly,
+        goals: s.goals,
+      }),
+      s.nextPayday
+    ),
   ].join("\n");
 }
