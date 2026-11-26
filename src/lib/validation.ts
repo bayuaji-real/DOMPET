@@ -84,6 +84,8 @@ export const aiChatSchema = z.object({
     .max(14),
   /** Keadaan "menunggu jawaban gaji/biaya hidup" dari balasan sebelumnya (mode tabungan). */
   pending: savingsPendingSchema.nullable().optional(),
+  /** Percakapan yang sedang berjalan (dari balasan sebelumnya). Kosong = Tanya Ruby memakai percakapan terakhir, mode lain mulai sesi baru. */
+  threadId: z.string().uuid().optional(),
 });
 
 export const helpReportSchema = z.object({

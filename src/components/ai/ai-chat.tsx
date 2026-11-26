@@ -11,7 +11,11 @@ import {
   MessageSquare,
   Send,
   Sparkles,
+  Trash2,
 } from "lucide-react";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
+import { useConfirm } from "@/components/ui/use-confirm";
 import type { AIChatResponse, SavingsProposal } from "@/app/api/ai-chat/route";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
 import { ASSISTANT_NAME, RUBY_MENU, RUBY_PHOTO } from "@/components/ai/ruby";
@@ -24,6 +28,11 @@ export interface Msg {
   text: string;
   /** Jam kirim (WIB), mis. "09:41". */
   time?: string;
+}
+
+/** Jam WIB dari cap waktu database (untuk pesan lama yang dimuat ulang). */
+function timeLabel(iso: string): string {
+  return new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Jakarta" }).format(new Date(iso)).replace(".", ":");
 }
 
 export function nowLabel(): string {
@@ -465,7 +474,34 @@ export function AiChat({
   const [pending, setPending] = React.useState<AIChatResponse["pending"]>(null);
   const [profile, setProfile] = React.useState<UserProfile | null>(null);
   const [openedAt, setOpenedAt] = React.useState<string>("");
+  // Percakapan yang tersimpan di database (Tanya Ruby dan Rencana dilanjutkan; Buat Tabungan mulai sesi baru).
+  const [threadId, setThreadId] = React.useState<string | null>(null);
+  const [askConfirm, confirmDialog] = useConfirm();
   const endRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (mode === "savings") return;
+    let alive = true;
+    (async () => {
+      try {
+        // Tabel ruby_* belum ada di berkas tipe, jadi klien dipakai tanpa tipe tabel.
+        const db = createClient() as unknown as SupabaseClient;
+        const { data: t } = await db.from("ruby_threads").select("id").eq("mode", mode).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        if (!t?.id || !alive) return;
+        const { data: rows } = await db.from("ruby_messages").select("role, text, created_at").eq("thread_id", t.id).order("created_at", { ascending: false }).limit(60);
+        if (!alive || !rows?.length) return;
+        const restored: Msg[] = rows.reverse().map((r) => ({ role: r.role as Msg["role"], text: String(r.text), time: timeLabel(String(r.created_at)) }));
+        // Kalau pengguna sudah mengetik duluan, jangan menimpa percakapan yang sedang jalan.
+        setMessages((prev) => (prev.length ? prev : restored));
+        setThreadId((prev) => prev ?? (t.id as string));
+      } catch {
+        /* gagal memuat riwayat: mulai kosong seperti biasa */
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [mode]);
 
   React.useEffect(() => {
     setOpenedAt(nowLabel());
@@ -488,6 +524,21 @@ export function AiChat({
     return () => clearTimeout(t);
   }, [kb]);
 
+  const clearHistory = async () => {
+    if (!(await askConfirm("Hapus semua riwayat chat dan memori Ruby? Ruby akan lupa hal yang pernah kamu ceritakan. Data keuanganmu tidak ikut terhapus.", "Ya, hapus"))) return;
+    try {
+      const db = createClient() as unknown as SupabaseClient;
+      const zero = "00000000-0000-0000-0000-000000000000";
+      const a = await db.from("ruby_threads").delete().neq("id", zero);
+      const b = await db.from("ruby_memory").delete().neq("user_id", zero);
+      if (a.error || b.error) throw new Error("gagal");
+      setThreadId(null);
+      reset();
+    } catch {
+      setError("Riwayat belum bisa dihapus. Coba lagi sebentar.");
+    }
+  };
+
   const reset = () => {
     setMessages([]);
     setProposal(null);
@@ -509,7 +560,7 @@ export function AiChat({
       const res = await fetch("/api/ai-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, messages: next.slice(-14).map(({ role, text: t }) => ({ role, text: t })), pending }),
+        body: JSON.stringify({ mode, messages: next.slice(-14).map(({ role, text: t }) => ({ role, text: t })), pending, ...(threadId ? { threadId } : {}) }),
       });
       const json = (await res.json()) as AIChatResponse | { success: false; error: string };
       if (!res.ok || !json.success) {
@@ -519,6 +570,7 @@ export function AiChat({
       setMessages([...next, { role: "model", text: json.reply, time: nowLabel() }]);
       setProposal(json.proposal);
       setPending(json.pending ?? null);
+      if (json.threadId) setThreadId(json.threadId);
     } catch {
       setError("Tidak bisa terhubung. Cek internet lalu coba lagi.");
     } finally {
@@ -534,8 +586,18 @@ export function AiChat({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
+      {confirmDialog}
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto bg-background/50 px-3.5 py-4">
         <div className="flex-1" aria-hidden />
+        {messages.length > 0 && (
+          <button
+            type="button"
+            onClick={() => void clearHistory()}
+            className="mx-auto flex cursor-pointer items-center gap-1 rounded-full border border-border/70 px-2.5 py-1 text-[10px] font-semibold text-muted-foreground hover:bg-muted"
+          >
+            <Trash2 className="size-3" /> Hapus riwayat dan memori Ruby
+          </button>
+        )}
         {all.map((m, i) => (
           <React.Fragment key={i}>
             <Bubble msg={m} first={i === 0 || all[i - 1].role !== m.role} profile={profile} />

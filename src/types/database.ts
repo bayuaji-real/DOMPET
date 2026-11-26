@@ -450,7 +450,7 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          feature: "tabungan" | "konsultasi" | "struk" | "suara" | "insight" | "rencana" | "impor";
+          feature: "tabungan" | "konsultasi" | "struk" | "suara" | "insight" | "rencana" | "impor" | "memori";
           model: string;
           input_tokens: number;
           output_tokens: number;
@@ -461,7 +461,7 @@ export interface Database {
         Insert: {
           id?: string;
           user_id?: string;
-          feature: "tabungan" | "konsultasi" | "struk" | "suara" | "insight" | "rencana" | "impor";
+          feature: "tabungan" | "konsultasi" | "struk" | "suara" | "insight" | "rencana" | "impor" | "memori";
           model: string;
           input_tokens?: number;
           output_tokens?: number;
@@ -495,7 +495,7 @@ export interface Database {
           status?: "baru";
           created_at?: string;
         };
-        Update: Record<string, never>;
+        Update: { status?: "baru" | "dibaca" | "dikerjakan" | "selesai" };
         Relationships: [];
       };
       ai_insights: {

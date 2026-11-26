@@ -1,10 +1,11 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, after, type NextRequest } from "next/server";
 import { generateChat, estimateCostIdr, GeminiError, type ChatTurn } from "@/lib/ai/gemini";
 import { buildFinanceSummary, summaryToText } from "@/lib/ai/finance-summary";
 import type { FeasibilityResult } from "@/lib/savings-feasibility";
 import { evaluateSavingsQueue, generatePaydaysFromInfo, resolvePlanBasis } from "@/lib/savings-queue";
 import { verifyServerAuth } from "@/lib/auth/server-auth";
 import { guardAi } from "@/lib/ai/entitlement";
+import { loadMemory, memoryToText, saveTurn, refreshMemoryIfDue } from "@/lib/ai/ruby-memory";
 import { createClient } from "@/lib/supabase/server";
 import { aiChatSchema, type SavingsPending } from "@/lib/validation";
 import { parseBasisAnswer } from "@/lib/savings-answer";
@@ -32,6 +33,8 @@ export interface AIChatResponse {
   proposal: SavingsProposal | null;
   /** Ruby sedang menunggu jawaban gaji/biaya hidup. Klien mengirimnya kembali di pesan berikutnya. */
   pending?: SavingsPending | null;
+  /** Percakapan tempat pesan ini disimpan; klien mengirimnya kembali di pesan berikutnya. */
+  threadId?: string | null;
   usage: { inputTokens: number; outputTokens: number; costIdr: number };
 }
 
@@ -252,7 +255,9 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ success: false, error: "Pesan terlalu panjang atau tidak valid." }, { status: 400 });
   }
-  const { mode, messages, pending } = parsed.data;
+  const { mode, messages: sentMessages, pending, threadId: sentThreadId } = parsed.data;
+  // Hemat token: tanya bebas cukup 8 pesan terakhir (konteks lama ada di memori). Tabungan dan rencana butuh seluruh sesi (maks 14).
+  const messages = mode === "advisor" ? sentMessages.slice(-8) : sentMessages;
   // Jenis jatah cicip Basic mengikuti mode: tabungan, rencana, atau tanya biasa.
   const cicipKey = mode === "savings" ? "tabungan" : mode === "plan" ? "rencana" : "konsultasi";
   const guard = await guardAi("ai_chat", auth.userId, cicipKey, mode === "plan");
@@ -293,15 +298,19 @@ export async function POST(request: NextRequest) {
           supabase,
           userId: auth.userId,
         });
-        const body: AIChatResponse = { success: true, reply: r.reply, proposal: r.proposal, pending: r.pending, usage: { inputTokens: 0, outputTokens: 0, costIdr: 0 } };
+        const savedId = await saveTurn(supabase, mode, sentThreadId, lastUser, r.reply);
+        const body: AIChatResponse = { success: true, reply: r.reply, proposal: r.proposal, pending: r.pending, threadId: savedId ?? sentThreadId ?? null, usage: { inputTokens: 0, outputTokens: 0, costIdr: 0 } };
         return NextResponse.json(body);
       }
     }
 
+    const memoryText = memoryToText(await loadMemory(supabase));
     const summaryText = summaryToText(summaryData);
     const turns: ChatTurn[] = messages.map((m) => ({ role: m.role, text: m.text }));
     const { text, usage } = await generateChat(turns, {
-      system: mode === "savings" ? savingsSystem(summaryText, today) : mode === "plan" ? planSystem(summaryText) : advisorSystem(summaryText),
+      system:
+        (mode === "savings" ? savingsSystem(summaryText, today) : mode === "plan" ? planSystem(summaryText) : advisorSystem(summaryText)) +
+        (memoryText ? `\n\n${memoryText}` : ""),
       responseSchema: mode === "savings" ? SAVINGS_SCHEMA : undefined,
       temperature: mode === "savings" ? 0.2 : 0.5,
     });
@@ -334,11 +343,16 @@ export async function POST(request: NextRequest) {
     });
     if (logErr) console.warn("[ai-chat] gagal mencatat pemakaian:", logErr.message);
 
+    // Simpan giliran ini. Pembaruan memori jalan SETELAH jawaban terkirim (tidak menambah waktu tunggu).
+    const savedThreadId = await saveTurn(supabase, mode, sentThreadId, messages[messages.length - 1].text, reply);
+    if (savedThreadId) after(() => refreshMemoryIfDue(supabase, auth.userId, today));
+
     const body: AIChatResponse = {
       success: true,
       reply,
       proposal,
       pending: nextPending,
+      threadId: savedThreadId ?? sentThreadId ?? null,
       usage: { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, costIdr },
     };
     return NextResponse.json(body);
