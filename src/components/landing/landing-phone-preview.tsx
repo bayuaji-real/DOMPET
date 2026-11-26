@@ -181,26 +181,26 @@ export function LandingPhonePreview() {
                 </div>
               </div>
 
-              {/* Income & Expense Month Stats: Dual Frosted Glass Capsules */}
+              {/* Income & Expense Month Stats: Dual Crystal Glass Capsules */}
               <div className="relative z-10 mt-3 grid grid-cols-2 gap-2 border-t border-white/15 pt-2.5">
-                <div className="flex items-center gap-2 rounded-xl border border-white/15 bg-black/20 p-2 backdrop-blur-md shadow-inner">
-                  <div className="size-6 shrink-0 rounded-lg bg-emerald-400/20 text-emerald-300 ring-1 ring-emerald-400/30 flex items-center justify-center">
+                <div className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/12 p-2 backdrop-blur-md shadow-xs">
+                  <div className="size-6 shrink-0 rounded-lg bg-emerald-300 text-teal-950 font-bold shadow-xs flex items-center justify-center">
                     <TrendingUp className="size-3" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[8px] font-bold uppercase tracking-wider text-emerald-200/90 leading-none">Pemasukan</p>
+                    <p className="truncate text-[8px] font-bold uppercase tracking-wider text-emerald-100 leading-none">Pemasukan</p>
                     <p className="truncate text-[11px] font-black text-white drop-shadow-xs mt-0.5">
                       {hideBalance ? "••••" : "Rp8.500.000"}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 rounded-xl border border-white/15 bg-black/20 p-2 backdrop-blur-md shadow-inner">
-                  <div className="size-6 shrink-0 rounded-lg bg-rose-400/20 text-rose-300 ring-1 ring-rose-400/30 flex items-center justify-center">
+                <div className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/12 p-2 backdrop-blur-md shadow-xs">
+                  <div className="size-6 shrink-0 rounded-lg bg-rose-300 text-rose-950 font-bold shadow-xs flex items-center justify-center">
                     <TrendingDown className="size-3" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[8px] font-bold uppercase tracking-wider text-rose-200/90 leading-none">Pengeluaran</p>
+                    <p className="truncate text-[8px] font-bold uppercase tracking-wider text-rose-100 leading-none">Pengeluaran</p>
                     <p className="truncate text-[11px] font-black text-white drop-shadow-xs mt-0.5">
                       {hideBalance ? "••••" : "Rp2.340.000"}
                     </p>

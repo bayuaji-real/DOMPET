@@ -201,7 +201,7 @@ export function TotalSaldoCarousel({
 
       {/* Subtitle / Keterangan Dompet */}
       <div className="relative z-10 mt-1.5 flex flex-wrap items-center justify-between gap-2">
-        <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-2.5 py-0.5 text-[11px] font-medium text-white/95 backdrop-blur-xs">
+        <div className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/20 bg-white/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-teal-100 backdrop-blur-xs">
           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-300" />
           <span className="truncate">{subtitle}</span>
         </div>
@@ -209,22 +209,22 @@ export function TotalSaldoCarousel({
           <button
             type="button"
             onClick={() => onSelectWallet(selected)}
-            className="flex cursor-pointer items-center gap-1 rounded-lg border border-white/20 bg-white/15 px-2.5 py-1 text-[11px] font-bold text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
+            className="flex cursor-pointer items-center gap-1 rounded-xl border border-white/40 bg-white px-2.5 py-1 text-[11px] font-black text-teal-900 shadow-md transition-all hover:bg-white/95 active:scale-95"
           >
             Detail <ChevronRight className="h-3 w-3" />
           </button>
         )}
       </div>
 
-      {/* Pemasukan & Pengeluaran: Kapsul Kaca Mikro untuk Kontras & Kejelasan Maksimal */}
-      <div className="relative z-10 mt-4.5 grid grid-cols-2 gap-2.5 border-t border-white/15 pt-3.5">
+      {/* Pemasukan & Pengeluaran: Dual Crystal Glass Capsules */}
+      <div className="relative z-10 mt-4 grid grid-cols-2 gap-2.5 border-t border-white/15 pt-3.5">
         {/* Pemasukan */}
-        <div className="flex items-center gap-2.5 rounded-2xl border border-white/15 bg-black/20 p-2.5 backdrop-blur-md shadow-inner transition-colors hover:bg-black/25">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-400/20 text-emerald-300 ring-1 ring-emerald-400/30">
+        <div className="flex items-center gap-2.5 rounded-2xl border border-white/20 bg-white/12 p-2.5 backdrop-blur-md shadow-xs transition-colors hover:bg-white/18">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-300 text-teal-950 font-bold shadow-xs">
             <TrendingUp className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[10px] font-bold uppercase tracking-wider text-emerald-200/90">Pemasukan</p>
+            <p className="truncate text-[10px] font-bold uppercase tracking-wider text-emerald-100">Pemasukan</p>
             <p className="truncate text-xs font-black tracking-tight text-white drop-shadow-xs sm:text-sm">
               {display(masuk)}
             </p>
@@ -232,12 +232,12 @@ export function TotalSaldoCarousel({
         </div>
 
         {/* Pengeluaran */}
-        <div className="flex items-center gap-2.5 rounded-2xl border border-white/15 bg-black/20 p-2.5 backdrop-blur-md shadow-inner transition-colors hover:bg-black/25">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-400/20 text-rose-300 ring-1 ring-rose-400/30">
+        <div className="flex items-center gap-2.5 rounded-2xl border border-white/20 bg-white/12 p-2.5 backdrop-blur-md shadow-xs transition-colors hover:bg-white/18">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-300 text-rose-950 font-bold shadow-xs">
             <TrendingDown className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[10px] font-bold uppercase tracking-wider text-rose-200/90">Pengeluaran</p>
+            <p className="truncate text-[10px] font-bold uppercase tracking-wider text-rose-100">Pengeluaran</p>
             <p className="truncate text-xs font-black tracking-tight text-white drop-shadow-xs sm:text-sm">
               {display(keluar)}
             </p>
