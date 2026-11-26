@@ -505,6 +505,8 @@ export function AiChat({
   }, [mode]);
 
   React.useEffect(() => {
+    // Jam dibuat di sisi klien saja supaya tidak beda dengan HTML server (hydration).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpenedAt(nowLabel());
     let alive = true;
     getUserProfile()
