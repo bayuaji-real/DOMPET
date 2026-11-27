@@ -18,7 +18,7 @@ import type { WalletBalance } from "@/lib/data/wallets";
 import type { GoalProgress } from "@/lib/data/goals";
 import { USE_SAMPLE_DATA, todayJakarta } from "@/lib/data/sample-mode";
 import { splitPayday, clampAllocation, orderGoals, type SplitGoal } from "@/lib/payday-split";
-import { LIVING_SOURCE_LABEL, type LivingCostAnswer } from "@/lib/living-cost";
+import { type LivingCostAnswer } from "@/lib/living-cost";
 import Link from "next/link";
 
 interface PaydayCardProps {
@@ -235,9 +235,7 @@ export function PaydayCard({
       {!livingAnswered && (
         <div className="rounded-2xl border border-teal-500/30 bg-teal-500/5 p-3.5 text-xs space-y-2">
           <p className="font-bold text-foreground">Biaya hidupmu belum diisi</p>
-          <p className="text-muted-foreground">
-            Ruby akan menanyakannya di chat AI (sekali saja). Setelah itu pembagian gajianmu langsung muncul di sini.
-          </p>
+          <p className="text-muted-foreground">Isi sekali di chat AI, lalu pembagiannya muncul di sini.</p>
           <Link
             href="/chat"
             className="inline-flex h-9 items-center justify-center rounded-xl bg-teal-600 px-4 text-[11px] font-extrabold text-white hover:bg-teal-700"
@@ -256,7 +254,7 @@ export function PaydayCard({
               Saran Pembagian Gajian
             </span>
             <span className="text-[10px] text-muted-foreground font-medium">
-              Bisa diedit, total tidak melebihi gaji
+              Bisa diedit
             </span>
           </div>
 
@@ -268,8 +266,7 @@ export function PaydayCard({
                 Biaya Hidup
               </p>
               <p className="text-[10px] text-muted-foreground">
-                Per gajian, dibayar paling dulu · {answer ? LIVING_SOURCE_LABEL[answer.source] : ""}
-                {answer && answer.monthly > 0 ? ` (${formatRupiah(answer.monthly)} per bulan)` : ""} ·{" "}
+                Biaya hidupmu setiap gajian ·{" "}
                 <Link href="/chat#biaya-hidup" className="font-bold text-teal-600 dark:text-teal-400">
                   Ubah
                 </Link>
@@ -291,7 +288,7 @@ export function PaydayCard({
                 </p>
                 <p className="text-[10px] text-muted-foreground truncate">
                   {(allocations[g.id] || 0) === 0 && deficit === 0
-                    ? "Belum kebagian: menunggu tujuan di atasnya terpenuhi"
+                    ? "Belum kebagian"
                     : `Sisa target: ${formatRupiah(g.remaining)}`}
                 </p>
               </div>
@@ -325,14 +322,7 @@ export function PaydayCard({
           >
             <div>
               <span className="font-bold block">
-                {deficit > 0 ? "Biaya hidup melebihi gaji ⚠️" : "Sisa Dana Bebas ✨"}
-              </span>
-              <span className="text-[10px] opacity-80">
-                {deficit > 0
-                  ? "Kecilkan biaya hidup atau perbaiki nominal gaji"
-                  : freeAmount > 0
-                    ? "Bebas dipakai untuk jajan & santai"
-                    : "Seluruh gaji sudah terbagi habis"}
+                {deficit > 0 ? "Biaya hidup melebihi gaji" : "Sisa Dana Bebas ✨"}
               </span>
             </div>
             <span className="text-sm font-extrabold tracking-tight">
