@@ -4,7 +4,7 @@ import { useKeyboardOpen } from "@/hooks/use-keyboard-open";
 import * as React from "react";
 import { LivingCostSetup } from "@/components/ai/living-cost-setup";
 import { getUserSettings } from "@/lib/data/settings";
-import { toLivingAnswer } from "@/lib/living-cost";
+import { toLivingAnswer, type LivingCostAnswer } from "@/lib/living-cost";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -486,6 +486,7 @@ export function AiChat({
   const [offerBusy, setOfferBusy] = React.useState(false);
   // Ruby menanyakan biaya hidup per bulan di awal bila pengguna belum pernah menjawab. Setelah dijawab tidak ditanya lagi.
   const [livingAsk, setLivingAsk] = React.useState(false);
+  const [livingInitial, setLivingInitial] = React.useState<LivingCostAnswer | null>(null);
   const [askConfirm, confirmDialog] = useConfirm();
   const endRef = React.useRef<HTMLDivElement>(null);
 
@@ -517,7 +518,11 @@ export function AiChat({
     let alive = true;
     getUserSettings()
       .then((st) => {
-        if (alive && st && !toLivingAnswer(st.living_cost_source, st.living_cost_per_payday, st.living_cost_monthly)) setLivingAsk(true);
+        if (!alive || !st) return;
+        const ans = toLivingAnswer(st.living_cost_source, st.living_cost_per_payday, st.living_cost_monthly);
+        setLivingInitial(ans);
+        // Belum pernah dijawab -> Ruby bertanya. Sudah dijawab -> hanya dibuka lagi bila pengguna menekan "Ubah" di Beranda.
+        if (!ans || (typeof window !== "undefined" && window.location.hash === "#biaya-hidup")) setLivingAsk(true);
       })
       .catch(() => {});
     return () => {
@@ -697,6 +702,7 @@ export function AiChat({
         {livingAsk && !loading && (
           <div className="ml-10">
             <LivingCostSetup
+              initial={livingInitial}
               onCancel={() => setLivingAsk(false)}
               onSaved={(a) => {
                 setLivingAsk(false);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { toLivingAnswer, averageLivingMonthly, makeAnswer, paydaysPerMonth, perPaydayFromMonthly, sumNeeds } from "./living-cost";
+import { toLivingAnswer, averageLivingMonthly, makeAnswer, makeAnswerPerPayday, paydaysPerMonth, perPaydayFromMonthly, sumNeeds } from "./living-cost";
 import { parseBasisAnswer, CONFUSED_RE } from "./savings-answer";
 
 describe("toLivingAnswer", () => {
@@ -21,6 +21,12 @@ describe("per bulan ke per gajian", () => {
   it("gajian dua mingguan = 26/12 kali per bulan", () => {
     expect(perPaydayFromMonthly(2_600_000, paydaysPerMonth("biweekly"))).toBe(1_200_000);
     expect(makeAnswer("diisi", 867_000, paydaysPerMonth("biweekly"))).toEqual({ source: "diisi", monthly: 867000, perPayday: 400154 });
+  });
+  it("diketik per gajian: angkanya dipakai apa adanya (400.000 tetap 400.000)", () => {
+    expect(makeAnswerPerPayday("diisi", 400_000, paydaysPerMonth("biweekly"))).toEqual({ source: "diisi", perPayday: 400000, monthly: 866667 });
+  });
+  it("diketik per bulan 400.000 jadi sekitar 184.615 per gajian dua mingguan", () => {
+    expect(makeAnswer("diisi", 400_000, paydaysPerMonth("biweekly")).perPayday).toBe(184615);
   });
   it("gajian bulanan: per gajian sama dengan per bulan", () => {
     expect(makeAnswer("diisi", 1_500_000, paydaysPerMonth("monthly")).perPayday).toBe(1_500_000);

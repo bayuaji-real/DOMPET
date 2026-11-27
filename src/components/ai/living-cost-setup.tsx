@@ -6,6 +6,7 @@ import { cn, formatRupiah } from "@/lib/utils";
 import {
   LIVING_NEEDS,
   makeAnswer,
+  makeAnswerPerPayday,
   sumNeeds,
   type LivingCostAnswer,
   type LivingCostSource,
@@ -32,6 +33,7 @@ export function LivingCostSetup({
   const [step, setStep] = React.useState<"pilih" | "bantu">("pilih");
   const [choice, setChoice] = React.useState<LivingCostSource | null>(initial?.source ?? null);
   const [typed, setTyped] = React.useState(initial?.source === "diisi" ? initial.monthly.toLocaleString("id-ID") : "");
+  const [period, setPeriod] = React.useState<"bulan" | "gajian">("bulan");
   const [needs, setNeeds] = React.useState<Record<string, string>>({});
   const [sug, setSug] = React.useState<LivingSuggestion | null | undefined>(undefined); // undefined = memuat
   const [saving, setSaving] = React.useState(false);
@@ -49,8 +51,9 @@ export function LivingCostSetup({
   const avg = sug?.avgMonthly ?? null;
   const total = sumNeeds(Object.fromEntries(Object.entries(needs).map(([k, v]) => [k, digits(v)])));
 
-  const save = async (source: LivingCostSource, monthly: number) => {
-    const a = makeAnswer(source, monthly, perMonth);
+  const typedNum = Number(digits(typed)) || 0;
+  const save = async (source: LivingCostSource, amount: number, perGajian = false) => {
+    const a = perGajian ? makeAnswerPerPayday(source, amount, perMonth) : makeAnswer(source, amount, perMonth);
     setSaving(true);
     setErr(null);
     try {
@@ -147,9 +150,34 @@ export function LivingCostSetup({
                 autoFocus
                 value={typed}
                 onChange={(e) => setTyped(fmt(e.target.value))}
-                placeholder="Biaya hidup per bulan"
+                placeholder={period === "gajian" && perMonth !== 1 ? "Biaya hidup per gajian" : "Biaya hidup per bulan"}
                 className="w-full bg-transparent text-base font-extrabold tracking-tight text-foreground focus:outline-none"
               />
+            </div>
+          )}
+          {choice === "diisi" && perMonth !== 1 && (
+            <div className="mt-2 space-y-1.5">
+              <div className="flex gap-1.5" role="radiogroup" aria-label="Periode">
+                {(["bulan", "gajian"] as const).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    role="radio"
+                    aria-checked={period === p}
+                    onClick={() => setPeriod(p)}
+                    className={cn("flex-1 cursor-pointer rounded-lg border px-2 py-1.5 text-[11px] font-bold", period === p ? on : off)}
+                  >
+                    {p === "bulan" ? "Per bulan" : "Per gajian (2 mingguan)"}
+                  </button>
+                ))}
+              </div>
+              {typedNum > 0 && (
+                <p className="text-[10px] text-muted-foreground">
+                  {period === "bulan"
+                    ? `Rp${typedNum.toLocaleString("id-ID")} per bulan = sekitar ${formatRupiah(makeAnswer("diisi", typedNum, perMonth).perPayday)} per gajian`
+                    : `Rp${typedNum.toLocaleString("id-ID")} per gajian = sekitar ${formatRupiah(makeAnswerPerPayday("diisi", typedNum, perMonth).monthly)} per bulan`}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -194,7 +222,7 @@ export function LivingCostSetup({
           type="button"
           disabled={!canSave}
           onClick={() => {
-            if (choice === "diisi") void save("diisi", Number(digits(typed)) || 0);
+            if (choice === "diisi") void save("diisi", typedNum, period === "gajian" && perMonth !== 1);
             else if (choice === "rata_rata" && avg) void save("rata_rata", avg);
             else if (choice === "belum_punya") void save("belum_punya", 0);
           }}

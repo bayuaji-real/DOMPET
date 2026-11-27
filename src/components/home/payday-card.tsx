@@ -19,7 +19,7 @@ import type { GoalProgress } from "@/lib/data/goals";
 import { USE_SAMPLE_DATA, todayJakarta } from "@/lib/data/sample-mode";
 import { splitPayday, clampAllocation, orderGoals, type SplitGoal } from "@/lib/payday-split";
 import { LIVING_SOURCE_LABEL, type LivingCostAnswer } from "@/lib/living-cost";
-import { LivingCostSetup } from "@/components/ai/living-cost-setup";
+import Link from "next/link";
 
 interface PaydayCardProps {
   schedule: PaydaySchedule | null;
@@ -59,10 +59,7 @@ export function PaydayCard({
 
   // Biaya hidup = jawaban pribadi pengguna yang tersimpan di profilnya. Belum dijawab -> ditanya SEKALI,
   // gajian berikutnya tidak ditanya lagi (hanya bisa diubah lewat tombol "Ubah").
-  const [localAnswer, setLocalAnswer] = React.useState<LivingCostAnswer | null>(null);
-  const answer = localAnswer ?? livingCostAnswer;
-  const [editingLiving, setEditingLiving] = React.useState(false);
-  const askLiving = !answer || editingLiving;
+  const answer: LivingCostAnswer | null = livingCostAnswer;
   const livingCost: number | null = answer ? answer.perPayday : null;
 
   // Tujuan tabungan aktif yang masih punya sisa, urut antrean (tenggat terdekat dulu)
@@ -94,7 +91,7 @@ export function PaydayCard({
   const allocations: Record<string, number> =
     manual && manual.key === suggestionKey ? manual.values : suggestion.amounts;
 
-  const livingAnswered = livingCost !== null && !editingLiving;
+  const livingAnswered = livingCost !== null;
   const totalSavingsAllocated = queue.reduce((sum, g) => sum + (allocations[g.id] || 0), 0);
   const freeAmount = livingAnswered ? salaryAmount - (livingCost ?? 0) - totalSavingsAllocated : 0;
   const deficit = livingAnswered ? Math.max(0, (livingCost ?? 0) - salaryAmount) : 0;
@@ -234,16 +231,20 @@ export function PaydayCard({
 
       </div>
 
-      {/* Ruby menanyakan biaya hidup per bulan (sekali). Jawaban tersimpan di profil dan tidak ditanya lagi. */}
-      {askLiving && (
-        <LivingCostSetup
-          initial={answer}
-          onSaved={(a) => {
-            setLocalAnswer(a);
-            setEditingLiving(false);
-          }}
-          onCancel={answer ? () => setEditingLiving(false) : undefined}
-        />
+      {/* Biaya hidup ditanyakan Ruby di chat AI (bukan di Beranda). Belum dijawab: arahkan ke sana. */}
+      {!livingAnswered && (
+        <div className="rounded-2xl border border-teal-500/30 bg-teal-500/5 p-3.5 text-xs space-y-2">
+          <p className="font-bold text-foreground">Biaya hidupmu belum diisi</p>
+          <p className="text-muted-foreground">
+            Ruby akan menanyakannya di chat AI (sekali saja). Setelah itu pembagian gajianmu langsung muncul di sini.
+          </p>
+          <Link
+            href="/chat"
+            className="inline-flex h-9 items-center justify-center rounded-xl bg-teal-600 px-4 text-[11px] font-extrabold text-white hover:bg-teal-700"
+          >
+            Isi bareng Ruby
+          </Link>
+        </div>
       )}
 
       {/* Rincian Alokasi Cerdas: muncul setelah biaya hidup dijawab */}
@@ -267,11 +268,11 @@ export function PaydayCard({
                 Biaya Hidup
               </p>
               <p className="text-[10px] text-muted-foreground">
-                {answer ? LIVING_SOURCE_LABEL[answer.source] : ""}
+                Per gajian, dibayar paling dulu · {answer ? LIVING_SOURCE_LABEL[answer.source] : ""}
                 {answer && answer.monthly > 0 ? ` (${formatRupiah(answer.monthly)} per bulan)` : ""} ·{" "}
-                <button type="button" onClick={() => setEditingLiving(true)} className="font-bold text-teal-600 dark:text-teal-400 cursor-pointer">
+                <Link href="/chat#biaya-hidup" className="font-bold text-teal-600 dark:text-teal-400">
                   Ubah
-                </button>
+                </Link>
               </p>
             </div>
             <span className="shrink-0 text-xs font-bold text-foreground">{formatRupiah(livingCost ?? 0)}</span>

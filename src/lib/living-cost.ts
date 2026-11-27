@@ -47,6 +47,13 @@ export function makeAnswer(source: LivingCostSource, monthly: number, perMonth: 
   return { source, monthly: m, perPayday: perPaydayFromMonthly(m, perMonth) };
 }
 
+/** Jawaban yang diketik PER GAJIAN: angka per gajian dipakai apa adanya (tidak dibagi ulang), per bulan = dikali gajian per bulan. */
+export function makeAnswerPerPayday(source: LivingCostSource, perPayday: number, perMonth: number): LivingCostAnswer {
+  if (source === "belum_punya") return { source, monthly: 0, perPayday: 0 };
+  const pp = Math.max(0, Math.round(perPayday));
+  return { source, perPayday: pp, monthly: Math.round(pp * (perMonth > 0 ? perMonth : 1)) };
+}
+
 export function sumNeeds(values: Record<string, number | string | undefined>): number {
   return Object.values(values).reduce<number>((a, v) => a + Math.max(0, Math.round(Number(v) || 0)), 0);
 }
