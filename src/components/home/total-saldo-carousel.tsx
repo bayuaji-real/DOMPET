@@ -153,7 +153,7 @@ export function TotalSaldoCarousel({
       </div>
 
       {/* Header Kartu: Selector Dompet & Tombol Sembunyikan Saldo */}
-      <div className="relative z-10 flex items-center justify-between gap-2">
+      <div className="relative z-30 flex items-center justify-between gap-2">
         <div ref={boxRef} className="relative min-w-0">
           <button
             type="button"
