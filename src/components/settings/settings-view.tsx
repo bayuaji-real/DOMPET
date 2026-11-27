@@ -136,7 +136,7 @@ export function SettingsView({ top }: { top?: React.ReactNode | ((slots: { secon
   // Payday & living cost state
   const [paydayDateInput, setPaydayDateInput] = React.useState("20");
   const [expectedSalaryInput, setExpectedSalaryInput] = React.useState("8.500.000");
-  const [livingCostInput, setLivingCostInput] = React.useState("400.000");
+  const [livingCostInput, setLivingCostInput] = React.useState("");
   const [defaultWalletId, setDefaultWalletId] = React.useState("");
   const [isSavingGeneral, setIsSavingGeneral] = React.useState(false);
 
@@ -285,13 +285,16 @@ export function SettingsView({ top }: { top?: React.ReactNode | ((slots: { secon
     triggerHapticFeedback();
 
     try {
-      const livingCost = parseInt(livingCostInput.replace(/\D/g, ""), 10) || 400000;
+      const livingCost = parseInt(livingCostInput.replace(/\D/g, ""), 10) || 0;
       const expectedSalary = parseInt(expectedSalaryInput.replace(/\D/g, ""), 10) || 8500000;
       const dayNum = parseInt(paydayDateInput, 10) || 20;
 
       await updateUserSettings({
         default_wallet_id: defaultWalletId || null,
         living_cost_per_payday: livingCost,
+        // Diisi di Pengaturan = jawaban pribadi pengguna; kosong = belum punya.
+        living_cost_source: livingCost > 0 ? "diisi" : "belum_punya",
+        living_cost_monthly: null,
       });
 
       const nextDate = nextDateForDay(dayNum, todayJakarta());
@@ -1124,7 +1127,7 @@ export function SettingsView({ top }: { top?: React.ReactNode | ((slots: { secon
                       const raw = e.target.value.replace(/\D/g, "");
                       setLivingCostInput(raw ? Number(raw).toLocaleString("id-ID") : "");
                     }}
-                    placeholder="400.000"
+                    placeholder="Biaya hidup per gajian"
                     className="h-10 pl-9 text-xs rounded-xl font-bold"
                   />
                 </div>

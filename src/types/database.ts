@@ -318,6 +318,8 @@ export interface Database {
         Row: {
           user_id: string;
           living_cost_per_payday: number;
+          living_cost_source: "diisi" | "rata_rata" | "dihitung" | "belum_punya" | null;
+          living_cost_monthly: number | null;
           other_fixed_monthly: number | null;
           default_wallet_id: string | null;
           pin_hash: string | null;
@@ -331,6 +333,8 @@ export interface Database {
         Insert: {
           user_id: string;
           living_cost_per_payday?: number;
+          living_cost_source?: "diisi" | "rata_rata" | "dihitung" | "belum_punya" | null;
+          living_cost_monthly?: number | null;
           other_fixed_monthly?: number | null;
           default_wallet_id?: string | null;
           pin_hash?: string | null;
@@ -344,6 +348,8 @@ export interface Database {
         Update: {
           user_id?: string;
           living_cost_per_payday?: number;
+          living_cost_source?: "diisi" | "rata_rata" | "dihitung" | "belum_punya" | null;
+          living_cost_monthly?: number | null;
           other_fixed_monthly?: number | null;
           default_wallet_id?: string | null;
           pin_hash?: string | null;

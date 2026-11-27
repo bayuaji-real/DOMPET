@@ -2,6 +2,9 @@
 import { useKeyboardOpen } from "@/hooks/use-keyboard-open";
 
 import * as React from "react";
+import { LivingCostSetup } from "@/components/ai/living-cost-setup";
+import { getUserSettings } from "@/lib/data/settings";
+import { toLivingAnswer } from "@/lib/living-cost";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,7 +24,7 @@ import type { AIChatResponse, SavingsProposal } from "@/app/api/ai-chat/route";
 import { getUserProfile, type UserProfile } from "@/lib/user-profile";
 import { enablePush, isPushOn, type PushResult } from "@/lib/push/client";
 import { ASSISTANT_NAME, RUBY_MENU, RUBY_PHOTO } from "@/components/ai/ruby";
-import { cn } from "@/lib/utils";
+import { cn, formatRupiah } from "@/lib/utils";
 
 export type { SavingsProposal };
 
@@ -481,6 +484,8 @@ export function AiChat({
   // Kartu tawaran bantuan dari Ruby (pengingat gajian). Hilang setelah dijawab.
   const [offer, setOffer] = React.useState<AIChatResponse["offer"]>(null);
   const [offerBusy, setOfferBusy] = React.useState(false);
+  // Ruby menanyakan biaya hidup per bulan di awal bila pengguna belum pernah menjawab. Setelah dijawab tidak ditanya lagi.
+  const [livingAsk, setLivingAsk] = React.useState(false);
   const [askConfirm, confirmDialog] = useConfirm();
   const endRef = React.useRef<HTMLDivElement>(null);
 
@@ -509,6 +514,18 @@ export function AiChat({
   }, [mode]);
 
   React.useEffect(() => {
+    let alive = true;
+    getUserSettings()
+      .then((st) => {
+        if (alive && st && !toLivingAnswer(st.living_cost_source, st.living_cost_per_payday, st.living_cost_monthly)) setLivingAsk(true);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  React.useEffect(() => {
     // Jam dibuat di sisi klien saja supaya tidak beda dengan HTML server (hydration).
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpenedAt(nowLabel());
@@ -529,7 +546,7 @@ export function AiChat({
     return () => {
       if (t) clearTimeout(t);
     };
-  }, [messages, loading, proposal, offer]);
+  }, [messages, loading, proposal, offer, livingAsk]);
   // Keyboard terbuka/tutup: layar mengecil, jadi langsung gulung ke pesan terbaru supaya tidak tertutup
   React.useEffect(() => {
     const t = setTimeout(() => endRef.current?.scrollIntoView({ block: "end" }), 250);
@@ -675,6 +692,27 @@ export function AiChat({
                 Nanti saja
               </button>
             </div>
+          </div>
+        )}
+        {livingAsk && !loading && (
+          <div className="ml-10">
+            <LivingCostSetup
+              onCancel={() => setLivingAsk(false)}
+              onSaved={(a) => {
+                setLivingAsk(false);
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    role: "model",
+                    text:
+                      a.source === "belum_punya"
+                        ? "Oke, biaya hidupmu kuanggap belum ada dulu. Kapan pun mau diisi, bilang saja ya."
+                        : `Siap! Biaya hidupmu ${formatRupiah(a.monthly)} per bulan (kebutuhan harian, di luar tagihan) sudah kusimpan di profilmu. Aku tidak akan tanya lagi tiap gajian.`,
+                    time: nowLabel(),
+                  },
+                ]);
+              }}
+            />
           </div>
         )}
         {error && (

@@ -50,7 +50,7 @@ interface Props {
 export function SavingsTimeline({ goals, todayStr }: Props) {
   const [paydays, setPaydays] = React.useState<TimelinePayday[]>([]);
   const [charges, setCharges] = React.useState<MonthlyCharge[]>([]);
-  const [livingCost, setLivingCost] = React.useState(400000);
+  const [livingCost, setLivingCost] = React.useState(0);
   const [loaded, setLoaded] = React.useState(false);
   const [selected, setSelected] = React.useState<string | null>(null);
   const [showAll, setShowAll] = React.useState(false);

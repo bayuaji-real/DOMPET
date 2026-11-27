@@ -10,7 +10,9 @@ import { shouldOfferPaydayReminder, reminderStatusText, type ReminderStatus } fr
 import { loadMemory, memoryToText, saveTurn, refreshMemoryIfDue } from "@/lib/ai/ruby-memory";
 import { createClient } from "@/lib/supabase/server";
 import { aiChatSchema, type SavingsPending } from "@/lib/validation";
-import { parseBasisAnswer } from "@/lib/savings-answer";
+import { parseBasisAnswer, CONFUSED_RE, LIVING_HELP_TEXT } from "@/lib/savings-answer";
+import { makeAnswer, paydaysPerMonth } from "@/lib/living-cost";
+import { storeLivingCostAnswer } from "@/lib/living-cost-store";
 import type { PlanHints } from "@/lib/savings-queue";
 
 /**
@@ -237,12 +239,14 @@ async function resolveSavings(args: {
       const { error: payErr } = await supabase.from("payday_schedule").insert(rows);
       if (payErr) console.error("[ai-chat] gagal simpan jadwal gajian", payErr.message);
     }
-    if (basis.livingSource !== "rencana" || basis.otherFixedNew) {
-      const patch: { user_id: string; living_cost_per_payday?: number; other_fixed_monthly?: number } = { user_id: userId };
-      if (basis.livingSource !== "rencana") patch.living_cost_per_payday = basis.livingMonthly;
-      if (basis.otherFixedNew) patch.other_fixed_monthly = basis.otherFixedMonthly;
-      const { error: setErr } = await supabase.from("user_settings").upsert(patch, { onConflict: "user_id" });
-      if (setErr) console.error("[ai-chat] gagal simpan biaya hidup/komitmen rutin", setErr.message);
+    if (basis.livingSource !== "rencana") {
+      // Biaya hidup bulanan disimpan di profil pengguna; angka per gajian = per bulan dibagi gajian per bulan.
+      const src = basis.livingSource === "rata-rata" ? "rata_rata" : "diisi";
+      await storeLivingCostAnswer(supabase, userId, makeAnswer(src, basis.livingMonthly, paydaysPerMonth(basis.payday.frequency)));
+    }
+    if (basis.otherFixedNew) {
+      const { error: setErr } = await supabase.from("user_settings").upsert({ user_id: userId, other_fixed_monthly: basis.otherFixedMonthly }, { onConflict: "user_id" });
+      if (setErr) console.error("[ai-chat] gagal simpan komitmen rutin", setErr.message);
     }
   } catch (e) {
     console.error("[ai-chat] gagal menyimpan gaji/biaya hidup", e);
@@ -317,6 +321,12 @@ export async function POST(request: NextRequest) {
     // Jawaban atas pertanyaan balik (gaji, tanggal gajian, biaya hidup) dibaca dengan kode: tanpa Gemini, tanpa token.
     if (mode === "savings" && pending) {
       const lastUser = messages[messages.length - 1].text;
+      // Bingung soal biaya hidup: Ruby menanyakan kebutuhannya (kode, tanpa Gemini), pertanyaan tetap menunggu jawaban.
+      if (pending.ask === "biaya_hidup" && CONFUSED_RE.test(lastUser) && !parseBasisAnswer(pending.ask, lastUser, false)) {
+        const savedId = await saveTurn(supabase, mode, sentThreadId, lastUser, LIVING_HELP_TEXT);
+        const body: AIChatResponse = { success: true, reply: LIVING_HELP_TEXT, proposal: null, pending, threadId: savedId ?? sentThreadId ?? null, usage: { inputTokens: 0, outputTokens: 0, costIdr: 0 } };
+        return NextResponse.json(body);
+      }
       const answer = parseBasisAnswer(pending.ask, lastUser, summaryData.avgMonthlyExpense > 0);
       if (answer) {
         const r = await resolveSavings({

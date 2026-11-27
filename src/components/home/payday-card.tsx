@@ -18,13 +18,15 @@ import type { WalletBalance } from "@/lib/data/wallets";
 import type { GoalProgress } from "@/lib/data/goals";
 import { USE_SAMPLE_DATA, todayJakarta } from "@/lib/data/sample-mode";
 import { splitPayday, clampAllocation, orderGoals, type SplitGoal } from "@/lib/payday-split";
+import { LIVING_SOURCE_LABEL, type LivingCostAnswer } from "@/lib/living-cost";
+import { LivingCostSetup } from "@/components/ai/living-cost-setup";
 
 interface PaydayCardProps {
   schedule: PaydaySchedule | null;
   wallets: WalletBalance[];
   goals: GoalProgress[];
-  /** Biaya hidup per gajian yang tersimpan di Pengaturan (hanya jadi pilihan cepat, bukan bawaan) */
-  savedLivingCost?: number;
+  /** Jawaban biaya hidup yang sudah tersimpan di profil pengguna. null = belum pernah dijawab (ditanya sekali). */
+  livingCostAnswer?: LivingCostAnswer | null;
   defaultWalletId?: string;
   onSuccess?: () => void;
 }
@@ -33,7 +35,7 @@ export function PaydayCard({
   schedule,
   wallets,
   goals,
-  savedLivingCost = 0,
+  livingCostAnswer = null,
   defaultWalletId,
   onSuccess,
 }: PaydayCardProps) {
@@ -55,9 +57,13 @@ export function PaydayCard({
   const selectedWalletId =
     (defaultWalletId && wallets.some((w) => w.id === defaultWalletId) ? defaultWalletId : wallets[0]?.id) || "";
 
-  // State Biaya Hidup: null = belum dijawab (ditanya dulu, tidak ada angka bawaan)
-  const [livingCost, setLivingCost] = React.useState<number | null>(null);
-  const [livingCostInput, setLivingCostInput] = React.useState("");
+  // Biaya hidup = jawaban pribadi pengguna yang tersimpan di profilnya. Belum dijawab -> ditanya SEKALI,
+  // gajian berikutnya tidak ditanya lagi (hanya bisa diubah lewat tombol "Ubah").
+  const [localAnswer, setLocalAnswer] = React.useState<LivingCostAnswer | null>(null);
+  const answer = localAnswer ?? livingCostAnswer;
+  const [editingLiving, setEditingLiving] = React.useState(false);
+  const askLiving = !answer || editingLiving;
+  const livingCost: number | null = answer ? answer.perPayday : null;
 
   // Tujuan tabungan aktif yang masih punya sisa, urut antrean (tenggat terdekat dulu)
   const queue = React.useMemo(() => {
@@ -88,7 +94,7 @@ export function PaydayCard({
   const allocations: Record<string, number> =
     manual && manual.key === suggestionKey ? manual.values : suggestion.amounts;
 
-  const livingAnswered = livingCost !== null;
+  const livingAnswered = livingCost !== null && !editingLiving;
   const totalSavingsAllocated = queue.reduce((sum, g) => sum + (allocations[g.id] || 0), 0);
   const freeAmount = livingAnswered ? salaryAmount - (livingCost ?? 0) - totalSavingsAllocated : 0;
   const deficit = livingAnswered ? Math.max(0, (livingCost ?? 0) - salaryAmount) : 0;
@@ -99,16 +105,6 @@ export function PaydayCard({
     const num = Number(raw) || 0;
     setSalaryAmount(num);
     setSalaryInput(raw ? num.toLocaleString("id-ID") : "");
-  };
-
-  const applyLivingCost = (num: number | null) => {
-    setLivingCost(num);
-    setLivingCostInput(num === null ? "" : num.toLocaleString("id-ID"));
-  };
-
-  const handleLivingCostChange = (val: string) => {
-    const raw = val.replace(/\D/g, "");
-    applyLivingCost(raw ? Number(raw) : null);
   };
 
   const handleGoalAllocChange = (goalId: string, val: string) => {
@@ -238,51 +234,17 @@ export function PaydayCard({
 
       </div>
 
-      {/* Pertanyaan Biaya Hidup (tidak ada angka bawaan) */}
-      <div className="rounded-2xl border border-border/80 bg-background/60 p-3 space-y-2">
-        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-          Biaya hidupmu sampai gajian berikutnya berapa?
-        </label>
-        <div className="flex items-center gap-1">
-          <span className="text-sm font-extrabold text-teal-600 dark:text-teal-400">Rp</span>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={livingCostInput}
-            onChange={(e) => handleLivingCostChange(e.target.value)}
-            placeholder="Ketik nominal biaya hidup"
-            className="w-full bg-transparent text-base font-extrabold text-foreground focus:outline-none tracking-tight"
-          />
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {savedLivingCost > 0 && (
-            <button
-              type="button"
-              onClick={() => applyLivingCost(savedLivingCost)}
-              className={cn(
-                "rounded-full border px-2.5 py-1 text-[10px] font-bold cursor-pointer transition-colors",
-                livingCost === savedLivingCost
-                  ? "border-teal-500 bg-teal-500/20 text-teal-600 dark:text-teal-300"
-                  : "border-border/70 text-muted-foreground hover:border-teal-500/50"
-              )}
-            >
-              Pakai {formatRupiah(savedLivingCost)} (dari Pengaturan)
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => applyLivingCost(0)}
-            className={cn(
-              "rounded-full border px-2.5 py-1 text-[10px] font-bold cursor-pointer transition-colors",
-              livingCost === 0
-                ? "border-teal-500 bg-teal-500/20 text-teal-600 dark:text-teal-300"
-                : "border-border/70 text-muted-foreground hover:border-teal-500/50"
-            )}
-          >
-            Tidak ada (Rp0)
-          </button>
-        </div>
-      </div>
+      {/* Ruby menanyakan biaya hidup per bulan (sekali). Jawaban tersimpan di profil dan tidak ditanya lagi. */}
+      {askLiving && (
+        <LivingCostSetup
+          initial={answer}
+          onSaved={(a) => {
+            setLocalAnswer(a);
+            setEditingLiving(false);
+          }}
+          onCancel={answer ? () => setEditingLiving(false) : undefined}
+        />
+      )}
 
       {/* Rincian Alokasi Cerdas: muncul setelah biaya hidup dijawab */}
       {livingAnswered && (
@@ -297,14 +259,20 @@ export function PaydayCard({
             </span>
           </div>
 
-          {/* 1. Biaya Hidup */}
+          {/* 1. Biaya Hidup (dari profil, bisa diubah) */}
           <div className="flex items-center justify-between text-xs gap-3">
             <div className="min-w-0">
               <p className="font-semibold text-foreground flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-amber-500" />
                 Biaya Hidup
               </p>
-              <p className="text-[10px] text-muted-foreground">Dari jawabanmu di atas</p>
+              <p className="text-[10px] text-muted-foreground">
+                {answer ? LIVING_SOURCE_LABEL[answer.source] : ""}
+                {answer && answer.monthly > 0 ? ` (${formatRupiah(answer.monthly)} per bulan)` : ""} ·{" "}
+                <button type="button" onClick={() => setEditingLiving(true)} className="font-bold text-teal-600 dark:text-teal-400 cursor-pointer">
+                  Ubah
+                </button>
+              </p>
             </div>
             <span className="shrink-0 text-xs font-bold text-foreground">{formatRupiah(livingCost ?? 0)}</span>
           </div>

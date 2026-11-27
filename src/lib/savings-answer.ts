@@ -39,6 +39,14 @@ function findDay(text: string, bare: boolean): number {
   return d >= 1 && d <= 31 ? d : 0;
 }
 
+/** Pengguna bingung / belum tahu biaya hidupnya: Ruby membantu dengan menanyakan kebutuhannya. */
+export const CONFUSED_RE = /\b(bingung|binggung|gatau|ga tau|gak tau|nggak tau|ngga tau|tidak tahu|nggak tahu|ga tahu|gak tahu|belum tahu|belum punya|entah|bantu)\b/i;
+
+export const LIVING_HELP_TEXT =
+  "Tenang, kita hitung bareng ya. Biaya hidup itu kebutuhan harian saja: makan, minum dan jajan, laundry, transport, dan kebutuhan harian lain seperti sabun. Tagihan dan langganan jangan dihitung di sini. Tulis perkiraan per bulan untuk tiap kebutuhan, contoh: \"makan 1,5 juta, minum 200 ribu, laundry 150 ribu, transport 400 ribu\". Nanti aku jumlahkan.";
+
+const NEED_WORD_RE = /makan|minum|jajan|kopi|galon|laundry|transport|bensin|ojek|angkot|sabun/gi;
+
 const WANTS_AVERAGE = /\b(rata[- ]?rata|pakai (itu|yang itu|saja)|boleh|setuju|oke|ok|iya|ya)\b/i;
 
 /**
@@ -65,7 +73,9 @@ export function parseBasisAnswer(ask: AskKind, text: string, averageOffered: boo
     if (all.length > 1) return null;
     return NONE_RE.test(t) ? { other_fixed_monthly: 0 } : null;
   }
-  // biaya_hidup: angka yang ditulis pengguna menang atas "rata-rata"
+  // biaya_hidup: rincian kebutuhan (minimal dua kebutuhan dan dua angka) dijumlahkan; angka yang ditulis menang atas "rata-rata"
+  const parts = allMoney(t, 10_000);
+  if (parts.length >= 2 && (t.match(NEED_WORD_RE) ?? []).length >= 2) return { monthly_living_cost: parts.reduce((a, b) => a + b, 0) };
   const living = findMoney(t);
   if (living) return { monthly_living_cost: living };
   if (averageOffered && WANTS_AVERAGE.test(t)) return { living_use_average: true };

@@ -108,8 +108,8 @@ export function resolvePlanBasis(b: PlanBasisInput, hints: PlanHints): PlanBasis
       ask: "biaya_hidup",
       question:
         b.avgMonthlyExpense > 0
-          ? `Biaya hidupmu belum diisi. Mau pakai rata-rata pengeluaranmu selama ini (${rp(b.avgMonthlyExpense)} per bulan), atau kamu isi sendiri angkanya?`
-          : "Biaya hidupmu belum diisi dan belum ada riwayat pengeluaran. Berapa biaya hidupmu per bulan (makan, transport, dan lain-lain)?",
+          ? `Biaya hidupmu sebulan berapa? Khusus makan, minum, laundry, transport (di luar tagihan dan langganan). Mau pakai rata-rata pengeluaranmu selama ini (${rp(b.avgMonthlyExpense)} per bulan), isi sendiri angkanya, atau bilang "bingung" biar kita hitung bareng?`
+          : "Biaya hidupmu sebulan berapa? Khusus kebutuhan harian seperti makan, minum, laundry, dan transport (di luar tagihan dan langganan). Kalau bingung, bilang \"bingung\" biar kita hitung bareng.",
     };
   }
   // 3. Komitmen rutin pasti lain (zakat, investasi, asuransi, kiriman keluarga)
