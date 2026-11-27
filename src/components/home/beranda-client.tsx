@@ -183,7 +183,7 @@ export function BerandaClient({
             schedule={paydaySchedule || SAMPLE_PAYDAY_SCHEDULES[0]}
             wallets={wallets.filter((w) => w.type !== "tabungan" && !w.goal_id)}
             goals={goals}
-            defaultLivingCost={settings?.living_cost_per_payday || 400000}
+            savedLivingCost={settings?.living_cost_per_payday || 0}
             defaultWalletId={settings?.default_wallet_id || undefined}
             onSuccess={loadDashboardData}
           />

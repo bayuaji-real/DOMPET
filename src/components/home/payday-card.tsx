@@ -3,20 +3,12 @@
 import * as React from "react";
 import {
   Sparkles,
-  Wallet,
-  PiggyBank,
   CheckCircle2,
-  AlertCircle,
   Loader2,
-  ChevronDown,
   Coins,
-  HeartHandshake,
   ArrowRight,
-  ShieldCheck,
-  Check,
 } from "lucide-react";
 import { formatRupiah, cn } from "@/lib/utils";
-import { WalletIcon } from "@/components/wallet/wallet-icon";
 import {
   processPaydayAllocation,
   type PaydaySchedule,
@@ -25,13 +17,14 @@ import {
 import type { WalletBalance } from "@/lib/data/wallets";
 import type { GoalProgress } from "@/lib/data/goals";
 import { USE_SAMPLE_DATA, todayJakarta } from "@/lib/data/sample-mode";
-import { Select } from "@/components/ui/select";
+import { splitPayday, clampAllocation, orderGoals, type SplitGoal } from "@/lib/payday-split";
 
 interface PaydayCardProps {
   schedule: PaydaySchedule | null;
   wallets: WalletBalance[];
   goals: GoalProgress[];
-  defaultLivingCost?: number;
+  /** Biaya hidup per gajian yang tersimpan di Pengaturan (hanya jadi pilihan cepat, bukan bawaan) */
+  savedLivingCost?: number;
   defaultWalletId?: string;
   onSuccess?: () => void;
 }
@@ -40,7 +33,7 @@ export function PaydayCard({
   schedule,
   wallets,
   goals,
-  defaultLivingCost = 400000,
+  savedLivingCost = 0,
   defaultWalletId,
   onSuccess,
 }: PaydayCardProps) {
@@ -49,54 +42,56 @@ export function PaydayCard({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  // State Nominal Gaji Masuk
-  const initialSalary = schedule?.expected_amount || 8500000;
+  const today = todayJakarta();
+
+  // State Nominal Gaji Masuk (tidak ada angka tebakan: kosong bila jadwal tidak punya nominal)
+  const initialSalary = schedule?.expected_amount || 0;
   const [salaryAmount, setSalaryAmount] = React.useState(initialSalary);
   const [salaryInput, setSalaryInput] = React.useState(
-    initialSalary.toLocaleString("id-ID")
+    initialSalary ? initialSalary.toLocaleString("id-ID") : ""
   );
 
-  // State Dompet Penerima
-  const activeWalletId =
-    defaultWalletId ||
-    wallets.find((w) => w.name.toLowerCase().includes("bca"))?.id ||
-    wallets[0]?.id ||
-    "";
-  const [selectedWalletId, setSelectedWalletId] = React.useState(activeWalletId);
+  // Dompet penerima: pengaturan dompet utama, kalau belum ada pakai dompet pertama
+  const selectedWalletId =
+    (defaultWalletId && wallets.some((w) => w.id === defaultWalletId) ? defaultWalletId : wallets[0]?.id) || "";
 
-  // State Biaya Hidup
-  const [livingCost, setLivingCost] = React.useState(defaultLivingCost);
-  const [livingCostInput, setLivingCostInput] = React.useState(
-    defaultLivingCost.toLocaleString("id-ID")
-  );
+  // State Biaya Hidup: null = belum dijawab (ditanya dulu, tidak ada angka bawaan)
+  const [livingCost, setLivingCost] = React.useState<number | null>(null);
+  const [livingCostInput, setLivingCostInput] = React.useState("");
 
-  // State Alokasi Tabungan
-  const [allocations, setAllocations] = React.useState<
-    Record<string, { amount: number; input: string }>
-  >({});
-
-  // Inisialisasi alokasi tabungan sesuai planned_per_payday & prioritas
-  React.useEffect(() => {
-    if (goals.length > 0) {
-      const initialMap: Record<string, { amount: number; input: string }> = {};
-      goals.forEach((g) => {
-        const planned = g.planned_per_payday || 500000;
-        initialMap[g.id] = {
-          amount: planned,
-          input: planned.toLocaleString("id-ID"),
-        };
-      });
-      setAllocations(initialMap);
-    }
+  // Tujuan tabungan aktif yang masih punya sisa, urut antrean (tenggat terdekat dulu)
+  const queue = React.useMemo(() => {
+    const active: (SplitGoal & { storageWalletId: string | null })[] = goals
+      .filter((g) => g.status === "aktif" && Number(g.remaining) > 0)
+      .map((g) => ({
+        id: g.id,
+        name: g.name,
+        remaining: Number(g.remaining),
+        target: g.target_amount,
+        deadline: g.deadline,
+        priority: g.priority,
+        storageWalletId: g.storage_wallet_id,
+      }));
+    return orderGoals(active);
   }, [goals]);
 
-  // Perhitungan Real-Time Total Tabungan & Sisa Bebas
-  const totalSavingsAllocated = Object.values(allocations).reduce(
-    (sum, item) => sum + (item.amount || 0),
-    0
+  // Saran pembagian: gaji - biaya hidup, diisi berurutan ke tujuan (tidak pernah melebihi gaji)
+  const suggestion = React.useMemo(
+    () =>
+      splitPayday({ today, salary: salaryAmount, livingCost: livingCost ?? 0, goals: queue }),
+    [today, salaryAmount, livingCost, queue]
   );
-  const freeAmount = salaryAmount - livingCost - totalSavingsAllocated;
-  const isOverAllocated = freeAmount < 0;
+
+  // Isian manual berlaku selama gaji / biaya hidup / daftar tujuan tidak berubah; kalau berubah, kembali ke saran
+  const suggestionKey = `${salaryAmount}|${livingCost}|${queue.map((g) => g.id).join(",")}`;
+  const [manual, setManual] = React.useState<{ key: string; values: Record<string, number> } | null>(null);
+  const allocations: Record<string, number> =
+    manual && manual.key === suggestionKey ? manual.values : suggestion.amounts;
+
+  const livingAnswered = livingCost !== null;
+  const totalSavingsAllocated = queue.reduce((sum, g) => sum + (allocations[g.id] || 0), 0);
+  const freeAmount = livingAnswered ? salaryAmount - (livingCost ?? 0) - totalSavingsAllocated : 0;
+  const deficit = livingAnswered ? Math.max(0, (livingCost ?? 0) - salaryAmount) : 0;
 
   // Handlers untuk input angka
   const handleSalaryChange = (val: string) => {
@@ -106,23 +101,21 @@ export function PaydayCard({
     setSalaryInput(raw ? num.toLocaleString("id-ID") : "");
   };
 
+  const applyLivingCost = (num: number | null) => {
+    setLivingCost(num);
+    setLivingCostInput(num === null ? "" : num.toLocaleString("id-ID"));
+  };
+
   const handleLivingCostChange = (val: string) => {
     const raw = val.replace(/\D/g, "");
-    const num = Number(raw) || 0;
-    setLivingCost(num);
-    setLivingCostInput(raw ? num.toLocaleString("id-ID") : "");
+    applyLivingCost(raw ? Number(raw) : null);
   };
 
   const handleGoalAllocChange = (goalId: string, val: string) => {
     const raw = val.replace(/\D/g, "");
-    const num = Number(raw) || 0;
-    setAllocations((prev) => ({
-      ...prev,
-      [goalId]: {
-        amount: num,
-        input: raw ? num.toLocaleString("id-ID") : "",
-      },
-    }));
+    const others = totalSavingsAllocated - (allocations[goalId] || 0);
+    const num = clampAllocation(Number(raw) || 0, salaryAmount, livingCost ?? 0, others);
+    setManual({ key: suggestionKey, values: { ...allocations, [goalId]: num } });
   };
 
   // Submit Pembagian Gaji
@@ -131,12 +124,16 @@ export function PaydayCard({
       setErrorMessage("Nominal gaji harus lebih dari 0 ya!");
       return;
     }
-    if (!selectedWalletId) {
-      setErrorMessage("Silakan pilih dompet penerima gaji!");
+    if (livingCost === null) {
+      setErrorMessage("Isi dulu biaya hidupmu sampai gajian berikutnya.");
       return;
     }
-    if (isOverAllocated) {
-      setErrorMessage("Total alokasi melebihi nominal gajimu. Sesuaikan angkanya dulu ya!");
+    if (deficit > 0) {
+      setErrorMessage("Biaya hidup lebih besar dari gaji. Sesuaikan dulu ya!");
+      return;
+    }
+    if (!selectedWalletId) {
+      setErrorMessage("Belum ada dompet untuk menerima gaji. Buat dompet dulu ya!");
       return;
     }
 
@@ -144,11 +141,11 @@ export function PaydayCard({
     setErrorMessage(null);
 
     try {
-      const allocationItems: PaydayAllocationItem[] = goals.map((g) => ({
+      const allocationItems: PaydayAllocationItem[] = queue.map((g) => ({
         goalId: g.id,
         goalName: g.name,
-        amount: allocations[g.id]?.amount || 0,
-        storageWalletId: g.storage_wallet_id,
+        amount: allocations[g.id] || 0,
+        storageWalletId: g.storageWalletId,
       }));
 
       await processPaydayAllocation({
@@ -158,20 +155,21 @@ export function PaydayCard({
         livingCost: livingCost,
         allocations: allocationItems,
         freeAmount: Math.max(0, freeAmount),
-        date: schedule?.date || todayJakarta(),
+        date: schedule?.date || today,
       });
 
       setIsSuccess(true);
       if (onSuccess) onSuccess();
-    } catch (err: any) {
+    } catch (err) {
       console.error("Gagal membagi gaji:", err);
-      setErrorMessage(err.message || "Terjadi kendala saat memproses gaji.");
+      setErrorMessage(err instanceof Error && err.message ? err.message : "Terjadi kendala saat memproses gaji.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const selectedWallet = wallets.find((w) => w.id === selectedWalletId);
+  const canSubmit = livingAnswered && deficit === 0 && salaryAmount > 0 && !isSubmitting;
 
   // Jika sudah sukses dibagikan
   if (isSuccess) {
@@ -186,7 +184,7 @@ export function PaydayCard({
               Gaji Berhasil Dibagikan! 🎉
             </h3>
             <p className="text-[11px] text-muted-foreground">
-              Pemasukan {formatRupiah(salaryAmount)} telah masuk ke {selectedWallet?.name || "Dompet"} dan setoran tabungan berhasil dicatat.
+              Pemasukan {formatRupiah(salaryAmount)} telah masuk ke {selectedWallet?.name || "dompetmu"} dan setoran tabungan berhasil dicatat.
             </p>
           </div>
         </div>
@@ -208,7 +206,7 @@ export function PaydayCard({
                 Gajian Hari Ini 🎉
               </span>
               <span className="inline-block rounded-md bg-teal-500/20 px-1.5 py-0.2 text-[10px] font-bold text-teal-300">
-                {schedule?.date ? schedule.date : "20 Nov 2026"}
+                {schedule?.date || today}
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground">
@@ -219,7 +217,7 @@ export function PaydayCard({
       </div>
 
       {/* Form Input Nominal & Dompet */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+      <div className="grid grid-cols-1 gap-3 pt-1">
         {/* Nominal Gaji Masuk */}
         <div className="rounded-2xl border border-border/80 bg-background/60 p-3 space-y-1">
           <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
@@ -238,120 +236,142 @@ export function PaydayCard({
           </div>
         </div>
 
-        {/* Dompet Penerima */}
-        <div className="rounded-2xl border border-border/80 bg-background/60 p-3 space-y-1">
-          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
-            Masuk ke Dompet
-          </label>
-          <div className="flex items-center gap-2">
-            {selectedWallet && (
-              <div
-                className="h-6 w-6 rounded-lg flex items-center justify-center shrink-0"
-                style={{ backgroundColor: `${selectedWallet.color || "#0d9488"}20`, color: selectedWallet.color || "#0d9488" }}
-              >
-                <WalletIcon icon={selectedWallet.icon} color={selectedWallet.color} size={14} />
-              </div>
-            )}
-            <Select
-              value={selectedWalletId}
-              onChange={(e) => setSelectedWalletId(e.target.value)}
-             
+      </div>
+
+      {/* Pertanyaan Biaya Hidup (tidak ada angka bawaan) */}
+      <div className="rounded-2xl border border-border/80 bg-background/60 p-3 space-y-2">
+        <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+          Biaya hidupmu sampai gajian berikutnya berapa?
+        </label>
+        <div className="flex items-center gap-1">
+          <span className="text-sm font-extrabold text-teal-600 dark:text-teal-400">Rp</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={livingCostInput}
+            onChange={(e) => handleLivingCostChange(e.target.value)}
+            placeholder="Ketik nominal biaya hidup"
+            className="w-full bg-transparent text-base font-extrabold text-foreground focus:outline-none tracking-tight"
+          />
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {savedLivingCost > 0 && (
+            <button
+              type="button"
+              onClick={() => applyLivingCost(savedLivingCost)}
+              className={cn(
+                "rounded-full border px-2.5 py-1 text-[10px] font-bold cursor-pointer transition-colors",
+                livingCost === savedLivingCost
+                  ? "border-teal-500 bg-teal-500/20 text-teal-600 dark:text-teal-300"
+                  : "border-border/70 text-muted-foreground hover:border-teal-500/50"
+              )}
             >
-              {wallets.map((w) => (
-                <option key={w.id} value={w.id} className="bg-card text-foreground">
-                  {w.name} ({formatRupiah(w.balance)})
-                </option>
-              ))}
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {/* Rincian Alokasi Cerdas */}
-      <div className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 space-y-3">
-        <div className="flex items-center justify-between border-b border-border/40 pb-2">
-          <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-teal-500" />
-            Saran Pembagian Gajian
-          </span>
-          <span className="text-[10px] text-muted-foreground font-medium">
-            Bisa diedit sesukamu
-          </span>
-        </div>
-
-        {/* 1. Biaya Hidup */}
-        <div className="flex items-center justify-between text-xs gap-3">
-          <div className="min-w-0">
-            <p className="font-semibold text-foreground flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-amber-500" />
-              Biaya Hidup
-            </p>
-            <p className="text-[10px] text-muted-foreground">Pos belanja pokok & makan</p>
-          </div>
-          <div className="flex items-center gap-1 shrink-0 w-32 border-b border-border/60 pb-0.5">
-            <span className="text-[11px] font-bold text-muted-foreground">Rp</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={livingCostInput}
-              onChange={(e) => handleLivingCostChange(e.target.value)}
-              className="w-full bg-transparent text-xs font-bold text-foreground text-right focus:outline-none"
-            />
-          </div>
-        </div>
-
-        {/* 2. Target Tabungan / Goals */}
-        {goals.map((g, idx) => (
-          <div key={g.id} className="flex items-center justify-between text-xs gap-3">
-            <div className="min-w-0">
-              <p className="font-semibold text-foreground flex items-center gap-1.5 truncate">
-                <span className="h-2 w-2 rounded-full bg-teal-500 shrink-0" />
-                <span className="truncate">{g.name}</span>
-                <span className="text-[9px] px-1 py-0.2 rounded bg-muted text-muted-foreground font-bold shrink-0">
-                  P{idx + 1}
-                </span>
-              </p>
-              <p className="text-[10px] text-muted-foreground truncate">
-                Target: {formatRupiah(g.target_amount)}
-              </p>
-            </div>
-            <div className="flex items-center gap-1 shrink-0 w-32 border-b border-border/60 pb-0.5">
-              <span className="text-[11px] font-bold text-muted-foreground">Rp</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={allocations[g.id]?.input || "0"}
-                onChange={(e) => handleGoalAllocChange(g.id, e.target.value)}
-                className="w-full bg-transparent text-xs font-bold text-foreground text-right focus:outline-none"
-              />
-            </div>
-          </div>
-        ))}
-
-        {/* 3. Sisa Dana Bebas */}
-        <div
-          className={cn(
-            "rounded-xl p-2.5 flex items-center justify-between text-xs transition-colors",
-            isOverAllocated
-              ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30"
-              : "bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/30"
+              Pakai {formatRupiah(savedLivingCost)} (dari Pengaturan)
+            </button>
           )}
-        >
-          <div>
-            <span className="font-bold block">
-              {isOverAllocated ? "Alokasi Berlebih ⚠️" : "Sisa Dana Bebas ✨"}
-            </span>
-            <span className="text-[10px] opacity-80">
-              {isOverAllocated
-                ? "Kurang dari nominal gajimu"
-                : "Bebas dipakai untuk jajan & santai"}
-            </span>
-          </div>
-          <span className="text-sm font-extrabold tracking-tight">
-            {formatRupiah(Math.abs(freeAmount))}
-          </span>
+          <button
+            type="button"
+            onClick={() => applyLivingCost(0)}
+            className={cn(
+              "rounded-full border px-2.5 py-1 text-[10px] font-bold cursor-pointer transition-colors",
+              livingCost === 0
+                ? "border-teal-500 bg-teal-500/20 text-teal-600 dark:text-teal-300"
+                : "border-border/70 text-muted-foreground hover:border-teal-500/50"
+            )}
+          >
+            Tidak ada (Rp0)
+          </button>
         </div>
       </div>
+
+      {/* Rincian Alokasi Cerdas: muncul setelah biaya hidup dijawab */}
+      {livingAnswered && (
+        <div className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 space-y-3">
+          <div className="flex items-center justify-between border-b border-border/40 pb-2">
+            <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-teal-500" />
+              Saran Pembagian Gajian
+            </span>
+            <span className="text-[10px] text-muted-foreground font-medium">
+              Bisa diedit, total tidak melebihi gaji
+            </span>
+          </div>
+
+          {/* 1. Biaya Hidup */}
+          <div className="flex items-center justify-between text-xs gap-3">
+            <div className="min-w-0">
+              <p className="font-semibold text-foreground flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                Biaya Hidup
+              </p>
+              <p className="text-[10px] text-muted-foreground">Dari jawabanmu di atas</p>
+            </div>
+            <span className="shrink-0 text-xs font-bold text-foreground">{formatRupiah(livingCost ?? 0)}</span>
+          </div>
+
+          {/* 2. Tujuan Tabungan, urut tenggat terdekat */}
+          {queue.map((g, idx) => (
+            <div key={g.id} className="flex items-center justify-between text-xs gap-3">
+              <div className="min-w-0">
+                <p className="font-semibold text-foreground flex items-center gap-1.5 truncate">
+                  <span className="h-2 w-2 rounded-full bg-teal-500 shrink-0" />
+                  <span className="truncate">{g.name}</span>
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-muted text-muted-foreground font-bold shrink-0">
+                    P{idx + 1}
+                  </span>
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  {(allocations[g.id] || 0) === 0 && deficit === 0
+                    ? "Belum kebagian: menunggu tujuan di atasnya terpenuhi"
+                    : `Sisa target: ${formatRupiah(g.remaining)}`}
+                </p>
+              </div>
+              <div className="flex items-center gap-1 shrink-0 w-32 border-b border-border/60 pb-0.5">
+                <span className="text-[11px] font-bold text-muted-foreground">Rp</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={(allocations[g.id] || 0).toLocaleString("id-ID")}
+                  onChange={(e) => handleGoalAllocChange(g.id, e.target.value)}
+                  className="w-full bg-transparent text-xs font-bold text-foreground text-right focus:outline-none"
+                />
+              </div>
+            </div>
+          ))}
+
+          {queue.length === 0 && (
+            <p className="text-[11px] text-muted-foreground">
+              Belum ada tujuan tabungan aktif, jadi semua sisa gaji jadi dana bebas.
+            </p>
+          )}
+
+          {/* 3. Sisa Dana Bebas (atau kekurangan bila biaya hidup melebihi gaji) */}
+          <div
+            className={cn(
+              "rounded-xl p-2.5 flex items-center justify-between text-xs transition-colors",
+              deficit > 0
+                ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30"
+                : "bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/30"
+            )}
+          >
+            <div>
+              <span className="font-bold block">
+                {deficit > 0 ? "Biaya hidup melebihi gaji ⚠️" : "Sisa Dana Bebas ✨"}
+              </span>
+              <span className="text-[10px] opacity-80">
+                {deficit > 0
+                  ? "Kecilkan biaya hidup atau perbaiki nominal gaji"
+                  : freeAmount > 0
+                    ? "Bebas dipakai untuk jajan & santai"
+                    : "Seluruh gaji sudah terbagi habis"}
+              </span>
+            </div>
+            <span className="text-sm font-extrabold tracking-tight">
+              {formatRupiah(deficit > 0 ? deficit : freeAmount)}
+            </span>
+          </div>
+        </div>
+      )}
 
       {errorMessage && (
         <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-2 text-xs text-rose-600 dark:text-rose-400 font-medium">
@@ -363,7 +383,7 @@ export function PaydayCard({
       <button
         type="button"
         onClick={handleBagiSekarang}
-        disabled={isSubmitting || isOverAllocated}
+        disabled={!canSubmit}
         className="w-full h-11 rounded-2xl bg-teal-600 hover:bg-teal-700 active:scale-[0.98] transition-all text-white text-xs font-extrabold shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {isSubmitting ? (
